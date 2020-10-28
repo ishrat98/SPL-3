@@ -1309,16 +1309,16 @@ server <- function(input, output, session) {
   }
   
   
-  # output$PlotGeneExpr <- renderPlot({
-  #   if(input$geneExprProjection == 'tSNE')
-  #     plot_tsnePlotGene()
-  #   else if(input$geneExprProjection == 'UMAP')
-  #     plot_UMAPPlotGene()
-  # })
+  output$PlotGeneExpr <- renderPlot({
+    if(input$geneExprProjection == 'tSNE')
+      plot_tsnePlotGene()
+    else if(input$geneExprProjection == 'UMAP')
+      plot_UMAPPlotGene()
+  })
   
-   output$PlotGeneExpr <- renderPlot({
-     if_else(input$geneExprProjection == 'tSNE', plot_tsnePlotGene() ,plot_UMAPPlotGene() )
-    })
+   # output$PlotGeneExpr <- renderPlot({
+   #   if_else(input$geneExprProjection == 'tSNE', plot_tsnePlotGene() ,plot_UMAPPlotGene() )
+   #  })
   
   output$tsnePlotCluster <- renderPlotly({  
     if(input$projection == 'tSNE' & input$colorCellsBy == 'Cluster')
