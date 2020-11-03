@@ -137,6 +137,7 @@ ui <- dashboardPage(
                  menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
                  menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route')),
+                  menuSubItem('Input Parameters'), tabName = 'input_parameters', icon('random'),
       menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
