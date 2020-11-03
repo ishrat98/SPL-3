@@ -1831,7 +1831,7 @@ server <- function(input, output, session) {
   
   
   
-  output$hegTableCluster = DT::renderDataTable(tableRenderinghegChooseSCluster (), server = FALSE, extensions = 'Buttons', 
+  output$hegTableCluster = DT::renderDataTable(tableRenderinghegChooseSCluster (),server = FALSE, extensions = 'Buttons', 
                                                options = list(dom = 'lBfrtip',
                                                               buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), 
                                                               pageLength = 5, autoWidth = TRUE))
