@@ -136,10 +136,9 @@ ui <- dashboardPage(
                  menuSubItem('DE between samples', tabName = 'DE_between_samples'),
                  menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
                  menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
-      menuItem('Trajectory', tabName = 'trajectory', icon = icon('route')),
-                  menuSubItem('Input Parameters'), tabName = 'input_parameters', icon('random'),
-      menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
-    )
+      menuItem('Trajectory', tabName = 'trajectory', icon = icon('random')),
+      menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info')),
+      menuItem('Color Management', tabName = "colorManagement", icon = ('random'))
   ),
   dashboardBody(
     tags$head(tags$style(HTML('
@@ -891,16 +890,28 @@ ui <- dashboardPage(
               )
      ),
      tabItem(tabName = 'trajectory',
-             h2('No trajectory calcualted for this dataset')
-     ),
+             fluidRow(
+               column(width = 3, offset = 0, style = "padding: 0px;",
+                      box(
+                        title = "Input parameters",
+                        tagList(
+                          uiOutput("trajectory_input")
+                        )
+                      )
+               )
+     )
+  ),
      tabItem(tabName = 'analysisInfo',
              h2('Analysis details')
              #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
      )
      
-  )
- )
-)
+  ),
+    tabItem(tabName = 'colorManagement',
+            h2('Color Management')
+    )
+ ),
+
 
 server <- function(input, output, session) { 
   
