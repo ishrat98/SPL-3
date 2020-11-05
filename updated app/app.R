@@ -101,6 +101,21 @@ ha = HeatmapAnnotation(df = df)
 
 flag <<- 0
 
+## centre parametrer in trajectory
+
+scatter_plot_point_opacity <- list(
+  min = 0.1,
+  max = 1.0,
+  step = 0.1,
+  default = 1.0
+)
+
+scatter_plot_percentage_cells_to_show <- list(
+  min = 10,
+  max = 100,
+  step = 10,
+  default = 100
+)
 
 
 
@@ -927,7 +942,14 @@ ui <- dashboardPage(
                   options = list("actions-box" = TRUE),
                   multiple = TRUE
                 ),
-                sliderInput("trajectory_percentage_cells_to_show", "Show % of cells:", 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100),
+                sliderInput(
+                  "trajectory_percentage_cells_to_show",
+                  label = "Show % of cells",
+                  min = scatter_plot_percentage_cells_to_show[["min"]],
+                  max = scatter_plot_percentage_cells_to_show[["max"]],
+                  step = scatter_plot_percentage_cells_to_show[["step"]],
+                  value = scatter_plot_percentage_cells_to_show[["default"]]
+                ),
                 
       
                 selectInput("colorCellsByMixtureSelection", "Color cells by",
@@ -979,8 +1001,7 @@ server <- function(input, output, session) {
   #
   #################################
   
-  
-  
+ 
   
   output$violinPlot <- renderPlot({
     
@@ -1025,21 +1046,6 @@ server <- function(input, output, session) {
   plot_tsnePlotCluster <- function(){ 	
     
     
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #    filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #    filter(Sample %in% input$checkboxProjectionSample) %>%
-    # ggplot(aes(x=V1, y=V2, Clusters=Clusters)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Clusters)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("t-SNE 2D coloured by cluster") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_clust_col)
-    
     
     df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
     df[,'Cell']=as.factor(colData(cdScFiltAnnot)$Barcode)
@@ -1064,21 +1070,7 @@ server <- function(input, output, session) {
   plot_tsnePlotCellType <- function(){ 	
     
     
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #    filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #    filter(Sample %in% input$checkboxProjectionSample) %>%
-    # ggplot(aes(x=V1, y=V2, Clusters=Clusters)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Clusters)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("t-SNE 2D coloured by cluster") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_clust_col)
-    
+  
     
     df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
     df[,'Cell']=as.factor(colData(cdScFiltAnnot)$Barcode)
@@ -1102,22 +1094,7 @@ server <- function(input, output, session) {
   
   plot_tsnePlotSample <- function(){ 	
     
-    
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #   filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #   filter(Sample %in% input$checkboxProjectionSample) %>%
-    #   ggplot( aes(x=V1, y=V2, Sample=Sample)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Sample)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("t-SNE 2D coloured by sample") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_sample_col)
-    
+  
     
     df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
     df[,'Cell']=as.factor(colData(cdScFiltAnnot)$Barcode)
