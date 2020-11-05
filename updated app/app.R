@@ -125,20 +125,20 @@ ui <- dashboardPage(
       menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
       menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
       menuItem("Heatmap", tabName = "multiple_cluster_heatmap", icon = icon("columns"),
-                 menuSubItem('Cluster heatmap', tabName = 'clusterHeatmap'),
-                 menuSubItem('Sample heatmap', tabName = 'sampleHeatmap'),
-                 menuSubItem('Sample & cluster heatmap', tabName = 'sampleClusterHeatmap')),
+               menuSubItem('Cluster heatmap', tabName = 'clusterHeatmap'),
+               menuSubItem('Sample heatmap', tabName = 'sampleHeatmap'),
+               menuSubItem('Sample & cluster heatmap', tabName = 'sampleClusterHeatmap')),
       menuItem("Bubble plot", tabName = "bubblePlot", icon = icon("dot-circle"),
                menuSubItem('Cluster bubble plot', tabName = 'clusterBubblePlot'),
                menuSubItem('Sample bubble plot', tabName = 'sampleBubblePlot')),
       menuItem('Differential Expression', tabName = 'DE_menus', icon = icon('line-chart'), 
-                 menuSubItem('DE between clusters', tabName = 'DE_between_clusters'),
-                 menuSubItem('DE between samples', tabName = 'DE_between_samples'),
-                 menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
-                 menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
-      menuItem('Trajectory', tabName = 'trajectory', icon = icon('random')),
+               menuSubItem('DE between clusters', tabName = 'DE_between_clusters'),
+               menuSubItem('DE between samples', tabName = 'DE_between_samples'),
+               menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
+               menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
+      menuItem('Trajectory', tabName = 'trajectory', icon = icon('route')),
       menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
-      # menuItem('Color Management', tabName = "colorManagement", icon = icon('random'))
+    )
   ),
   dashboardBody(
     tags$head(tags$style(HTML('
@@ -181,45 +181,45 @@ ui <- dashboardPage(
                               }
 
                               '))),
-   
+    
     tabItems(
       tabItem(tabName = 'overview',
               
               fluidRow(
                 column(12,tags$h1('Load data')),
                 column(12,
-                  fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = NULL,
-                              width = NULL, buttonLabel = "Browse...",
-                              placeholder = "No file selected")),
+                       fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = NULL,
+                                 width = NULL, buttonLabel = "Browse...",
+                                 placeholder = "No file selected")),
                 
                 br(),br(),br(),br(),br(),br(),br(),
                 column(4, align="center",
-                box(
-                  title = tags$p(style = "font-size: 200%;font-weight: 900;", dim(cdScFiltAnnot)[2]), width=20,  status = "info", "cells"
-                )),
+                       box(
+                         title = tags$p(style = "font-size: 200%;font-weight: 900;", dim(cdScFiltAnnot)[2]), width=20,  status = "info", "cells"
+                       )),
                 column(4,align="center",
-                box(
-                  title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Sample))), width=20,  status = "info","samples"
-                  
-                )),
+                       box(
+                         title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Sample))), width=20,  status = "info","samples"
+                         
+                       )),
                 column(4, align="center",
-                box(
-                  title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Clusters))), width=20,status = "info", "clusters"
-                  
-                ))
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-              
-            )
+                       box(
+                         title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Clusters))), width=20,status = "info", "clusters"
+                         
+                       ))
+                
+                #downloadButton("exportTsne", label = "Download t-SNE"),
+                #downloadButton("exportUmap", label = "Download UMAP")
+                
+              )
               
       ),
       tabItem(tabName = 'projection',
               fluidRow(
                 box(
                   title = p(tags$span("Projection", style="padding-right:8px;"), 
-                           actionButton("projectionInfo", "help", 
-                                        class = "btn-xs", title = "Additional information for this panel")
+                            actionButton("projectionInfo", "help", 
+                                         class = "btn-xs", title = "Additional information for this panel")
                   ), status = "primary", solidHeader = TRUE,
                   collapsible = TRUE, width = 12,
                   column(width=6, selectInput("projection", "Projection",
@@ -384,9 +384,9 @@ ui <- dashboardPage(
                                                 selected = '', multiple = FALSE,
                                                 selectize = FALSE)),
                     column(width=6,selectInput('ENChooseSampleGO', 'Sample', 
-                                       choices = levels(as.factor(cdScFiltAnnot$Sample)), 
-                                       selected = '', multiple = FALSE,
-                                       selectize = FALSE)),
+                                               choices = levels(as.factor(cdScFiltAnnot$Sample)), 
+                                               selected = '', multiple = FALSE,
+                                               selectize = FALSE)),
                     column(width=12,DT::dataTableOutput("ENTableSample") %>% withSpinner(type = getOption("spinner.type", default = 8)))
                     #downloadButton("exportTsne", label = "Download t-SNE"),
                     #downloadButton("exportUmap", label = "Download UMAP")
@@ -396,9 +396,9 @@ ui <- dashboardPage(
                   title = "Pathway enrichment for clusters", status = "primary", solidHeader = TRUE,
                   collapsible = TRUE, width = 12,
                   column(width=6,selectInput('ENChooseCluster', 'Cluster', 
-                              choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                              multiple = FALSE,
-                              selectize = FALSE)),
+                                             choices = levels(as.factor(my.clusters[order(my.clusters)])), 
+                                             multiple = FALSE,
+                                             selectize = FALSE)),
                   # column(width=6, selectInput('ENChooseCluster', 'Cluster', 
                   #                             choices = levels(as.factor(my.clusters[order(my.clusters)])), 
                   #                             selected = '', multiple = FALSE,
@@ -417,13 +417,13 @@ ui <- dashboardPage(
                   title = "Gene expression", status = "primary", solidHeader = TRUE,
                   collapsible = TRUE, width = 12,
                   column(width=6,selectInput("geneName", "Gene Name", selected = GeneNameSorted[1], 
-                              choices = GeneNameSorted,
-                              multiple = FALSE,
-                              selectize = FALSE)),
+                                             choices = GeneNameSorted,
+                                             multiple = FALSE,
+                                             selectize = FALSE)),
                   column(width=6, selectInput("geneExprProjection", "Projection",
-                              choices = c('tSNE','UMAP'),
-                              multiple = FALSE,
-                              selectize = FALSE)),
+                                              choices = c('tSNE','UMAP'),
+                                              multiple = FALSE,
+                                              selectize = FALSE)),
                   column(width=6, sliderInput("geneExpressionplotOverviewDotSize", "Dot size:", 0, 10, 0.5, 0.5)),
                   column(width=6,sliderInput("geneExpressionplotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1)),
                   column(width=6, colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "firebrick1")),
@@ -486,11 +486,11 @@ ui <- dashboardPage(
                   selectizeInput("geneNameMultiple", "List of genes", 
                                  selected = '', 
                                  choices = GeneNameSorted,
-                                  multiple = TRUE),
+                                 multiple = TRUE),
                   selectInput("geneExprProjectionMultiple", "Projection",
-                                              choices = c('tSNE','UMAP'),
-                                              multiple = FALSE,
-                                              selectize = FALSE),
+                              choices = c('tSNE','UMAP'),
+                              multiple = FALSE,
+                              selectize = FALSE),
                   sliderInput("geneExpressionplotOverviewDotSizeMultiple", "Dot size:", 0, 10, 0.5, 0.5),
                   sliderInput("geneExpressionplotOverviewDotOpacityMultiple", "Dot opacity:", 0, 1, 1, 0.1),
                   colourpicker::colourInput("colmaxgeneExpMultiple", "Select colour for maximum value", "firebrick1"),
@@ -570,31 +570,31 @@ ui <- dashboardPage(
               )
       ),
       tabItem(tabName = 'sampleHeatmap',
-             fluidRow(
-               box(title='Input for sample heatmap', status = "primary", solidHeader = TRUE,
-                   collapsible = TRUE, width = 4,
-                   selectizeInput('ChooseSampleHeatmap', 'Select your samples', 
-                                  choices = as.factor(cdScFiltAnnot$Sample[order(cdScFiltAnnot$Sample)]), 
-                                  selected = '', 
-                                  multiple = TRUE),
-                   textAreaInput('SampleGeneList', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
-                   tags$form(
-                     actionButton("buttonForSampleHeatmap", "Generate Heatmap", styleclass = "primary")
-                   )
-                   
-                   #downloadButton("exportTsne", label = "Download t-SNE"),
-                   #downloadButton("exportUmap", label = "Download UMAP")
-               ),
-               
-               box(
-                 title = "Heatmap", status = "primary", solidHeader = TRUE,
-                 collapsible = TRUE, width = 8,
-                 plotOutput("plotSampleHeatmap", height = "600px"),
-                 column(width=4, colourpicker::colourInput("colmaxSampleHeatmap", "Maximum value", "red")),
-                 column(width=4, colourpicker::colourInput("colmidSampleHeatmap", "Middle value", "white")),
-                 column(width=4, colourpicker::colourInput("colminSampleHeatmap", "Minimum value", "blue"))
-               )
-             )
+              fluidRow(
+                box(title='Input for sample heatmap', status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 4,
+                    selectizeInput('ChooseSampleHeatmap', 'Select your samples', 
+                                   choices = as.factor(cdScFiltAnnot$Sample[order(cdScFiltAnnot$Sample)]), 
+                                   selected = '', 
+                                   multiple = TRUE),
+                    textAreaInput('SampleGeneList', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
+                    tags$form(
+                      actionButton("buttonForSampleHeatmap", "Generate Heatmap", styleclass = "primary")
+                    )
+                    
+                    #downloadButton("exportTsne", label = "Download t-SNE"),
+                    #downloadButton("exportUmap", label = "Download UMAP")
+                ),
+                
+                box(
+                  title = "Heatmap", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 8,
+                  plotOutput("plotSampleHeatmap", height = "600px"),
+                  column(width=4, colourpicker::colourInput("colmaxSampleHeatmap", "Maximum value", "red")),
+                  column(width=4, colourpicker::colourInput("colmidSampleHeatmap", "Middle value", "white")),
+                  column(width=4, colourpicker::colourInput("colminSampleHeatmap", "Minimum value", "blue"))
+                )
+              )
       ),
       tabItem(tabName = 'sampleClusterHeatmap',
               fluidRow(
@@ -628,28 +628,28 @@ ui <- dashboardPage(
               )
       ),
       tabItem(tabName = 'clusterBubblePlot',
-                fluidRow(
-                  box(title='Input for cluster bubbleplot', status = "primary", solidHeader = TRUE,
-                      collapsible = TRUE, width = 4,
-                      selectizeInput('ChooseClustersBubblePlot', 'Select your clusters', 
-                                     choices = as.factor(cdScFiltAnnot$Clusters[order(cdScFiltAnnot$Clusters)]), 
-                                     selected = '', 
-                                     multiple = TRUE),
-                      textAreaInput('ClusterGeneListClusterBubblePlot', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
-                      tags$form(
-                        actionButton("buttonForClusterBubbleplot", "Generate Bubbleplot", styleclass = "primary")
-                      )
-                      
-                      #downloadButton("exportTsne", label = "Download t-SNE"),
-                      #downloadButton("exportUmap", label = "Download UMAP")
-                  ),
-                  
-                  box(
-                    title = "Bubble plot", status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 8,
-                    plotOutput("plotClusterBubbleplot", height = "600px")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                  )
+              fluidRow(
+                box(title='Input for cluster bubbleplot', status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 4,
+                    selectizeInput('ChooseClustersBubblePlot', 'Select your clusters', 
+                                   choices = as.factor(cdScFiltAnnot$Clusters[order(cdScFiltAnnot$Clusters)]), 
+                                   selected = '', 
+                                   multiple = TRUE),
+                    textAreaInput('ClusterGeneListClusterBubblePlot', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
+                    tags$form(
+                      actionButton("buttonForClusterBubbleplot", "Generate Bubbleplot", styleclass = "primary")
+                    )
+                    
+                    #downloadButton("exportTsne", label = "Download t-SNE"),
+                    #downloadButton("exportUmap", label = "Download UMAP")
+                ),
+                
+                box(
+                  title = "Bubble plot", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 8,
+                  plotOutput("plotClusterBubbleplot", height = "600px")%>% withSpinner(type = getOption("spinner.type", default = 8))
                 )
+              )
       ),
       tabItem(tabName = 'sampleBubblePlot',
               fluidRow(
@@ -683,17 +683,17 @@ ui <- dashboardPage(
                 box(title='Input for DE between clusters', status = "primary", solidHeader = TRUE,
                     collapsible = TRUE, width = 12,
                     column(width = 6,
-                      selectizeInput("clust1", "Select Cluster/Clusters for Group1",
-                                     choices = as.factor(my.clusters[order(my.clusters)]),
-                                     multiple = TRUE)),
-                      column(width = 6,
-                      selectizeInput("clust2", "Select Cluster/Clusters for Group2",
-                                     choices = as.factor(my.clusters[order(my.clusters)]),
-                                     multiple = TRUE)),
-                      column(width = 4,
-                        tags$form(
-                        actionButton("buttonForTwoClustDE", "Run DE", styleclass = "primary")
-                      )),
+                           selectizeInput("clust1", "Select Cluster/Clusters for Group1",
+                                          choices = as.factor(my.clusters[order(my.clusters)]),
+                                          multiple = TRUE)),
+                    column(width = 6,
+                           selectizeInput("clust2", "Select Cluster/Clusters for Group2",
+                                          choices = as.factor(my.clusters[order(my.clusters)]),
+                                          multiple = TRUE)),
+                    column(width = 4,
+                           tags$form(
+                             actionButton("buttonForTwoClustDE", "Run DE", styleclass = "primary")
+                           )),
                     column(width = 12,
                            plotlyOutput("AllClustTwoClustComp") %>% withSpinner(type = getOption("spinner.type", default = 8))),
                     column(width = 12,
@@ -741,145 +741,145 @@ ui <- dashboardPage(
               )
       ),
       tabItem(tabName = 'DE_between_sample_and_clusters',
-            fluidRow(
-              box(title = p(tags$span("Input selection", style="padding-right:8px;"), 
-                    actionButton("DE_between_sample_and_clustersSelectionInfo", "help", 
-                                 class = "btn-xs", title = "Additional information for this panel")
-                      ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 4,
-                  pickerInput(
-                    inputId = "checkboxMultiSelectionSampleSel1", 
-                    label = "Selection-1 samples", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    selected = '', 
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  pickerInput(
-                    inputId = "checkboxMultiSelectionClusterSel1", 
-                    label = "Selection1 clusters", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                    #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                    selected = '',
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  pickerInput(
-                    inputId = "checkboxMultiSelectionSampleSel2", 
-                    label = "Selection-2 samples", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    selected = '', 
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  pickerInput(
-                    inputId = "checkboxMultiSelectionClusterSel2", 
-                    label = "Selection-2 clusters", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                    #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                    selected = '',
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  selectInput("selectProjectionMixtureSelection", "Projection by",
-                              choices = c('tSNE','UMAP'),
-                              multiple = FALSE,
-                              selectize = FALSE),
-                  selectInput("colorCellsByMixtureSelection", "Color cells by",
-                                                choices = c('Sample','Cluster'),
-                                                multiple = FALSE,
-                                                selectize = FALSE),
-                    
-                   tags$form(
-                          actionButton("buttonForDEMixedSelection", "Run DE", styleclass = "primary")
-                    )
-            ),
-                  #downloadButton("exportTsne", label = "Download t-SNE"),
-                  #downloadButton("exportUmap", label = "Download UMAP")
-              box(title = p(tags$span("Cell projection", style="padding-right:8px;"), 
-                            actionButton("DE_between_sample_and_clustersProjectionInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-              ), status = "primary", solidHeader = TRUE, width = 8,
-                         plotOutput("AllClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
-                  ),
-            box(title = p(tags$span("Selected cells", style="padding-right:8px;"), 
-                  actionButton("DE_between_sample_and_clustersSelectinCellsInfo", "help", 
-                               class = "btn-xs", title = "Additional information for this panel")
-            ), status = "primary", solidHeader = TRUE, width = 8,
-                    plotOutput("selectedCellsClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
-            ),
-              box(title = "DE results", status = "primary", solidHeader = TRUE, 
-                      collapsible = TRUE, width = 12,
-                      DT::dataTableOutput("mytableMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                  )
+              fluidRow(
+                box(title = p(tags$span("Input selection", style="padding-right:8px;"), 
+                              actionButton("DE_between_sample_and_clustersSelectionInfo", "help", 
+                                           class = "btn-xs", title = "Additional information for this panel")
+                ), status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 4,
+                pickerInput(
+                  inputId = "checkboxMultiSelectionSampleSel1", 
+                  label = "Selection-1 samples", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  selected = '', 
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                ),
+                pickerInput(
+                  inputId = "checkboxMultiSelectionClusterSel1", 
+                  label = "Selection1 clusters", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
+                  selected = '',
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                ),
+                pickerInput(
+                  inputId = "checkboxMultiSelectionSampleSel2", 
+                  label = "Selection-2 samples", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  selected = '', 
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                ),
+                pickerInput(
+                  inputId = "checkboxMultiSelectionClusterSel2", 
+                  label = "Selection-2 clusters", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
+                  selected = '',
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                ),
+                selectInput("selectProjectionMixtureSelection", "Projection by",
+                            choices = c('tSNE','UMAP'),
+                            multiple = FALSE,
+                            selectize = FALSE),
+                selectInput("colorCellsByMixtureSelection", "Color cells by",
+                            choices = c('Sample','Cluster'),
+                            multiple = FALSE,
+                            selectize = FALSE),
+                
+                tags$form(
+                  actionButton("buttonForDEMixedSelection", "Run DE", styleclass = "primary")
+                )
+                ),
+                #downloadButton("exportTsne", label = "Download t-SNE"),
+                #downloadButton("exportUmap", label = "Download UMAP")
+                box(title = p(tags$span("Cell projection", style="padding-right:8px;"), 
+                              actionButton("DE_between_sample_and_clustersProjectionInfo", "help", 
+                                           class = "btn-xs", title = "Additional information for this panel")
+                ), status = "primary", solidHeader = TRUE, width = 8,
+                plotOutput("AllClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
+                ),
+                box(title = p(tags$span("Selected cells", style="padding-right:8px;"), 
+                              actionButton("DE_between_sample_and_clustersSelectinCellsInfo", "help", 
+                                           class = "btn-xs", title = "Additional information for this panel")
+                ), status = "primary", solidHeader = TRUE, width = 8,
+                plotOutput("selectedCellsClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
+                ),
+                box(title = "DE results", status = "primary", solidHeader = TRUE, 
+                    collapsible = TRUE, width = 12,
+                    DT::dataTableOutput("mytableMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
+                )
               )
-            ),
+      ),
       tabItem(tabName = 'DE_between_manual_selection',
               fluidRow(
                 box(title=p(tags$span("Manual selection of cells", style="padding-right:8px;"), 
                             actionButton("DE_in_manual_selection_input", "help", 
                                          class = "btn-xs", title = "Additional information for this panel")
                 ), status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
-                    column(width = 12, h5('Manually select the two groups of cells by dragging your mouse over the cells. 
+                collapsible = TRUE, width = 12,
+                column(width = 12, h5('Manually select the two groups of cells by dragging your mouse over the cells. 
                                          Then click the button')), 
-                    column(width = 6,       
-                      tags$form(
-                               actionButton("buttonForDEManualSelection", "Run DE between selected cells", styleclass = "primary")
-                                         )),
-                      column(width=6, useShinyjs(),
-                      actionButton("reset", "Reset all selection")),
-                    column(width = 4, pickerInput(
-                      inputId = "checkboxMultiSelectionSample", 
-                      label = "Select/deselect samples", 
-                      choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                      selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                      options = list(
-                        `actions-box` = TRUE, 
-                        size = 10,
-                        `selected-text-format` = "count > 20"
-                      ), 
-                      multiple = TRUE
-                    )),
-                    column(width = 4, pickerInput(
-                      inputId = "checkboxMultiSelectionCluster", 
-                      label = "Select/deselect clusters", 
-                      choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                      selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                      options = list(
-                        `actions-box` = TRUE, 
-                        size = 10,
-                        `selected-text-format` = "count > 20"
-                      ), 
-                      multiple = TRUE
-                    )),
-                    column(width = 4, selectInput("colorCellsByManualSelection", "Color cells by",
-                                                  choices = c('Sample','Cluster'),
-                                                  multiple = FALSE,
-                                                  selectize = FALSE)),
-                    column(width = 12,
-                           plotlyOutput("AllClustManualSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) )
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
+                column(width = 6,       
+                       tags$form(
+                         actionButton("buttonForDEManualSelection", "Run DE between selected cells", styleclass = "primary")
+                       )),
+                column(width=6, useShinyjs(),
+                       actionButton("reset", "Reset all selection")),
+                column(width = 4, pickerInput(
+                  inputId = "checkboxMultiSelectionSample", 
+                  label = "Select/deselect samples", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                )),
+                column(width = 4, pickerInput(
+                  inputId = "checkboxMultiSelectionCluster", 
+                  label = "Select/deselect clusters", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
+                  selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                )),
+                column(width = 4, selectInput("colorCellsByManualSelection", "Color cells by",
+                                              choices = c('Sample','Cluster'),
+                                              multiple = FALSE,
+                                              selectize = FALSE)),
+                column(width = 12,
+                       plotlyOutput("AllClustManualSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) )
+                
+                #downloadButton("exportTsne", label = "Download t-SNE"),
+                #downloadButton("exportUmap", label = "Download UMAP")
                 ),
                 
                 box(
@@ -888,40 +888,19 @@ ui <- dashboardPage(
                   DT::dataTableOutput("mytableManualSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
                 )
               )
-     ),
-     tabItem(tabName = 'trajectory',
-             fluidRow(
-               column(width = 3, offset = 0, style = "padding: 0px;",
-                      box(
-                        title = "Input parameters",
-                        tagList(
-                          uiOutput("trajectory_input")
-                        )
-                      )
-               )
-     )
-  ),
-  #    tabItem(tabName = 'analysisInfo',
-  #            h2('Analysis details')
-  #            #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
-  #    
-  # )
-  #         # tabItem(tabName = 'colorManagement',
-  #         #         h2('Color Management')
-  #         # )
-  #   )
-  # )
-  # )
-
-  tabItem(tabName = 'analysisInfo',
-          h2('Analysis details')
-          #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
-  )
-  
+      ),
+      tabItem(tabName = 'trajectory',
+              h2('No trajectory calcualted for this dataset')
+      ),
+      tabItem(tabName = 'analysisInfo',
+              h2('Analysis details')
+              #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
+      )
+      
     )
   )
-  )
-  
+)
+
 server <- function(input, output, session) { 
   
   #################################
@@ -956,7 +935,7 @@ server <- function(input, output, session) {
   output$violinPlotClusterOrig <- renderPlot({
     
     geneListToTest <- input$geneName
-  
+    
     
     dfViolin <- data.frame(Cluster=colData(cdScFiltAnnot)$Clusters, logCounts=logcounts(cdScFiltAnnot)[geneListToTest,], title=geneListToTest)
     p <- ggplot(dfViolin, aes(factor(Cluster), logCounts)) +
@@ -1002,11 +981,11 @@ server <- function(input, output, session) {
       filter(Sample %in% input$checkboxProjectionSample) %>%
       filter(cellType %in% input$checkboxProjectionCellType) %>%
       plot_ly(color = ~Clusters, colors = c_clust_col[c(1:9)], type="scatter", mode="markers", hoverinfo = 'text',
-                   marker = list(size = input$plotOverviewDotSize, opacity = input$plotOverviewDotOpacity),
-                   text = ~paste('</br> Cell: ', Cell,
-                                 '</br> Clusters: ', Clusters,
-                                 '</br> Samples: ', Sample,
-                                 '</br> CellType: ', cellType)) %>% layout(legend= list(font=list(size=8))) %>%
+              marker = list(size = input$plotOverviewDotSize, opacity = input$plotOverviewDotOpacity),
+              text = ~paste('</br> Cell: ', Cell,
+                            '</br> Clusters: ', Clusters,
+                            '</br> Samples: ', Sample,
+                            '</br> CellType: ', cellType)) %>% layout(legend= list(font=list(size=8))) %>%
       add_trace(x=~V1,y=~V2) %>%
       layout(title = 'tSNE with Clusters',showlegend = TRUE, legend = list(font = list(size = 10), itemsizing='constant'))
     
@@ -1080,14 +1059,14 @@ server <- function(input, output, session) {
       filter(Sample %in% input$checkboxProjectionSample) %>%
       filter(cellType %in% input$checkboxProjectionCellType) %>%
       plot_ly(color = ~Sample, colors = c_sample_col[c(1:4)], type="scatter", mode="markers", hoverinfo = 'text',
-                   marker = list(size = input$plotOverviewDotSize, opacity = input$plotOverviewDotOpacity),
-                   text = ~paste('</br> Cell: ', Cell,
-                                 '</br> Clusters: ', Clusters,
-                                 '</br> Samples: ', Sample,
-                                 '</br> CellType: ', cellType)) %>% layout(legend= list(font=list(size=8))) %>%
+              marker = list(size = input$plotOverviewDotSize, opacity = input$plotOverviewDotOpacity),
+              text = ~paste('</br> Cell: ', Cell,
+                            '</br> Clusters: ', Clusters,
+                            '</br> Samples: ', Sample,
+                            '</br> CellType: ', cellType)) %>% layout(legend= list(font=list(size=8))) %>%
       add_trace(x=~V1,y=~V2) %>%
       layout(title = 'tSNE with Samples',showlegend = TRUE, legend = list(font = list(size = 10), itemsizing='constant'))
-
+    
   }
   plot_tsnePlotnUMI <- function(){ 	
     
@@ -1259,20 +1238,20 @@ server <- function(input, output, session) {
   plot_UMAPPlotnUMI <- function(){    
     
     
-      # as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
-      # mutate(Samples = colData(cdScFiltAnnot)$Sample) %>%
-      # mutate(Cell = colData(cdScFiltAnnot)$Barcode) %>%
-      # mutate(Clusters = as.factor(my.clusters)) %>%
-      # mutate(log10_nUMI = log10(cdScFiltAnnot$total)) %>%
-      # filter(Clusters %in% input$checkboxProjectionCluster) %>%
-      # filter(Sample %in% input$checkboxProjectionSample) %>%
-      # ggplot(aes(x=V1, y=V2, colour=log10_nUMI)) +
-      # geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity) +
-      # #scale_colour_manual(values=cbPalette) +
-      # guides(colour = guide_legend(override.aes = list(size=4))) +
-      # xlab("") + ylab("") +
-      # ggtitle("UMAP with total UMI in log10") +
-      # theme_classic(base_size=10)
+    # as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
+    # mutate(Samples = colData(cdScFiltAnnot)$Sample) %>%
+    # mutate(Cell = colData(cdScFiltAnnot)$Barcode) %>%
+    # mutate(Clusters = as.factor(my.clusters)) %>%
+    # mutate(log10_nUMI = log10(cdScFiltAnnot$total)) %>%
+    # filter(Clusters %in% input$checkboxProjectionCluster) %>%
+    # filter(Sample %in% input$checkboxProjectionSample) %>%
+    # ggplot(aes(x=V1, y=V2, colour=log10_nUMI)) +
+    # geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity) +
+    # #scale_colour_manual(values=cbPalette) +
+    # guides(colour = guide_legend(override.aes = list(size=4))) +
+    # xlab("") + ylab("") +
+    # ggtitle("UMAP with total UMI in log10") +
+    # theme_classic(base_size=10)
     
     
     as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
@@ -1337,9 +1316,6 @@ server <- function(input, output, session) {
       plot_UMAPPlotGene()
   })
   
-   # output$PlotGeneExpr <- renderPlot({
-   #   if_else(input$geneExprProjection == 'tSNE', plot_tsnePlotGene() ,plot_UMAPPlotGene() )
-   #  })
   
   output$tsnePlotCluster <- renderPlotly({  
     if(input$projection == 'tSNE' & input$colorCellsBy == 'Cluster')
@@ -1368,16 +1344,13 @@ server <- function(input, output, session) {
       plot_UMAPPlotPercentMt()
   })
   
-  # output$tsnePlotSample <- renderPlotly({   
-  #   if(input$projection == 'tSNE')
-  #     plot_tsnePlotSample()
-  #   else
-  #     plot_UMAPPlotSample()
-  # })
-  
   output$tsnePlotSample <- renderPlotly({   
-    if_else(input$projection == 'tSNE', plot_tsnePlotSample() , plot_UMAPPlotSample()
-  )})
+    if(input$projection == 'tSNE')
+      plot_tsnePlotSample()
+    else
+      plot_UMAPPlotSample()
+  })
+  
   
   output$checkboxProjectionSample <- renderUI({
     choice <-  unique(levels(as.factor(cdScFiltAnnot$Sample)))
@@ -1438,13 +1411,13 @@ server <- function(input, output, session) {
       xlab("") + ylab("") +
       ggtitle(paste0('tSNE Gene Exp:',input$geneName))+
       theme_classic(base_size=14) 
-      # theme(strip.background = element_blank(),
-      #       strip.text.x     = element_blank(),
-      #       axis.text.x      = element_blank(),
-      #       axis.text.y      = element_blank(),
-      #       axis.ticks       = element_blank(),
-      #       axis.line        = element_blank(),
-      #       panel.border     = element_blank())
+    # theme(strip.background = element_blank(),
+    #       strip.text.x     = element_blank(),
+    #       axis.text.x      = element_blank(),
+    #       axis.text.y      = element_blank(),
+    #       axis.ticks       = element_blank(),
+    #       axis.line        = element_blank(),
+    #       panel.border     = element_blank())
     
   }
   
@@ -1587,13 +1560,13 @@ server <- function(input, output, session) {
       xlab("") + ylab("") +
       ggtitle(paste0('UMAP Gene Exp:',input$geneName))+
       theme_classic(base_size=14) 
-      # theme(strip.background = element_blank(),
-      #       strip.text.x     = element_blank(),
-      #       axis.text.x      = element_blank(),
-      #       axis.text.y      = element_blank(),
-      #       axis.ticks       = element_blank(),
-      #       axis.line        = element_blank(),
-      #       panel.border     = element_blank())
+    # theme(strip.background = element_blank(),
+    #       strip.text.x     = element_blank(),
+    #       axis.text.x      = element_blank(),
+    #       axis.text.y      = element_blank(),
+    #       axis.ticks       = element_blank(),
+    #       axis.line        = element_blank(),
+    #       panel.border     = element_blank())
     
   }
   
@@ -1623,7 +1596,7 @@ server <- function(input, output, session) {
                              guide = guide_colorbar(frame.colour = "black", ticks.colour = "black")) +
       xlab("") + ylab("") +
       theme_classic(base_size=14) + 
-    facet_wrap(~geneName)
+      facet_wrap(~geneName)
     
   }
   
@@ -1650,16 +1623,12 @@ server <- function(input, output, session) {
       facet_wrap(~geneName)
     
   }
-  # PlotGeneExprMultipleFunction <- eventReactive(input$buttonForMultipleGeneExpresion, {
-  #   if(input$geneExprProjectionMultiple == 'tSNE')
-  #     plot_tsnePlotGeneMultiple()
-  #   else
-  #     plot_UMAPPlotGeneMultiple()
-  # })
-  # 
   PlotGeneExprMultipleFunction <- eventReactive(input$buttonForMultipleGeneExpresion, {
-    if_else(input$geneExprProjectionMultiple == 'tSNE' , plot_tsnePlotGeneMultiple() ,plot_UMAPPlotGeneMultiple()
-  )})
+    if(input$geneExprProjectionMultiple == 'tSNE')
+      plot_tsnePlotGeneMultiple()
+    else
+      plot_UMAPPlotGeneMultiple()
+  })
   
   output$PlotGeneExprMultiple <- renderPlot({   
     PlotGeneExprMultipleFunction()
@@ -1852,11 +1821,11 @@ server <- function(input, output, session) {
   
   
   
-  output$hegTableCluster = DT::renderDataTable(tableRenderinghegChooseSCluster (),server = FALSE, extensions = 'Buttons', 
+  output$hegTableCluster = DT::renderDataTable(tableRenderinghegChooseSCluster (), server = FALSE, extensions = 'Buttons', 
                                                options = list(dom = 'lBfrtip',
                                                               buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), 
                                                               pageLength = 5, autoWidth = TRUE))
-
+  
   ####################################
   
   
@@ -2090,16 +2059,16 @@ server <- function(input, output, session) {
     # gc()
     
     ht_list <- Heatmap(heat.vals,
-            col = colorRamp2(c(-1.5,0,1.5), c(input$colminClustHeatmap, input$colmidClustHeatmap, input$colmaxClustHeatmap)),
-            heatmap_legend_param = list(
-              color_bar = "continuous",
-              title = "Scaled expr",
-              direction = "horizontal"
-            ),        top_annotation = ha, show_column_names=FALSE, cluster_rows = FALSE, show_row_dend = FALSE,
-            cluster_columns  = FALSE, show_column_dend = FALSE,
-            row_names_gp = gpar(fontsize = 10))
+                       col = colorRamp2(c(-1.5,0,1.5), c(input$colminClustHeatmap, input$colmidClustHeatmap, input$colmaxClustHeatmap)),
+                       heatmap_legend_param = list(
+                         color_bar = "continuous",
+                         title = "Scaled expr",
+                         direction = "horizontal"
+                       ),        top_annotation = ha, show_column_names=FALSE, cluster_rows = FALSE, show_row_dend = FALSE,
+                       cluster_columns  = FALSE, show_column_dend = FALSE,
+                       row_names_gp = gpar(fontsize = 10))
     draw(ht_list, merge_legend = TRUE, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
-
+    
     
   })
   
@@ -2277,7 +2246,7 @@ server <- function(input, output, session) {
     # rm(cdScFiltAnnotTmp)
     # gc()
     
-
+    
     ht_list <- Heatmap(heat.vals,
                        col = colorRamp2(c(-1.5,0,1.5), c(input$colminSampleClusterHeatmap, input$colmidSampleClusterHeatmap, input$colmaxSampleClusterHeatmap)),
                        heatmap_legend_param = list(
@@ -2317,7 +2286,7 @@ server <- function(input, output, session) {
     # validate(
     #   need(input$ChooseClusters != "All Clusters", "Please select a single valid cluster")
     # )
-
+    
     id <- c(input$ChooseClustersBubblePlot)
     # cdScFiltAnnotTmp <-  cdScFiltAnnotTmp[, colData(cdScFiltAnnotTmp)$Cluster %in% id]
     # cdScFiltAnnotTmp <-  cdScFiltAnnotTmp[,order(match(colData(cdScFiltAnnotTmp)$Cluster, id))]
@@ -2402,16 +2371,16 @@ server <- function(input, output, session) {
         axis.text.x = element_text(angle = 45, hjust = 1)
       )
     p
-
+    
   })
-
+  
   output$plotClusterBubbleplot <- renderPlot({
     
     BubblePlotClusterRendering()
     
   })
   
-
+  
   #############################################
   
   
@@ -2516,7 +2485,7 @@ server <- function(input, output, session) {
     p
     
   })
-
+  
   
   output$plotSampleBubbleplot <- renderPlot({
     
@@ -2668,13 +2637,13 @@ server <- function(input, output, session) {
     p <- ggplot(df_shiny_ForTwoSample, aes(V1, V2, col = I(Group))) +
       geom_point(size=0.8, alpha = 0.7)  +
       theme_classic(base_size=10)
-      # theme(strip.background = element_blank(),
-      #       strip.text.x     = element_blank(),
-      #       axis.text.x      = element_blank(),
-      #       axis.text.y      = element_blank(),
-      #       axis.ticks       = element_blank(),
-      #       axis.line        = element_blank(),
-      #       panel.border     = element_blank())
+    # theme(strip.background = element_blank(),
+    #       strip.text.x     = element_blank(),
+    #       axis.text.x      = element_blank(),
+    #       axis.text.y      = element_blank(),
+    #       axis.ticks       = element_blank(),
+    #       axis.line        = element_blank(),
+    #       panel.border     = element_blank())
     
     p
   })
@@ -2732,73 +2701,49 @@ server <- function(input, output, session) {
   
   
   output$AllClustMixedSelection <- renderPlot({
-    # 
-    # if(input$selectProjectionMixtureSelection == 'tSNE'){
-    #   df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
-    #   projectionType <- 'tSNE'
-    # }
-    # else{
-    #   df <- as.data.frame(reducedDim(cdScFiltAnnot,'UMAP'))
-    #   projectionType <- 'UMAP'
-    # }
-    # 
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(my.clusters)
-    # # df <- df %>%
-    # #   filter(Clusters %in% input$checkboxMultiSelectionCluster) %>%
-    # #   filter(Sample %in% input$checkboxMultiSelectionSample)
-    # 
-    # if(input$colorCellsByMixtureSelection == 'Sample'){
-    #   # p <- df %>% plot_ly(color = ~Sample, colors = c_sample_col[c(1:nlevels(as.factor(cdScFiltAnnot$Sample)))], type="scatter", mode="markers", hoverinfo = 'text',
-    #   #                         text = ~paste('</br> Sample: ', Sample))
-    #   p <- ggplot(df, aes(V1, V2, color=Sample)) +
-    #     geom_point(size=1)  +
-    #     theme_classic(base_size=10) + 
-    #     scale_colour_manual(values = c_sample_col)
-    #     projectionCatagory <- 'Sample'
-    # }
-    # else{
-    #   # p <- df %>% plot_ly(color = ~Cluster, colors = c_sample_col[c(1:nlevels(as.factor(cdScFiltAnnot$Cluster)))], type="scatter", mode="markers", hoverinfo = 'text',
-    #   #                         text = ~paste('</br> Cluster: ', Cluster))
-    #   p <- ggplot(df, aes(V1, V2, color=Clusters)) +
-    #     geom_point(size=1)  +
-    #     theme_classic(base_size=10) + 
-    #     scale_colour_manual(values = c_clust_col)
-    #   projectionCatagory <- 'Cluster'
-    # }
-      # p %>% layout(legend= list(font=list(size=8))) %>%
-      # add_trace(x=~V1,y=~V2,
-      #           marker = list(
-      #             size = 3)) %>% 
-      # layout(title = paste0(projectionType,' with Sample'),showlegend = TRUE, legend = list(title='Sample',font = list(size = 10), itemsizing='constant'))
-      # 
     
-    if_else(input$selectProjectionMixtureSelection == 'tSNE' ,
-      df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE')) ,
-      projectionType <- 'tSNE',
-      df <- as.data.frame(reducedDim(cdScFiltAnnot,'UMAP')) ,
+    if(input$selectProjectionMixtureSelection == 'tSNE'){
+      df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
+      projectionType <- 'tSNE'
+    }
+    else{
+      df <- as.data.frame(reducedDim(cdScFiltAnnot,'UMAP'))
       projectionType <- 'UMAP'
-  )
+    }
     
     df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
     df[,'Clusters'] <- as.factor(my.clusters)
-  
+    # df <- df %>%
+    #   filter(Clusters %in% input$checkboxMultiSelectionCluster) %>%
+    #   filter(Sample %in% input$checkboxMultiSelectionSample)
     
-    if_else(input$colorCellsByMixtureSelection == 'Sample' ,
+    if(input$colorCellsByMixtureSelection == 'Sample'){
+      # p <- df %>% plot_ly(color = ~Sample, colors = c_sample_col[c(1:nlevels(as.factor(cdScFiltAnnot$Sample)))], type="scatter", mode="markers", hoverinfo = 'text',
+      #                         text = ~paste('</br> Sample: ', Sample))
       p <- ggplot(df, aes(V1, V2, color=Sample)) +
         geom_point(size=1)  +
         theme_classic(base_size=10) + 
-        scale_colour_manual(values = c_sample_col) , projectionCatagory <- 'Sample' ,
-    
-     
+        scale_colour_manual(values = c_sample_col)
+      projectionCatagory <- 'Sample'
+    }
+    else{
+      # p <- df %>% plot_ly(color = ~Cluster, colors = c_sample_col[c(1:nlevels(as.factor(cdScFiltAnnot$Cluster)))], type="scatter", mode="markers", hoverinfo = 'text',
+      #                         text = ~paste('</br> Cluster: ', Cluster))
       p <- ggplot(df, aes(V1, V2, color=Clusters)) +
         geom_point(size=1)  +
         theme_classic(base_size=10) + 
-        scale_colour_manual(values = c_clust_col) ,
+        scale_colour_manual(values = c_clust_col)
       projectionCatagory <- 'Cluster'
-    )
-    p <- p + ggtitle(paste(projectionType,'with',projectionCatagory))
+    }
+    # p %>% layout(legend= list(font=list(size=8))) %>%
+    # add_trace(x=~V1,y=~V2,
+    #           marker = list(
+    #             size = 3)) %>% 
+    # layout(title = paste0(projectionType,' with Sample'),showlegend = TRUE, legend = list(title='Sample',font = list(size = 10), itemsizing='constant'))
+    # 
     
+    p <- p + ggtitle(paste(projectionType,'with',projectionCatagory))
+    p
     
     # Sample <- as.factor(colData(cdScFiltAnnot)[,'Sample'])
     # 
@@ -2851,18 +2796,18 @@ server <- function(input, output, session) {
     if(!is.null(cells_in_current_group2))
       df[cells_in_current_group2,'Group'] <- 'red'
     
-      # p <- df %>% plot_ly(color = ~Sample, colors = c_sample_col[c(1:nlevels(as.factor(cdScFiltAnnot$Sample)))], type="scatter", mode="markers", hoverinfo = 'text',
-      #                         text = ~paste('</br> Sample: ', Sample))
-      p <- ggplot(df, aes(V1, V2, col=I(Group))) +
-        geom_point(size=1, alpha=0.5)  +
-        theme_classic(base_size=10) 
+    # p <- df %>% plot_ly(color = ~Sample, colors = c_sample_col[c(1:nlevels(as.factor(cdScFiltAnnot$Sample)))], type="scatter", mode="markers", hoverinfo = 'text',
+    #                         text = ~paste('</br> Sample: ', Sample))
+    p <- ggplot(df, aes(V1, V2, col=I(Group))) +
+      geom_point(size=1, alpha=0.5)  +
+      theme_classic(base_size=10) 
     
     
-     
-     p <- p + ggtitle(paste(projectionType))
-     p
     
-
+    p <- p + ggtitle(paste(projectionType))
+    p
+    
+    
     
   })
   
@@ -2904,10 +2849,10 @@ server <- function(input, output, session) {
   
   
   output$mytableMixedSelection = DT::renderDataTable(tableRenderingMixedSampleCluster(), server = FALSE, extensions = 'Buttons',
-                                                
-                                                options = list(dom = 'lBfrtip',
-                                                               buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-                                                               pageLength = 5, autoWidth = TRUE)
+                                                     
+                                                     options = list(dom = 'lBfrtip',
+                                                                    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                                    pageLength = 5, autoWidth = TRUE)
   )
   
   
@@ -2957,7 +2902,7 @@ server <- function(input, output, session) {
     #print(head(click_data))
     #print(head(select_data))
     
-
+    
     if(is.null(select_data)){
       # df %>%
       # plot_ly(color = ~Clusters, colors = c_clust_col[c(1:9)], type="scatter", mode="markers", hoverinfo = 'text',
@@ -3048,7 +2993,6 @@ server <- function(input, output, session) {
     }
     
   }
-  
   
   
   
@@ -3160,21 +3104,16 @@ server <- function(input, output, session) {
   }
   
   
-  # output$AllClustManualSelection <- renderPlotly({
-  #   if(input$colorCellsByManualSelection == 'Sample'){
-  #     plot_tsnePlotSampleManualSelection()
-  #   }
-  #   else{
-  #     plot_tsnePlotClusterManualSelection()
-  #   }
-  #   
-  # })
-  
   output$AllClustManualSelection <- renderPlotly({
-    if_else(input$colorCellsByManualSelection == 'Sample' , 
-      plot_tsnePlotSampleManualSelection(),plot_tsnePlotClusterManualSelection() )
+    if(input$colorCellsByManualSelection == 'Sample'){
+      plot_tsnePlotSampleManualSelection()
+    }
+    else{
+      plot_tsnePlotClusterManualSelection()
+    }
     
   })
+  
   
   tableRendering <- eventReactive(input$buttonForDEManualSelection, {
     
@@ -3222,7 +3161,7 @@ server <- function(input, output, session) {
                                                                      buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), 
                                                                      pageLength = 5, autoWidth = TRUE)
   )
-
+  
   observeEvent(input[["reset"]], {
     runjs("Shiny.setInputValue('plotly_selected-A', null);")
   })
@@ -3238,7 +3177,7 @@ server <- function(input, output, session) {
   ####################################
   
   observeEvent(input$projectionInfo, {
-
+    
     showModal(modalDialog(
       title = "Projection",
       tags$div(
@@ -3268,7 +3207,7 @@ server <- function(input, output, session) {
       title = "Samples into clusters",
       tags$div(
         "This table shows the number of samples distributed into different clusters. It also shows the total number of cells in a sample."
-        ),
+      ),
       
       easyClose = TRUE,
       footer = NULL
@@ -3304,7 +3243,7 @@ server <- function(input, output, session) {
       
       easyClose = TRUE,
       footer = NULL
-      ))
+    ))
   })
   
   observeEvent(input$numberOfGenesExpressedInfo, {
@@ -3317,7 +3256,7 @@ server <- function(input, output, session) {
       
       easyClose = TRUE,
       footer = NULL
-      ))
+    ))
   })
   
   observeEvent(input$umiInClustersInfo, {
@@ -3345,7 +3284,7 @@ server <- function(input, output, session) {
       
       easyClose = TRUE,
       footer = NULL
-      ))
+    ))
   })
   
   observeEvent(input$DE_between_sample_and_clustersSelectionInfo, {
@@ -3357,10 +3296,10 @@ server <- function(input, output, session) {
         belong to the selected samples and clusters. This panel helps to select the cells that belong to a specific sample
         and cluster. For eg. cluster 1 is shared between Sample 1 and Sample 2. If you select cluster 1 and sample 1 then
         cells only in cluster 1 and sample 1 would be selected for the DE.",
-          tags$ul(
-            tags$li("The first selection is for the first group of cells."),
-            tags$li("Second selection is for the second group of cells.")
-          )
+        tags$ul(
+          tags$li("The first selection is for the first group of cells."),
+          tags$li("Second selection is for the second group of cells.")
+        )
       ),
       
       easyClose = TRUE,
@@ -3395,13 +3334,13 @@ server <- function(input, output, session) {
           tags$li("The user would then click DE between selected cells to run the Differential Expression analysis between the 
                   two groups of cells"),
           tags$li("In order to clear all the selection the uer needs to click Reset all selection")
-          )
+        )
         
       ),
       
       easyClose = TRUE,
       footer = NULL
-      ))
+    ))
   })
   
   
@@ -3414,6 +3353,6 @@ server <- function(input, output, session) {
   
   
   
-  }
+}
 
 shinyApp(ui, server)
