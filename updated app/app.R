@@ -137,8 +137,8 @@ ui <- dashboardPage(
                  menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
                  menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('random')),
-      menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info')),
-      menuItem('Color Management', tabName = "colorManagement", icon = ('random'))
+      menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
+      # menuItem('Color Management', tabName = "colorManagement", icon = icon('random'))
   ),
   dashboardBody(
     tags$head(tags$style(HTML('
@@ -901,18 +901,27 @@ ui <- dashboardPage(
                )
      )
   ),
-     tabItem(tabName = 'analysisInfo',
-             h2('Analysis details')
-             #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
-     )
-     
-  ),
-    tabItem(tabName = 'colorManagement',
-            h2('Color Management')
+  #    tabItem(tabName = 'analysisInfo',
+  #            h2('Analysis details')
+  #            #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
+  #    
+  # )
+  #         # tabItem(tabName = 'colorManagement',
+  #         #         h2('Color Management')
+  #         # )
+  #   )
+  # )
+  # )
+
+  tabItem(tabName = 'analysisInfo',
+          h2('Analysis details')
+          #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
+  )
+  
     )
- ),
-
-
+  )
+  )
+  
 server <- function(input, output, session) { 
   
   #################################
