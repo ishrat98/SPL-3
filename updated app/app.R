@@ -891,14 +891,14 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = 'trajectory',
               fluidRow(
-                box(title = p(tags$span("Input selection", style="padding-right:8px;"), 
+                box(title = p(tags$span("Input parameters", style="padding-right:8px;"), 
                               actionButton("DE_between_sample_and_clustersSelectionInfo", "help", 
                                            class = "btn-xs", title = "Additional information for this panel")
                 ), status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 4,
                 pickerInput(
-                  inputId = "checkboxMultiSelectionSampleSel1", 
-                  label = "Selection-1 samples", 
+                  inputId = "trajectory_projection_info",
+                  label = "Trajectory", 
                   choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
                   #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
                   selected = '', 
@@ -910,52 +910,32 @@ ui <- dashboardPage(
                   multiple = TRUE
                 ),
                 pickerInput(
-                  inputId = "checkboxMultiSelectionClusterSel1", 
-                  label = "Selection1 clusters", 
+                  inputId = "trajectory_samples_to_display", 
+                  label = "Samples to display", 
                   choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
                   #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
                   selected = '',
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
+                  options = list("actions-box" = TRUE),
                   multiple = TRUE
                 ),
                 pickerInput(
-                  inputId = "checkboxMultiSelectionSampleSel2", 
-                  label = "Selection-2 samples", 
+                  inputId = "trajectory_clusters_to_display", 
+                  label = "Cluster to display", 
                   choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
                   #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
                   selected = '', 
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
+                  options = list("actions-box" = TRUE),
                   multiple = TRUE
                 ),
-                pickerInput(
-                  inputId = "checkboxMultiSelectionClusterSel2", 
-                  label = "Selection-2 clusters", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                  selected = '',
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
-                  multiple = TRUE
-                ),
-                selectInput("selectProjectionMixtureSelection", "Projection by",
-                            choices = c('tSNE','UMAP'),
-                            multiple = FALSE,
-                            selectize = FALSE),
+                sliderInput("trajectory_percentage_cells_to_show", "Show % of cells:", 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100),
+                
+      
                 selectInput("colorCellsByMixtureSelection", "Color cells by",
                             choices = c('Sample','Cluster'),
                             multiple = FALSE,
                             selectize = FALSE),
+
+                
                 
                 tags$form(
                   actionButton("buttonForDEMixedSelection", "Run DE", styleclass = "primary")
