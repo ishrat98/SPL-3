@@ -101,6 +101,28 @@ ha = HeatmapAnnotation(df = df)
 
 flag <<- 0
 
+## centre parametrer in trajectory
+
+scatter_plot_dot_size <- list(
+  min = 1,
+  max = 20,
+  step = 1,
+  default = 5
+)
+
+scatter_plot_dot_opacity <- list(
+  min = 0.1,
+  max = 1.0,
+  step = 0.1,
+  default = 1.0
+)
+
+scatter_plot_percentage_cells_to_show <- list(
+  min = 10,
+  max = 100,
+  step = 10,
+  default = 100
+)
 
 
 
@@ -892,73 +914,92 @@ ui <- dashboardPage(
       tabItem(tabName = 'trajectory',
               fluidRow(
                 box(title = p(tags$span("Input parameters", style="padding-right:8px;"), 
-                              actionButton("DE_between_sample_and_clustersSelectionInfo", "help", 
+                              actionButton("trajectory_input", "info",
                                            class = "btn-xs", title = "Additional information for this panel")
                 ), status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 4,
-                pickerInput(
+                selectInput(
                   inputId = "trajectory_projection_info",
                   label = "Trajectory", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  selected = '', 
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
-                  multiple = TRUE
+                  choices = names(cdScFiltAnnot$trajectory$monocle2)
+          
                 ),
                 pickerInput(
                   inputId = "trajectory_samples_to_display", 
-                  label = "Samples to display", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                  selected = '',
+                  label = "Samples to display",
+                  choices = cdScFiltAnnot$sample_names,
+                  selected = cdScFiltAnnot$sample_names,
                   options = list("actions-box" = TRUE),
                   multiple = TRUE
+                  
                 ),
                 pickerInput(
                   inputId = "trajectory_clusters_to_display", 
-                  label = "Cluster to display", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  selected = '', 
+                  label = "Clusters to display",
+                  choices = cdScFiltAnnot$cluster_names,
+                  selected = cdScFiltAnnot$cluster_names,
                   options = list("actions-box" = TRUE),
                   multiple = TRUE
+                  
                 ),
-                sliderInput("trajectory_percentage_cells_to_show", "Show % of cells:", 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100),
-                
-      
-                selectInput("colorCellsByMixtureSelection", "Color cells by",
-                            choices = c('Sample','Cluster'),
-                            multiple = FALSE,
-                            selectize = FALSE),
+                sliderInput(
+                  "trajectory_percentage_cells_to_show",
+                  label = "Show % of cells",
+                  min = scatter_plot_percentage_cells_to_show[["min"]],
+                  max = scatter_plot_percentage_cells_to_show[["max"]],
+                  step = scatter_plot_percentage_cells_to_show[["step"]],
+                  value = scatter_plot_percentage_cells_to_show[["default"]]
+                ),
 
+                selectInput(
+                  "trajectory_dot_color",
+                  label = "Color cells by",
+                  choices = c("state","pseudotime",names(cdScFiltAnnot$cells)[! names(cdScFiltAnnot$cells) %in% c("cell_barcode")])
+                ),
+                
+                sliderInput(
+                  "trajectory_dot_size",
+                  label = "Dot size",
+                  min = scatter_plot_dot_size[["min"]],
+                  max = scatter_plot_dot_size[["max"]],
+                  step = scatter_plot_dot_size[["step"]],
+                  value = scatter_plot_dot_size[["default"]]
+                ),
+                sliderInput(
+                  "trajectory_dot_opacity",
+                  label = "Dot opacity",
+                  min = scatter_plot_dot_opacity[["min"]],
+                  max = scatter_plot_dot_opacity[["max"]],
+                  step = scatter_plot_dot_opacity[["step"]],
+                  value = scatter_plot_dot_opacity[["default"]]
+                )
                 
                 
-                tags$form(
-                  actionButton("buttonForDEMixedSelection", "Run DE", styleclass = "primary")
-                )
                 ),
-                #downloadButton("exportTsne", label = "Download t-SNE"),
-                #downloadButton("exportUmap", label = "Download UMAP")
-                box(title = p(tags$span("Cell projection", style="padding-right:8px;"), 
-                              actionButton("DE_between_sample_and_clustersProjectionInfo", "help", 
+                
+                box(title = p(tags$span("Trajectory", style="padding-right:8px;"),
+                              actionButton("trajectory_projection_info", "info",
                                            class = "btn-xs", title = "Additional information for this panel")
                 ), status = "primary", solidHeader = TRUE, width = 8,
-                plotOutput("AllClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
+                plotOutput("trajectory_projection") %>% withSpinner(type = getOption("spinner.type", default = 8))
                 ),
-                box(title = p(tags$span("Selected cells", style="padding-right:8px;"), 
-                              actionButton("DE_between_sample_and_clustersSelectinCellsInfo", "help", 
-                                           class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE, width = 8,
-                plotOutput("selectedCellsClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
-                ),
-                box(title = "DE results", status = "primary", solidHeader = TRUE, 
-                    collapsible = TRUE, width = 12,
-                    DT::dataTableOutput("mytableMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
+
+                # box(title = p(tags$span("Cell projection", style="padding-right:8px;"), 
+                #               actionButton("DE_between_sample_and_clustersProjectionInfo", "help", 
+                #                            class = "btn-xs", title = "Additional information for this panel")
+                # ), status = "primary", solidHeader = TRUE, width = 8,
+                # plotOutput("AllClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
+                # ),
+                # box(title = p(tags$span("Selected cells", style="padding-right:8px;"), 
+                #               actionButton("DE_between_sample_and_clustersSelectinCellsInfo", "help", 
+                #                            class = "btn-xs", title = "Additional information for this panel")
+                # ), status = "primary", solidHeader = TRUE, width = 8,
+                # plotOutput("selectedCellsClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
+                # ),
+                # box(title = "DE results", status = "primary", solidHeader = TRUE, 
+                #     collapsible = TRUE, width = 12,
+                #     DT::dataTableOutput("mytableMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
+                # )
               )
       ),
       
@@ -979,8 +1020,7 @@ server <- function(input, output, session) {
   #
   #################################
   
-  
-  
+ 
   
   output$violinPlot <- renderPlot({
     
@@ -1025,21 +1065,6 @@ server <- function(input, output, session) {
   plot_tsnePlotCluster <- function(){ 	
     
     
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #    filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #    filter(Sample %in% input$checkboxProjectionSample) %>%
-    # ggplot(aes(x=V1, y=V2, Clusters=Clusters)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Clusters)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("t-SNE 2D coloured by cluster") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_clust_col)
-    
     
     df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
     df[,'Cell']=as.factor(colData(cdScFiltAnnot)$Barcode)
@@ -1064,21 +1089,7 @@ server <- function(input, output, session) {
   plot_tsnePlotCellType <- function(){ 	
     
     
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #    filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #    filter(Sample %in% input$checkboxProjectionSample) %>%
-    # ggplot(aes(x=V1, y=V2, Clusters=Clusters)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Clusters)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("t-SNE 2D coloured by cluster") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_clust_col)
-    
+  
     
     df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
     df[,'Cell']=as.factor(colData(cdScFiltAnnot)$Barcode)
@@ -1102,22 +1113,7 @@ server <- function(input, output, session) {
   
   plot_tsnePlotSample <- function(){ 	
     
-    
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #   filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #   filter(Sample %in% input$checkboxProjectionSample) %>%
-    #   ggplot( aes(x=V1, y=V2, Sample=Sample)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Sample)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("t-SNE 2D coloured by sample") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_sample_col)
-    
+  
     
     df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
     df[,'Cell']=as.factor(colData(cdScFiltAnnot)$Barcode)
