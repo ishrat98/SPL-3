@@ -890,8 +890,98 @@ ui <- dashboardPage(
               )
       ),
       tabItem(tabName = 'trajectory',
-              h2('No trajectory calcualted for this dataset')
+              fluidRow(
+                box(title = p(tags$span("Input selection", style="padding-right:8px;"), 
+                              actionButton("DE_between_sample_and_clustersSelectionInfo", "help", 
+                                           class = "btn-xs", title = "Additional information for this panel")
+                ), status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 4,
+                pickerInput(
+                  inputId = "checkboxMultiSelectionSampleSel1", 
+                  label = "Selection-1 samples", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  selected = '', 
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                ),
+                pickerInput(
+                  inputId = "checkboxMultiSelectionClusterSel1", 
+                  label = "Selection1 clusters", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
+                  selected = '',
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                ),
+                pickerInput(
+                  inputId = "checkboxMultiSelectionSampleSel2", 
+                  label = "Selection-2 samples", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  selected = '', 
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                ),
+                pickerInput(
+                  inputId = "checkboxMultiSelectionClusterSel2", 
+                  label = "Selection-2 clusters", 
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
+                  selected = '',
+                  options = list(
+                    `actions-box` = TRUE, 
+                    size = 10,
+                    `selected-text-format` = "count > 20"
+                  ), 
+                  multiple = TRUE
+                ),
+                selectInput("selectProjectionMixtureSelection", "Projection by",
+                            choices = c('tSNE','UMAP'),
+                            multiple = FALSE,
+                            selectize = FALSE),
+                selectInput("colorCellsByMixtureSelection", "Color cells by",
+                            choices = c('Sample','Cluster'),
+                            multiple = FALSE,
+                            selectize = FALSE),
+                
+                tags$form(
+                  actionButton("buttonForDEMixedSelection", "Run DE", styleclass = "primary")
+                )
+                ),
+                #downloadButton("exportTsne", label = "Download t-SNE"),
+                #downloadButton("exportUmap", label = "Download UMAP")
+                box(title = p(tags$span("Cell projection", style="padding-right:8px;"), 
+                              actionButton("DE_between_sample_and_clustersProjectionInfo", "help", 
+                                           class = "btn-xs", title = "Additional information for this panel")
+                ), status = "primary", solidHeader = TRUE, width = 8,
+                plotOutput("AllClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
+                ),
+                box(title = p(tags$span("Selected cells", style="padding-right:8px;"), 
+                              actionButton("DE_between_sample_and_clustersSelectinCellsInfo", "help", 
+                                           class = "btn-xs", title = "Additional information for this panel")
+                ), status = "primary", solidHeader = TRUE, width = 8,
+                plotOutput("selectedCellsClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
+                ),
+                box(title = "DE results", status = "primary", solidHeader = TRUE, 
+                    collapsible = TRUE, width = 12,
+                    DT::dataTableOutput("mytableMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
+                )
+              )
       ),
+      
       tabItem(tabName = 'analysisInfo',
               h2('Analysis details')
               #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
