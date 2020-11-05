@@ -1196,20 +1196,6 @@ server <- function(input, output, session) {
   
   plot_UMAPPlotCluster <- function(){    
     
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'UMAP'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #   filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #   filter(Sample %in% input$checkboxProjectionSample) %>%
-    #   ggplot(aes(x=V1, y=V2, Clusters=Clusters)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Clusters)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("UMAP 2D coloured by cluster") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_clust_col)
     
     as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
       mutate(Sample = colData(cdScFiltAnnot)$Sample) %>%
@@ -1231,21 +1217,6 @@ server <- function(input, output, session) {
   }
   
   plot_UMAPPlotCellType <- function(){    
-    
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'UMAP'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #   filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #   filter(Sample %in% input$checkboxProjectionSample) %>%
-    #   ggplot(aes(x=V1, y=V2, Clusters=Clusters)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Clusters)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("UMAP 2D coloured by cluster") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_clust_col)
     
     as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
       mutate(Sample = colData(cdScFiltAnnot)$Sample) %>%
@@ -1269,20 +1240,7 @@ server <- function(input, output, session) {
   plot_UMAPPlotSample <- function(){    
     
     
-    # df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
-    # df[,'Sample']=as.factor(colData(cdScFiltAnnot)$Sample)
-    # df[,'Clusters'] <- as.factor(cdScFiltAnnot$Clusters)
-    # as_tibble(df) %>%
-    #   filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    #   filter(Sample %in% input$checkboxProjectionSample) %>%
-    #   ggplot(aes(x=V1, y=V2, Sample=Sample)) +
-    #   geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity, aes(colour=Sample)) +
-    #   #scale_colour_manual(values=cbPalette) +
-    #   guides(colour = guide_legend(override.aes = list(size=4))) +
-    #   xlab("") + ylab("") +
-    #   ggtitle("t-SNE 2D coloured by cluster") +
-    #   theme_classic(base_size=10)  +
-    #   scale_color_manual(values = c_clust_col)
+
     
     as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
       mutate(Sample = colData(cdScFiltAnnot)$Sample) %>%
@@ -1302,22 +1260,6 @@ server <- function(input, output, session) {
       layout(title = 'UMAP with Samples',showlegend = TRUE, legend = list(title='Cluster',font = list(size = 10), itemsizing='constant'))
   }
   plot_UMAPPlotnUMI <- function(){    
-    
-    
-    # as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
-    # mutate(Samples = colData(cdScFiltAnnot)$Sample) %>%
-    # mutate(Cell = colData(cdScFiltAnnot)$Barcode) %>%
-    # mutate(Clusters = as.factor(my.clusters)) %>%
-    # mutate(log10_nUMI = log10(cdScFiltAnnot$total)) %>%
-    # filter(Clusters %in% input$checkboxProjectionCluster) %>%
-    # filter(Sample %in% input$checkboxProjectionSample) %>%
-    # ggplot(aes(x=V1, y=V2, colour=log10_nUMI)) +
-    # geom_point(size=input$plotOverviewDotSize,alpha=input$plotOverviewDotOpacity) +
-    # #scale_colour_manual(values=cbPalette) +
-    # guides(colour = guide_legend(override.aes = list(size=4))) +
-    # xlab("") + ylab("") +
-    # ggtitle("UMAP with total UMI in log10") +
-    # theme_classic(base_size=10)
     
     
     as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
@@ -3409,7 +3351,190 @@ server <- function(input, output, session) {
     ))
   })
   
+  ############################################
+  #
+  # For Trajectory panel
+  #
+  ############################################
   
+  ##----------------------------------------------------------------------------##
+  ## Projection.
+  ##----------------------------------------------------------------------------##
+  output$trajectory_projection <- plotly::renderPlotly({
+    # don't do anything before these inputs are selected
+    req(
+      input[["trajectory_to_display"]],
+      input[["trajectory_samples_to_display"]],
+      input[["trajectory_clusters_to_display"]],
+      input[["trajectory_percentage_cells_to_show"]],
+      input[["trajectory_dot_color"]],
+      input[["trajectory_dot_size"]],
+      input[["trajectory_dot_opacity"]]
+    )
+    
+    trajectory_to_display <- input[["trajectory_to_display"]]
+    samples_to_display <- input[["trajectory_samples_to_display"]]
+    clusters_to_display <- input[["trajectory_clusters_to_display"]]
+    cells_to_display <- which(
+      (sample_data()$cells$sample %in% samples_to_display) &
+        (sample_data()$cells$cluster %in% clusters_to_display)
+    )
+    
+    # randomly remove cells
+    if ( input[["trajectory_percentage_cells_to_show"]] < 100 ) {
+      number_of_cells_to_plot <- ceiling(
+        input[["trajectory_percentage_cells_to_show"]] / 100 * length(cells_to_display)
+      )
+      cells_to_display <- cells_to_display[ sample(1:length(cells_to_display), number_of_cells_to_plot) ]
+    }
+    
+    # extract cells to plot
+    to_plot <- cbind(
+      sample_data()$trajectory$monocle2[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
+      sample_data()$cells[ cells_to_display , ]
+    ) %>%
+      dplyr::filter(!is.na(pseudotime))
+    to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
+    
+    color_variable <- input[["trajectory_dot_color"]]
+  
+    # convert edges of trajectory into list format to plot with plotly
+    trajectory_edges <- sample_data()$trajectory$monocle2[[trajectory_to_display]][["edges"]]
+    trajectory_lines <- list()
+    for (i in 1:nrow(trajectory_edges) ) {
+      line = list(
+        type = "line",
+        line = list(color = "black"),
+        xref = "x",
+        yref = "y",
+        x0 = trajectory_edges$source_dim_1[i],
+        y0 = trajectory_edges$source_dim_2[i],
+        x1 = trajectory_edges$target_dim_1[i],
+        y1 = trajectory_edges$target_dim_2[i]
+      )
+      trajectory_lines <- c(trajectory_lines, list(line))
+    }
+    
+    if ( is.factor(to_plot[[ color_variable ]]) || is.character(to_plot[[ color_variable ]]) ) {
+      if ( color_variable == "sample" ) {
+        colors_this_plot <- reactive_colors()$sampless
+      } else if ( color_variable == "cluster" ) {
+        colors_this_plot <- reactive_colors()$clusters
+      } else if ( color_variable %in% c("cell_cycle_seurat","cell_cycle_cyclone") ) {
+        colors_this_plot <- cell_cycle_colorset
+      } else if ( is.factor(to_plot[[ color_variable ]]) ) {
+        colors_this_plot <- setNames(
+          default_colorset[1:length(levels(to_plot[[ color_variable ]]))],
+          levels(to_plot[[ color_variable ]])
+        )
+      } else {
+        colors_this_plot <- default_colorset
+      }
+      plot <- plotly::plot_ly(
+        to_plot,
+        x = ~DR_1,
+        y = ~DR_2,
+        color = ~to_plot[[ color_variable ]],
+        colors = colors_this_plot,
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          opacity = input[["trajectory_dot_opacity"]],
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          shapes = trajectory_lines,
+          xaxis = list(
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_1) * 1.1
+          ),
+          yaxis = list(
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_2) * 1.1
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences[["use_webgl"]] == TRUE ) {
+        plot %>% plotly::toWebGL()
+      } else {
+        plot
+      }
+    } else {
+      plot <- plotly::plot_ly(
+        data = to_plot,
+        x = ~DR_1,
+        y = ~DR_2,
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          colorbar = list(
+            title = colnames(to_plot)[which(colnames(to_plot) == color_variable)]
+          ),
+          color = ~to_plot[[ color_variable ]],
+          opacity = input[["trajectory_dot_opacity"]],
+          colorscale = "YlGnBu",
+          reversescale = TRUE,
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          shapes = trajectory_lines,
+          xaxis = list(
+            title = colnames(to_plot)[1],
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_1) * 1.1
+          ),
+          yaxis = list(
+            title = colnames(to_plot)[2],
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_2) * 1.1
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences$use_webgl == TRUE ) {
+        plotly::toWebGL(plot)
+      } else {
+        plot
+      }
+    }
+  })
   
   
   ###################################
