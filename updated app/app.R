@@ -22,7 +22,7 @@ library(DT)
 library(colourpicker)
 library(shinyWidgets)
 library(shinyjs)
-
+library(monocle)
 
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
@@ -927,8 +927,11 @@ ui <- dashboardPage(
                 pickerInput(
                   inputId = "trajectory_samples_to_display", 
                   label = "Samples to display",
-                  choices = cdScFiltAnnot$sample_names,
-                  selected = cdScFiltAnnot$sample_names,
+                  # choices = cdScFiltAnnot$sample_names,
+                  # selected = cdScFiltAnnot$sample_names,
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  selected = '',
                   options = list("actions-box" = TRUE),
                   multiple = TRUE
                   
@@ -936,8 +939,10 @@ ui <- dashboardPage(
                 pickerInput(
                   inputId = "trajectory_clusters_to_display", 
                   label = "Clusters to display",
-                  choices = cdScFiltAnnot$cluster_names,
-                  selected = cdScFiltAnnot$cluster_names,
+                  # choices = cdScFiltAnnot$cluster_names,
+                  # selected = cdScFiltAnnot$cluster_names,
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
+                  selected = '',
                   options = list("actions-box" = TRUE),
                   multiple = TRUE
                   
@@ -954,7 +959,7 @@ ui <- dashboardPage(
                 selectInput(
                   "trajectory_dot_color",
                   label = "Color cells by",
-                  choices = c("state","pseudotime",names(cdScFiltAnnot$cells)[! names(cdScFiltAnnot$cells) %in% c("cell_barcode")])
+                  choices = c("state","pseudotime",names(cdScFiltAnnot$cellType)[! names(cdScFiltAnnot$cellType) %in% c("cell_barcode")])
                 ),
                 
                 sliderInput(
@@ -3376,8 +3381,8 @@ server <- function(input, output, session) {
     samples_to_display <- input[["trajectory_samples_to_display"]]
     clusters_to_display <- input[["trajectory_clusters_to_display"]]
     cells_to_display <- which(
-      (sample_data()$cells$sample %in% samples_to_display) &
-        (sample_data()$cells$cluster %in% clusters_to_display)
+      (cdScFiltAnnot$cellType$sample %in% samples_to_display) &
+        (cdScFiltAnnot$cellType$cluster %in% clusters_to_display)
     )
     
     # randomly remove cells
@@ -3390,8 +3395,8 @@ server <- function(input, output, session) {
     
     # extract cells to plot
     to_plot <- cbind(
-      sample_data()$trajectory$monocle2[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
-      sample_data()$cells[ cells_to_display , ]
+      cdScFiltAnnot$trajectory$monocle2[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
+      cdScFiltAnnot$cellType[ cells_to_display , ]
     ) %>%
       dplyr::filter(!is.na(pseudotime))
     to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
@@ -3399,7 +3404,7 @@ server <- function(input, output, session) {
     color_variable <- input[["trajectory_dot_color"]]
   
     # convert edges of trajectory into list format to plot with plotly
-    trajectory_edges <- sample_data()$trajectory$monocle2[[trajectory_to_display]][["edges"]]
+    trajectory_edges <- cdScFiltAnnot$trajectory$monocle2[[trajectory_to_display]][["edges"]]
     trajectory_lines <- list()
     for (i in 1:nrow(trajectory_edges) ) {
       line = list(
