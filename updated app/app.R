@@ -103,6 +103,7 @@ flag <<- 0
 
 ## centre parametrer in trajectory
 
+<<<<<<< HEAD
 scatter_plot_dot_size <- list(
   min = 1,
   max = 20,
@@ -111,6 +112,9 @@ scatter_plot_dot_size <- list(
 )
 
 scatter_plot_dot_opacity <- list(
+=======
+scatter_plot_point_opacity <- list(
+>>>>>>> 02411537bca37398f78c14197e6bd6b4a331a936
   min = 0.1,
   max = 1.0,
   step = 0.1,
@@ -955,6 +959,23 @@ ui <- dashboardPage(
                   step = scatter_plot_percentage_cells_to_show[["step"]],
                   value = scatter_plot_percentage_cells_to_show[["default"]]
                 ),
+<<<<<<< HEAD
+=======
+                sliderInput(
+                  "trajectory_percentage_cells_to_show",
+                  label = "Show % of cells",
+                  min = scatter_plot_percentage_cells_to_show[["min"]],
+                  max = scatter_plot_percentage_cells_to_show[["max"]],
+                  step = scatter_plot_percentage_cells_to_show[["step"]],
+                  value = scatter_plot_percentage_cells_to_show[["default"]]
+                ),
+                
+      
+                selectInput("colorCellsByMixtureSelection", "Color cells by",
+                            choices = c('Sample','Cluster'),
+                            multiple = FALSE,
+                            selectize = FALSE),
+>>>>>>> 02411537bca37398f78c14197e6bd6b4a331a936
 
                 selectInput(
                   "trajectory_dot_color",
