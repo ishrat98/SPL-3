@@ -1,6 +1,3 @@
-library(shiny)
-library(shinydashboard)
-
 
 library(scater)
 library(plotly)
@@ -8,55 +5,46 @@ library(reshape2)
 library(circlize)
 library(sSeq)
 library(shinycssloaders)
-library(ComplexHeatmap)
-library(colourpicker)
-library(shinyWidgets)
-library(shinyjs)
+library(SingleCellExperiment)
+library(TSCAN)
+library(M3Drop)
+library(monocle)
+library(destiny)
+library(scater)
+library(ggplot2)
+library(ggthemes)
+library(ggbeeswarm)
+library(corrplot)
+library(Polychrome)
+library(slingshot)
+library(SLICER)
+library(ouija)
+set.seed(1)
 
-c30 <- c("dodgerblue2",#1
-         "#E31A1C", #2 red
-         "green4", #3
-         "#FF7F00", #4 orange
-         "green1",#5
-         "purple",#6
-         "blue1",#7
-         "deeppink1",#8
-         "darkorange4",#9
-         "black",#10
-         "gold1",#11
-         "darkturquoise",#12
-         "#6A3D9A", #13 purple
-         "orchid1",#14
-         "gray70",#15
-         "maroon",#16
-         "palegreen2",#17
-         "#333333",#18
-         "#CAB2D6", #19 lt purple
-         "#FDBF6F", #20 lt orange
-         "khaki2",#21
-         "skyblue2",#22
-         "steelblue4",#23
-         "green1",#24
-         "yellow4",#25
-         "yellow3",#26
-         "#FB9A99", #27 lt pink
-         "brown",#28
-         "#000099",#29
-         "#CC3300"#30
+
+deng_SCE <- readRDS("data/deng/deng-reads.rds")
+
+deng_SCE$cell_type2 <- factor(
+  deng_SCE$cell_type2,
+  levels = c("zy", "early2cell", "mid2cell", "late2cell",
+             "4cell", "8cell", "16cell", "earlyblast",
+             "midblast", "lateblast")
 )
+cellLabels <- deng_SCE$cell_type2
+deng <- counts(deng_SCE)
+colnames(deng) <- cellLabels
 
+deng_SCE <- scater::runPCA(deng_SCE,ncomponent = 5)
 
+## change color Palette with library(Polychrome)
 
-c_sample_col <- c30[c(1,3,23,19,30)]
-c_clust_col <- c30[c(1,2,3,4,5,6,7,8,9,11,12,14,19,22,24,25)]
+set.seed(723451) # for reproducibility
+my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
+names(my_color) <- unique(as.character(deng_SCE$cell_type2))
 
-my.clusters <- cdScFiltAnnot$Clusters
-#options(bitmapType='cairo')
+pca_df <- data.frame(PC1 = reducedDim(deng_SCE,"PCA")[,1],
+                     PC2 = reducedDim(deng_SCE,"PCA")[,2],
+                     cell_type2 = deng_SCE$cell_type2)
 
-ui <- dashboardPage(
-  #skin = "purple",
-  dashboardHeader(
-    title = "UoM Single cell"
-  )
-  shinyApp(ui, server)
-  
+ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cell_type2))+
+  scale_colour_manual(values = my_color)+theme_classic()
