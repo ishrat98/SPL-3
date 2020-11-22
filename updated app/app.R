@@ -166,7 +166,9 @@ ui <- dashboardPage(
                menuSubItem('DE between samples', tabName = 'DE_between_samples'),
                menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
                menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
-      menuItem('Trajectory', tabName = 'trajectory', icon = icon('route')),
+      menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
+               menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
+               menuSubItem('Monocle', tabName = 'trajectory_monocle')),
       menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
@@ -964,7 +966,6 @@ ui <- dashboardPage(
                   value = scatter_plot_percentage_cells_to_show[["default"]]
                 ),
 # # <<<<<<< HEAD
-# =======
                 sliderInput(
                   "trajectory_percentage_cells_to_show",
                   label = "Show % of cells",
