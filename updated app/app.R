@@ -921,7 +921,7 @@ ui <- dashboardPage(
                 )
               )
       ),
-      tabItem(tabName = 'trajectory',
+      tabItem(tabName = 'trajectory_monocle',
               fluidRow(
                 box(title = p(tags$span("Input parameters", style="padding-right:8px;"), 
                               actionButton("trajectory_input", "info",
@@ -931,8 +931,14 @@ ui <- dashboardPage(
                 selectInput(
                   inputId = "trajectory_projection_info",
                   label = "Trajectory", 
-                  choices = names(cdScFiltAnnot$trajectory$monocle2)
-          
+                 # choices = names(cdScFiltAnnot$trajectory$monocle2)
+                 # choices = unique(levels(as.factor(cdScFiltAnnot$trajectory$monocle2))),
+                 # choices = names(as.factor(cdScFiltAnnot$trajectory$monocle2)
+                 # choices = unique(levels(as.factor(cdScFiltAnnot$samples))), 
+                 # selected = unique(levels(as.factor(cdScFiltAnnot$samples))),
+                 choices = c('tSNE','UMAP'),
+                 multiple = FALSE,
+                 selectize = FALSE
                 ),
                 pickerInput(
                   inputId = "trajectory_samples_to_display", 
@@ -965,28 +971,24 @@ ui <- dashboardPage(
                   step = scatter_plot_percentage_cells_to_show[["step"]],
                   value = scatter_plot_percentage_cells_to_show[["default"]]
                 ),
-# # <<<<<<< HEAD
-                sliderInput(
-                  "trajectory_percentage_cells_to_show",
-                  label = "Show % of cells",
-                  min = scatter_plot_percentage_cells_to_show[["min"]],
-                  max = scatter_plot_percentage_cells_to_show[["max"]],
-                  step = scatter_plot_percentage_cells_to_show[["step"]],
-                  value = scatter_plot_percentage_cells_to_show[["default"]]
-                ),
                 
       
-                selectInput("colorCellsByMixtureSelection", "Color cells by",
-                            choices = c('Sample','Cluster'),
-                            multiple = FALSE,
-                            selectize = FALSE),
-# >>>>>>> 02411537bca37398f78c14197e6bd6b4a331a936
+#                 selectInput("colorCellsByMixtureSelection", "Color cells by",
+#                             choices = c('Sample','Cluster'),
+#                             multiple = FALSE,
+#                             selectize = FALSE),
+# # >>>>>>> 02411537bca37398f78c14197e6bd6b4a331a936
 
                 selectInput(
                   "trajectory_dot_color",
                   label = "Color cells by",
-                  choices = c("state","pseudotime",names(cdScFiltAnnot$cellType)[! names(cdScFiltAnnot$cellType) %in% c("cell_barcode")])
-                ),
+                  # choices = c("state","pseudotime",names(cdScFiltAnnot$cells)[! names(cdScFiltAnnot$cells) %in% c("cell_barcode")])
+                  # choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
+                  # selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
+                  choices = c('Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
+                  multiple = FALSE,
+                  selectize = FALSE
+                  ),
                 
                 sliderInput(
                   "trajectory_dot_size",
@@ -1015,22 +1017,12 @@ ui <- dashboardPage(
                 plotOutput("trajectory_projection") %>% withSpinner(type = getOption("spinner.type", default = 8))
                 ),
 
-                # box(title = p(tags$span("Cell projection", style="padding-right:8px;"), 
-                #               actionButton("DE_between_sample_and_clustersProjectionInfo", "help", 
-                #                            class = "btn-xs", title = "Additional information for this panel")
-                # ), status = "primary", solidHeader = TRUE, width = 8,
-                # plotOutput("AllClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
-                # ),
-                # box(title = p(tags$span("Selected cells", style="padding-right:8px;"), 
-                #               actionButton("DE_between_sample_and_clustersSelectinCellsInfo", "help", 
-                #                            class = "btn-xs", title = "Additional information for this panel")
-                # ), status = "primary", solidHeader = TRUE, width = 8,
-                # plotOutput("selectedCellsClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
-                # ),
-                # box(title = "DE results", status = "primary", solidHeader = TRUE, 
-                #     collapsible = TRUE, width = 12,
-                #     DT::dataTableOutput("mytableMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                # )
+                box(
+                  title = "Distribution along pseudotime", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 12,
+                  plotOutput("trajectory_density_plott", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                )
+               
               )
       ),
       
@@ -3556,6 +3548,116 @@ server <- function(input, output, session) {
             showline = TRUE,
             zeroline = FALSE,
             range = range(to_plot$DR_2) * 1.1
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences$use_webgl == TRUE ) {
+        plotly::toWebGL(plot)
+      } else {
+        plot
+      }
+    }
+  })
+  ##----------------------------------------------------------------------------##
+  ## Distribution along pseudotime.
+  ##----------------------------------------------------------------------------##
+  
+  output[["trajectory_density_plot"]] <- plotly::renderPlotly({
+    # don't do anything before these inputs are selected
+    req(
+      input[["trajectory_to_display"]],
+      input[["trajectory_samples_to_display"]],
+      input[["trajectory_clusters_to_display"]],
+      input[["trajectory_dot_color"]]
+    )
+    
+    trajectory_to_display <- input[["trajectory_to_display"]]
+    samples_to_display <- input[["trajectory_samples_to_display"]]
+    clusters_to_display <- input[["trajectory_clusters_to_display"]]
+    cells_to_display <- which(
+      (cdScFiltAnnot$cells$sample %in% samples_to_display) &
+        (cdScFiltAnnot$cells$cluster %in% clusters_to_display)
+    )
+    
+    # extract cells to plot
+    to_plot <- cbind(
+      cdScFiltAnnot$trajectory$monocle2[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
+      cdScFiltAnnot$cells[ cells_to_display , ]
+    ) %>%
+      dplyr::filter(!is.na(pseudotime))
+    to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
+    
+    color_variable <- input[["trajectory_dot_color"]]
+    
+    if ( is.factor(to_plot[[ color_variable ]]) || is.character(to_plot[[ color_variable ]]) ) {
+      if ( color_variable == "sample" ) {
+        colors_this_plot <- reactive_colors()$samples
+      } else if ( color_variable == "cluster" ) {
+        colors_this_plot <- reactive_colors()$clusters
+      } else if ( color_variable %in% c("cell_cycle_seurat","cell_cycle_cyclone") ) {
+        colors_this_plot <- cell_cycle_colorset
+      } else if ( is.factor(to_plot[[ color_variable ]]) ) {
+        colors_this_plot <- setNames(
+          default_colorset[1:length(levels(to_plot[[ color_variable ]]))],
+          levels(to_plot[[ color_variable ]])
+        )
+      } else {
+        colors_this_plot <- default_colorset
+      }
+      p <- ggplot(to_plot, aes_string(x = "pseudotime", fill = color_variable)) +
+        geom_density(alpha = 0.4, color = "black") +
+        theme_bw() +
+        labs(x = "Pseudotime", y = "Density") +
+        scale_fill_manual(values = colors_this_plot) +
+        guides(fill = guide_legend(override.aes = list(alpha = 1)))
+      plotly::ggplotly(p, tooltip = "text") %>%
+        plotly::style(
+          hoveron = "fill"
+        )
+    } else {
+      colors_this_plot <- setNames(
+        default_colorset[1:length(levels(cdScFiltAnnot$trajectory$monocle2[[ input[["trajectory_to_display"]] ]][["meta"]]$state))],
+        levels(cdScFiltAnnot$trajectory$monocle2[[ input[["trajectory_to_display"]] ]][["meta"]]$state)
+      )
+      plot <- plotly::plot_ly(
+        data = to_plot,
+        x = ~pseudotime,
+        y = ~to_plot[[ color_variable ]],
+        type = "scatter",
+        mode = "markers",
+        color = ~state,
+        colors = colors_this_plot,
+        marker = list(
+          opacity = input[["trajectory_dot_opacity"]],
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          xaxis = list(
+            title = "Pseudotime",
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE
+          ),
+          yaxis = list(
+            title = color_variable,
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE
           ),
           hoverlabel = list(font = list(size = 11))
         )
