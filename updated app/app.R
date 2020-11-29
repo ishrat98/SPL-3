@@ -23,6 +23,9 @@ library(colourpicker)
 library(shinyWidgets)
 library(shinyjs)
 library(monocle)
+library(slingshot)
+library(Seurat)
+library(TSCAN)
 
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
@@ -931,7 +934,7 @@ ui <- dashboardPage(
                 selectInput(
                   inputId = "trajectory_projection_info",
                   label = "Trajectory", 
-                 # choices = names(cdScFiltAnnot$trajectory$monocle2)
+                  #choices = names(cdScFiltAnnot$trajectory$monocle2),
                  # choices = unique(levels(as.factor(cdScFiltAnnot$trajectory$monocle2))),
                  # choices = names(as.factor(cdScFiltAnnot$trajectory$monocle2)
                  # choices = unique(levels(as.factor(cdScFiltAnnot$samples))), 
@@ -972,12 +975,6 @@ ui <- dashboardPage(
                   value = scatter_plot_percentage_cells_to_show[["default"]]
                 ),
                 
-      
-#                 selectInput("colorCellsByMixtureSelection", "Color cells by",
-#                             choices = c('Sample','Cluster'),
-#                             multiple = FALSE,
-#                             selectize = FALSE),
-# # >>>>>>> 02411537bca37398f78c14197e6bd6b4a331a936
 
                 selectInput(
                   "trajectory_dot_color",
@@ -985,7 +982,7 @@ ui <- dashboardPage(
                   # choices = c("state","pseudotime",names(cdScFiltAnnot$cells)[! names(cdScFiltAnnot$cells) %in% c("cell_barcode")])
                   # choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
                   # selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
-                  choices = c('Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
+                  choices = c('state','pseudotime','Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
                   multiple = FALSE,
                   selectize = FALSE
                   ),
@@ -3581,7 +3578,7 @@ server <- function(input, output, session) {
     
     # extract cells to plot
     to_plot <- cbind(
-      cdScFiltAnnot$trajectory$monocle2[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
+      input$trajectory_projection_info[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
       cdScFiltAnnot$cells[ cells_to_display , ]
     ) %>%
       dplyr::filter(!is.na(pseudotime))

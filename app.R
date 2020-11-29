@@ -4,7 +4,6 @@ library(plotly)
 library(reshape2)
 library(circlize)
 library(sSeq)
-# library(HDF5Array)
 library(shinycssloaders)
 library(SingleCellExperiment)
 library(TSCAN)
@@ -23,9 +22,8 @@ library(ouija)
 set.seed(1)
 
 
- deng_SCE <- readRDS("data/deng-reads.rds")
+deng_SCE <- readRDS("data/deng/deng-reads.rds")
 
-# deng_SCE <- loadHDF5SummarizedExperiment(dir="updated app/cdScFiltAnnotHDF5", prefix="")
 deng_SCE$cell_type2 <- factor(
   deng_SCE$cell_type2,
   levels = c("zy", "early2cell", "mid2cell", "late2cell",
@@ -66,22 +64,3 @@ colnames(procdeng) <- 1:ncol(deng_SCE)
 dengclust <- TSCAN::exprmclust(procdeng, clusternum = 10)
 
 TSCAN::plotmclust(dengclust)
-
-dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
-pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
-deng_SCE$pseudotime_order_tscan <- NA
-deng_SCE$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
-  dengorderTSCAN$Pseudotime
-
-cellLabels[dengclust$clusterid == 10]
-ggplot(as.data.frame(colData(deng_SCE)), 
-       aes(x = pseudotime_order_tscan, 
-           y = cell_type2, colour = cell_type2)) +
-  geom_quasirandom(groupOnX = FALSE) +
-  scale_color_manual(values = my_color) + theme_classic() +
-  xlab("TSCAN pseudotime") + ylab("Timepoint") +
-  ggtitle("Cells ordered by TSCAN pseudotime")
-
-deng_SCE <- slingshot(deng_SCE, clusterLabels = 'cell_type2',reducedDim = "PCA",
-                      allow.breaks = FALSE)
-
