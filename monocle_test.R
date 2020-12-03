@@ -1,29 +1,52 @@
-library(monocle)
 
-pd <- new("AnnotatedDataFrame", data = sample_sheet)
-fd <- new("AnnotatedDataFrame", data = gene_annotation)
-cds <- newCellDataSet(expr_matrix, phenoData = pd, featureData = fd)
+---
+  title: "Monocle3 Basics"
+author: "Cole Trapnell"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteEncoding{UTF-8}
+---
+  
+  ```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
 
-cth <- newCellTypeHierarchy()
+```{r}
+library(monocle3)
+library(ggplot2)
+```
 
-MYF5_id <- row.names(subset(fData(cds), gene_short_name == "MYF5"))
-ANPEP_id <- row.names(subset(fData(cds), gene_short_name == "ANPEP"))
+```{r}
+cds <- load_a549()
+```
 
-cth <- addCellType(cth, "Myoblast", classify_func =
-                     function(x) { x[MYF5_id,] >= 1 })
-cth <- addCellType(cth, "Fibroblast", classify_func =
-                     function(x) { x[MYF5_id,] < 1 & x[ANPEP_id,] > 1 } )
+```{r}
+cds <- preprocess_cds(cds, num_dim = 20)
+```
 
-cds <- classifyCells(cds, cth, 0.1)
+```{r}
+plot_pc_variance_explained(cds)
+```
 
-cds <- clusterCells(cds)
 
-disp_table <- dispersionTable(cds)
-ordering_genes <- subset(disp_table, mean_expression >= 0.1)
-cds <- setOrderingFilter(cds, ordering_genes)
-cds <- reduceDimension(cds)
-cds <- orderCells(cds)
+```{r}
+cds <- reduce_dimension(cds, reduction_method = 'UMAP')
+```
 
-diff_test_res <- differentialGeneTest(cds,
-                                      fullModelFormulaStr = "~Media")
-sig_genes <- subset(diff_test_res, qval < 0.1)
+```{r}
+cds <- cluster_cells(cds)
+```
+
+```{r}
+cds <- learn_graph(cds)
+```
+
+```{r}
+plot_cells(cds)
+```

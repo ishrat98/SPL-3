@@ -223,7 +223,7 @@ ui <- dashboardPage(
               fluidRow(
                 column(12,tags$h1('Load data')),
                 column(12,
-                       fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = NULL,
+                       fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = c(".rds",".crb",".cerebro","h5"),
                                  width = NULL, buttonLabel = "Browse...",
                                  placeholder = "No file selected")),
                 
