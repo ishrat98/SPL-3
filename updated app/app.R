@@ -23,9 +23,14 @@ library(colourpicker)
 library(shinyWidgets)
 library(shinyjs)
 library(monocle)
+library(SingleCellExperiment)
 library(slingshot)
 library(Seurat)
 library(TSCAN)
+#library(reticulate)
+#use_python("/Applications/miniconda3/bin/python3.6")
+
+library(rafalib)
 
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
@@ -924,6 +929,17 @@ ui <- dashboardPage(
                 )
               )
       ),
+      
+      tabItem(tabName = 'trajectory_slingshot',
+              box(
+                title = "Slingshot", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_slingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
+      ),
+              
+      
       tabItem(tabName = 'trajectory_monocle',
               fluidRow(
                 box(title = p(tags$span("Input parameters", style="padding-right:8px;"), 
@@ -3376,6 +3392,24 @@ server <- function(input, output, session) {
   # For Trajectory panel
   #
   ############################################
+  
+  
+  ## Slingshot
+  output$trajectory_slingshot <- plotly::renderPlotly({
+    x <- 1
+    y <- 2
+    theta <- 0
+    # reduced_dim_coords <- reducedDimK(cds)
+    S_matrix <- reducedDimS(cdScFiltAnnot)
+    data_df <- data.frame(t(S_matrix[c(x, y), ]))
+    colnames(data_df) <- c("data_dim_1", "data_dim_2")
+    data_df$sample_name <- row.names(data_df)
+    
+    set.seed(97)
+    rd <- data_df[, 1:2]
+    cl <- kmeans(rd, centers = 7)$cluster
+    plot(rd, col = brewer.pal(9, "Set1")[cl], pch = 16, asp = 1)
+  })
   
   ##----------------------------------------------------------------------------##
   ## Projection.

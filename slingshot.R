@@ -166,3 +166,4 @@ lines(density(devExpl12), col = cols[4])
 lines(density(devExpl14), col = cols[5])
 legend("topright", paste0("k=", c(3,seq(6, 14, by = 2))), col = cols[c(1,6,2:5)], lty = 1, lwd = 2)
 dev.off()
+
