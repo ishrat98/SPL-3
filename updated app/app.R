@@ -27,8 +27,6 @@ library(SingleCellExperiment)
 library(slingshot)
 library(Seurat)
 library(TSCAN)
-#library(reticulate)
-#use_python("/Applications/miniconda3/bin/python3.6")
 
 library(rafalib)
 
@@ -3396,19 +3394,59 @@ server <- function(input, output, session) {
   
   ## Slingshot
   output$trajectory_slingshot <- plotly::renderPlotly({
+    cds <- readRDS(gzcon(url("http://trapnell-lab.gs.washington.edu/public_share/valid_subset_GSE72857_cds2.RDS")))
+    
+    # Update the old CDS object to be compatible with Monocle 3
+    cds <- updateCDS(cds)
+    ## fit trajectory with slingshot
+    ### get UMAP coordinates
     x <- 1
     y <- 2
     theta <- 0
     # reduced_dim_coords <- reducedDimK(cds)
-    S_matrix <- reducedDimS(cdScFiltAnnot)
+    S_matrix <- reducedDimS(cds)
     data_df <- data.frame(t(S_matrix[c(x, y), ]))
     colnames(data_df) <- c("data_dim_1", "data_dim_2")
     data_df$sample_name <- row.names(data_df)
+    #  data_df <- merge(data_df, lib_info_with_pseudo, by.x = "sample_name",
+    #      by.y = "row.names")
+    return_rotation_mat <- function(theta) {
+      theta <- theta / 180 * pi
+      matrix(c(cos(theta), sin(theta), -sin(theta), cos(theta)),
+             nrow = 2
+      )
+    }
+    rot_mat <- return_rotation_mat(theta)
+    cn1 <- c("data_dim_1", "data_dim_2")
+    # cn2 <- c("source_prin_graph_dim_1", "source_prin_graph_dim_2")
+    # cn3 <- c("target_prin_graph_dim_1", "target_prin_graph_dim_2")
+    data_df[, cn1] <- as.matrix(data_df[, cn1]) %*% t(rot_mat)
+    plot(data_df[, 1], data_df[, 2], col = cell_type_color[phenoData(cds)$cell_type2], pch = 16)
+    
+    
+    ### slingshot
+    library(RColorBrewer)
+    gcolpal <- c(brewer.pal(8, "Dark2")[-c(2, 3, 5)],
+                 brewer.pal(12, "Paired")[c(1, 2, 8, 10, 9)],
+                 brewer.pal(12, "Set3")[c(7, 8, 12)], brewer.pal(8, "Pastel2")[8],
+                 brewer.pal(11, "BrBG")[11], brewer.pal(11, "PiYG")[1],
+                 "cyan", "darkblue", "darkorchid2", "brown1", "springgreen1",
+                 "deepskyblue4", "darkolivegreen", "antiquewhite2")
     
     set.seed(97)
     rd <- data_df[, 1:2]
     cl <- kmeans(rd, centers = 7)$cluster
     plot(rd, col = brewer.pal(9, "Set1")[cl], pch = 16, asp = 1)
+    library(slingshot)
+    lin <- getLineages(rd, clusterLabels = cl, start.clus = 4)
+    plot(rd, col = gcolpal[cl], xlab = "UMAP1", ylab = "UMAP2")
+    lines(lin, lwd = 2)
+    crv <- getCurves(lin)
+    plot(rd, col = gcolpal[cl], main = "color by cluster", xlab = "UMAP1", ylab = "UMAP2")
+    lines(crv, lwd = 2)
+    plot(rd, col = cell_type_color[phenoData(cds)$cell_type2],
+         main = "color by cell type", xlab = "UMAP1", ylab = "UMAP2", pch = 16)
+    lines(crv, lwd = 2)
   })
   
   ##----------------------------------------------------------------------------##
