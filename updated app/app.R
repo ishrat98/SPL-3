@@ -25,6 +25,7 @@ library(shinyjs)
 library(monocle)
 library(SingleCellExperiment)
 library(slingshot)
+library(RColorBrewer)
 library(Seurat)
 library(TSCAN)
 
@@ -32,7 +33,15 @@ library(rafalib)
 
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
-cdScFiltAnnot <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
+#cdScFiltAnnot <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
+
+
+cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
+#KData <- readRDS("D:/SPL3/Single_cell_rnaseq/data/se.rds")
+
+
+cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
+
 
 
 c30 <- c("dodgerblue2",#1
@@ -3394,40 +3403,21 @@ server <- function(input, output, session) {
   
   ## Slingshot
   output$trajectory_slingshot <- plotly::renderPlotly({
-    means <- rbind(
-      # non-DE genes
-      matrix(rep(rep(c(0.1,0.5,1,2,3), each = 300),100),
-             ncol = 300, byrow = TRUE),
-      # early deactivation
-      matrix(rep(exp(atan( ((300:1)-200)/50 )),50), ncol = 300, byrow = TRUE),
-      # late deactivation
-      matrix(rep(exp(atan( ((300:1)-100)/50 )),50), ncol = 300, byrow = TRUE),
-      # early activation
-      matrix(rep(exp(atan( ((1:300)-100)/50 )),50), ncol = 300, byrow = TRUE),
-      # late activation
-      matrix(rep(exp(atan( ((1:300)-200)/50 )),50), ncol = 300, byrow = TRUE),
-      # transient
-      matrix(rep(exp(atan( c((1:100)/33, rep(3,100), (100:1)/33) )),50), 
-             ncol = 300, byrow = TRUE)
-    )
-    counts <- apply(means,2,function(cell_means){
-      total <- rnbinom(1, mu = 7500, size = 4)
-      rmultinom(1, total, cell_means)
-    })
-    rownames(counts) <- paste0('G',1:750)
-    colnames(counts) <- paste0('c',1:300)
-    sim <- SingleCellExperiment(assays = List(counts = counts))
-
-    library(slingshot, quietly = FALSE)
-    data("slingshotExample")
-    rd <- slingshotExample$rd
-    cl <- slingshotExample$cl
+    data('cdScFiltAnnot')
+    rd <- cdScFiltAnnot$rd
+    cl <- cdScFiltAnnot$cl
+    condition <- factor(rep(c('A','B'), length.out = nrow(rd)))
+    condition[110:140] <- 'A'
+    ls()
+    plot(rd, asp = 1, pch = 16, col = brewer.pal(3,'Set1')[condition], las=1)
+    legend('topleft','(x,y)',legend = c('A','B'), title = 'Condition', pch=16, col = brewer.pal(3,'Set1')[1:2])
+    sds <- slingshot(rd, cl)
     
-    dim(rd) # data representing cells in a reduced dimensional space
-    length(cl) # vector of cluster labels
-    
-  })
+    plot(rd, asp = 1, pch = 16, col = brewer.pal(3,'Set1')[condition], las=1)
+    lines(sds, lwd=3)
+    legend('topleft','(x,y)',legend = c('A','B'), title = 'Condition', pch=16, col = brewer.pal(3,'Set1')[1:2])
   
+   })                                                                                                                                                                                           
   ##----------------------------------------------------------------------------##
   ## Projection.
   ##----------------------------------------------------------------------------##

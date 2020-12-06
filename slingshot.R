@@ -7,7 +7,7 @@ library(rafalib)
 cds <- readRDS(gzcon(url("http://trapnell-lab.gs.washington.edu/public_share/valid_subset_GSE72857_cds2.RDS")))
 
 # Update the old CDS object to be compatible with Monocle 3
-cds <- updateCDS(cds)
+
 pData(cds)$cell_type2 <- plyr::revalue(as.character(pData(cds)$cluster),
                                        c("1" = 'Erythrocyte',
                                          "2" = 'Erythrocyte',
