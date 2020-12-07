@@ -37,10 +37,16 @@ Sys.setenv(R_MAX_VSIZE = 16e9)
 
 
 cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
-#KData <- readRDS("D:/SPL3/Single_cell_rnaseq/data/se.rds")
 
 
 cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
+
+
+dim(cdScFiltAnnot)
+dimnames(cdScFiltAnnot)
+#View(cdScFiltAnnot)
+counts <- assays(cdScFiltAnnot)$counts
+#View(counts)
 
 
 
@@ -941,7 +947,7 @@ ui <- dashboardPage(
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_slingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -3402,21 +3408,35 @@ server <- function(input, output, session) {
   
   
   ## Slingshot
-  output$trajectory_slingshot <- plotly::renderPlotly({
-    data('cdScFiltAnnot')
+  output$trajectory_slingshotOT <- plotly::renderPlotly({
+    
+    rownames(counts) <- paste0('G',1:12022)
+    colnames(counts) <- paste0('c',1:1741)
+    sim <- SingleCellExperiment(assays = List(counts = counts))
+    geneFilter <- apply(assays(sim)$counts,1,function(x){
+      sum(x >= 3) >= 10
+    })
+    sim <- sim[geneFilter, ]
+    FQnorm <- function(counts){
+      rk <- apply(counts,2,rank,ties.method='min')
+      counts.sort <- apply(counts,2,sort)
+      refdist <- apply(counts.sort,1,median)
+      norm <- apply(rk,2,function(r){ refdist[r] })
+      rownames(norm) <- rownames(counts)
+      return(norm)
+    }
+    assays(sim)$norm <- FQnorm(assays(sim)$counts)
+    
     rd <- cdScFiltAnnot$rd
     cl <- cdScFiltAnnot$cl
-    condition <- factor(rep(c('A','B'), length.out = nrow(rd)))
-    condition[110:140] <- 'A'
-    ls()
-    plot(rd, asp = 1, pch = 16, col = brewer.pal(3,'Set1')[condition], las=1)
-    legend('topleft','(x,y)',legend = c('A','B'), title = 'Condition', pch=16, col = brewer.pal(3,'Set1')[1:2])
-    sds <- slingshot(rd, cl)
+    dim(rd) # data representing cells in a reduced dimensional space
+    length(cl) # vector of cluster labels
     
-    plot(rd, asp = 1, pch = 16, col = brewer.pal(3,'Set1')[condition], las=1)
-    lines(sds, lwd=3)
-    legend('topleft','(x,y)',legend = c('A','B'), title = 'Condition', pch=16, col = brewer.pal(3,'Set1')[1:2])
-  
+    pca <- prcomp(t(log1p(assays(sim)$norm)), scale. = FALSE)
+    rd1 <- pca$x[,1:2]
+    
+    plot(rd1, col = rgb(0,0,0,.5), pch=16, asp = 1)
+    
    })                                                                                                                                                                                           
   ##----------------------------------------------------------------------------##
   ## Projection.

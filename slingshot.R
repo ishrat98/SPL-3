@@ -16,7 +16,7 @@ cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
  dimnames(cdScFiltAnnot)
  View(cdScFiltAnnot)
  counts <- assays(cdScFiltAnnot)$counts
- View(counts)
+ #View(counts)
 
 
 rd <- cdScFiltAnnot$rd

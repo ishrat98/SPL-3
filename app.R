@@ -64,3 +64,4 @@ colnames(procdeng) <- 1:ncol(deng_SCE)
 dengclust <- TSCAN::exprmclust(procdeng, clusternum = 10)
 
 TSCAN::plotmclust(dengclust)
+
