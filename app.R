@@ -49,3 +49,4 @@ lines(sds, lwd = 2, type = 'lineages', col = 'black')
 
 plot(reducedDim(sds), col = cell_colors_clust, pch = 16, cex = 0.5)
 lines(sds, lwd = 2, type = 'lineages', col = 'black')
+

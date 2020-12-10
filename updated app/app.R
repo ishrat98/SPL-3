@@ -28,8 +28,12 @@ library(slingshot)
 library(RColorBrewer)
 library(Seurat)
 library(TSCAN)
+library(Seurat)
+library(scales)
+library(viridis)
+library(Matrix)
 
-library(rafalib)
+
 
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
@@ -43,8 +47,8 @@ cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
 
 
 dim(cdScFiltAnnot)
-dimnames(cdScFiltAnnot)
-#View(cdScFiltAnnot)
+#dimnames(cdScFiltAnnot)
+
 counts <- assays(cdScFiltAnnot)$counts
 #View(counts)
 
@@ -3436,6 +3440,15 @@ server <- function(input, output, session) {
     rd1 <- pca$x[,1:2]
     
     plot(rd1, col = rgb(0,0,0,.5), pch=16, asp = 1)
+    
+    sim5 <- slingshot(sim, clusterLabels = 'GMM', reducedDim = 'PCA',
+                      approx_points = 5)
+    
+    colors <- colorRampPalette(brewer.pal(11,'Spectral')[-6])(100)
+    plotcol <- colors[cut(sim5$slingPseudotime_1, breaks=100)]
+    
+    plot(reducedDims(sim5)$PCA, col = plotcol, pch=16, asp = 1)
+    lines(cdScFiltAnnot(sim5), lwd=2, col='black')
     
    })                                                                                                                                                                                           
   ##----------------------------------------------------------------------------##
