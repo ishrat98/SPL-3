@@ -15,7 +15,7 @@ library(SLICER)
 set.seed(1)
 
 deng_SCE <- readRDS("data/deng-reads.rds")
-
+deng_SCE
 deng_SCE$cell_type2 <- factor(
   deng_SCE$cell_type2,
   levels = c("zy", "early2cell", "mid2cell", "late2cell",
@@ -34,20 +34,7 @@ set.seed(723451) # for reproducibility
 my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
 names(my_color) <- unique(as.character(deng_SCE$cell_type2))
 
-pca_df <- data.frame(PC1 = reducedDim(deng_SCE,"PCA")[,1],
-                     PC2 = reducedDim(deng_SCE,"PCA")[,2],
-                     cell_type2 = deng_SCE$cell_type2)
 
-ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cell_type2))+
-  scale_colour_manual(values = my_color)+theme_classic()
-
-
-ggplot(pca_df, aes(x = PC1, y = cell_type2, 
-                   colour = cell_type2)) +
-  geom_quasirandom(groupOnX = FALSE) +
-  scale_colour_manual(values = my_color) + theme_classic() +
-  xlab("First principal component") + ylab("Timepoint") +
-  ggtitle("Cells ordered by first principal component")
 
 deng_SCE <- slingshot(deng_SCE, clusterLabels = 'cell_type2',reducedDim = "PCA",
                       allow.breaks = FALSE)

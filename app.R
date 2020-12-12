@@ -1,52 +1,81 @@
-library(slingshot)
-library(tidyverse)
-library(tidymodels)
-library(Seurat)
-library(scales)
-library(viridis)
-library(Matrix)
 library(SingleCellExperiment)
-
 library(HDF5Array)
-library(edgeR)
+library(TSCAN)
+library(M3Drop)
+library(monocle)
+#library(destiny)
+library(scater)
+library(ggplot2)
+library(ggthemes)
+library(ggbeeswarm)
+library(corrplot)
+library(Polychrome)
+library(slingshot)
+library(SLICER)
+#library(ouija)
+set.seed(1)
 
 
-cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="updated app/cdScFiltAnnotHDF5", prefix="")
-#KData <- readRDS("D:/SPL3/Single_cell_rnaseq/data/se.rds")
+cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
 
 
 cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
 
 
-dim(cdScFiltAnnot)
-counts <- assays(cdScFiltAnnot)$counts
-seu <- CreateSeuratObject(counts) %>% 
-  SCTransform() # normalize and scale
-# Add cell type annotation to metadata
-seu <- AddMetaData(seu, setNames(cdScFiltAnnot$labels[ind], cells_use), 
-                   col.name = "cell_type")
+cdScFiltAnnot$cellType <- factor(
+  cdScFiltAnnot$cellType,
+  levels = c("zy", "early2cell", "mid2cell", "late2cell",
+             "4cell", "8cell", "16cell", "earlyblast",
+             "midblast", "lateblast")
+)
+cellLabels <- cdScFiltAnnot$cellType
+deng <- counts(cdScFiltAnnot)
+colnames(deng) <- cellLabels
 
-sds <- slingshot(Embeddings(seu, "umap"), clusterLabels = seu$seurat_clusters, 
-                 start.clus = 4, stretch = 0)
+cdScFiltAnnot <- scater::runPCA(cdScFiltAnnot,ncomponent = 5)
+
+## change color Palette with library(Polychrome)
+
+set.seed(723451) # for reproducibility
+my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
+names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
 
 
-cell_pal <- function(cell_vars, pal_fun,...) {
-  if (is.numeric(cell_vars)) {
-    pal <- pal_fun(100, ...)
-    return(pal[cut(cell_vars, breaks = 100)])
-  } else {
-    categories <- sort(unique(cell_vars))
-    pal <- setNames(pal_fun(length(categories), ...), categories)
-    return(pal[cell_vars])
-  }
-}
 
-cell_colors <- cell_pal(seu$cell_type, brewer_pal("qual", "Set2"))
-cell_colors_clust <- cell_pal(seu$seurat_clusters, hue_pal())
+cdScFiltAnnot <- slingshot(cdScFiltAnnot, clusterLabels = 'cellType',reducedDim = "UMAP",
+                      allow.breaks = FALSE)
+summary(cdScFiltAnnot$slingPseudotime_1)
+lnes <- getLineages(reducedDim(cdScFiltAnnot,"UMAP"),
+                    cdScFiltAnnot$cellType)
 
-plot(reducedDim(sds), col = cell_colors, pch = 16, cex = 0.5)
-lines(sds, lwd = 2, type = 'lineages', col = 'black')
+plot(reducedDims(cdScFiltAnnot)$UMAP, col = my_color[as.character(cdScFiltAnnot$cellType)], 
+     pch=16, 
+     asp = 1)
+legend("bottomleft",legend = names(my_color[levels(cdScFiltAnnot$cellType)]),  
+       fill = my_color[levels(cdScFiltAnnot$cellType)])
+lines(SlingshotDataSet(cdScFiltAnnot), lwd=2, type = 'lineages', col = c("black"))
 
-plot(reducedDim(sds), col = cell_colors_clust, pch = 16, cex = 0.5)
-lines(sds, lwd = 2, type = 'lineages', col = 'black')
+
+## Plotting the pseudotime inferred by slingshot by cell types
+
+slingshot_df <- data.frame(colData(cdScFiltAnnot))
+
+ggplot(slingshot_df, aes(x = sizeFactor, y = cellType, 
+                         colour = cellType)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("First Slingshot pseudotime") + ylab("cell type") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+
+
+ggplot(slingshot_df, aes(x = sizeFactor, y = cellType, 
+                         colour = cellType)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("Second Slingshot pseudotime") + ylab("cell type") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+
+ggplot(slingshot_df, aes(x = sizeFactor, y = sizeFactor, 
+                         colour = cellType)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("First Slingshot pseudotime") + ylab("Second Slingshot pseudotime") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
