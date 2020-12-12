@@ -1,99 +1,88 @@
-library(monocle) # Load Monocle
 library(SingleCellExperiment)
+library(TSCAN)
+library(M3Drop)
+library(monocle)
+#library(destiny)
+library(scater)
+library(ggplot2)
+library(ggthemes)
+library(ggbeeswarm)
+library(corrplot)
+library(Polychrome)
 library(slingshot)
-library(HDF5Array)
-library(edgeR)
-library(uwot)
-library(mclust)
-library(RColorBrewer)
+library(SLICER)
+#library(ouija)
+set.seed(1)
 
-cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="F:/SPL-3/updated app/cdScFiltAnnotHDF5", prefix="")
+deng_SCE <- readRDS("data/deng-reads.rds")
 
+deng_SCE$cell_type2 <- factor(
+  deng_SCE$cell_type2,
+  levels = c("zy", "early2cell", "mid2cell", "late2cell",
+             "4cell", "8cell", "16cell", "earlyblast",
+             "midblast", "lateblast")
+)
+cellLabels <- deng_SCE$cell_type2
+deng <- counts(deng_SCE)
+colnames(deng) <- cellLabels
 
-cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
+deng_SCE <- scater::runPCA(deng_SCE,ncomponent = 5)
 
-dim(cdScFiltAnnot)
-counts <- assays(cdScFiltAnnot)$counts
+## change color Palette with library(Polychrome)
 
-dim(counts)
+set.seed(723451) # for reproducibility
+my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
+names(my_color) <- unique(as.character(deng_SCE$cell_type2))
 
-rownames(counts) <- paste0('G',1:12022)
-colnames(counts) <- paste0('c',1:1741)
+pca_df <- data.frame(PC1 = reducedDim(deng_SCE,"PCA")[,1],
+                     PC2 = reducedDim(deng_SCE,"PCA")[,2],
+                     cell_type2 = deng_SCE$cell_type2)
 
-rownames
-
-sim <- SingleCellExperiment(assays = List(counts = counts))
-sim
-geneFilter <- apply(assays(sim)$counts,1,function(x){
-  sum(x >= 3) >= 10
-})
-sim <- sim[geneFilter, ]
-
-FQnorm <- function(counts){
-  rk <- apply(counts,2,rank,ties.method='min')
-  counts.sort <- apply(counts,2,sort)
-  refdist <- apply(counts.sort,1,median)
-  norm <- apply(rk,2,function(r){ refdist[r] })
-  rownames(norm) <- rownames(counts)
-  return(norm)
-}
-assays(sim)$norm <- FQnorm(assays(sim)$counts)
+ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cell_type2))+
+  scale_colour_manual(values = my_color)+theme_classic()
 
 
-pca <- prcomp(t(log1p(assays(sim)$norm)), scale. = FALSE)
-rd1 <- pca$x[,1:2]
+ggplot(pca_df, aes(x = PC1, y = cell_type2, 
+                   colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_colour_manual(values = my_color) + theme_classic() +
+  xlab("First principal component") + ylab("Timepoint") +
+  ggtitle("Cells ordered by first principal component")
 
-plot(rd1, col = rgb(0,0,0,.5), pch=16, asp = 1)
+deng_SCE <- slingshot(deng_SCE, clusterLabels = 'cell_type2',reducedDim = "PCA",
+                      allow.breaks = FALSE)
+summary(deng_SCE$slingPseudotime_1)
+lnes <- getLineages(reducedDim(deng_SCE,"PCA"),
+                    deng_SCE$cell_type2)
 
-
-rd2 <- umap(t(log1p(assays(sim)$norm)))
-colnames(rd2) <- c('UMAP1', 'UMAP2')
-
-plot(rd2, col = rgb(0,0,0,.5), pch=16, asp = 1)
-
-
-reducedDims(sim) <- SimpleList(PCA = rd1, UMAP = rd2)
-
-
-cl1 <- Mclust(rd1)$classification
-colData(sim)$GMM <- cl1
-
-
-plot(rd1, col = brewer.pal(9,"Set1")[cl1], pch=16, asp = 1)
-
-cl2 <- kmeans(rd1, centers = 4)$cluster
-colData(sim)$kmeans <- cl2
-
-plot(rd1, col = brewer.pal(9,"Set1")[cl2], pch=16, asp = 1)
-
-sim <- slingshot(sim, clusterLabels = 'GMM', reducedDim = 'PCA')
+plot(reducedDims(deng_SCE)$PCA, col = my_color[as.character(deng_SCE$cell_type2)], 
+     pch=16, 
+     asp = 1)
+legend("bottomleft",legend = names(my_color[levels(deng_SCE$cell_type2)]),  
+       fill = my_color[levels(deng_SCE$cell_type2)])
+lines(SlingshotDataSet(deng_SCE), lwd=2, type = 'lineages', col = c("black"))
 
 
-summary(sim$slingPseudotime_1)
+## Plotting the pseudotime inferred by slingshot by cell types
 
-colors <- colorRampPalette(brewer.pal(11,'Spectral')[-6])(100)
-plotcol <- colors[cut(sim$slingPseudotime_1, breaks=100)]
+slingshot_df <- data.frame(colData(deng_SCE))
 
-plot(reducedDims(sim)$PCA, col = plotcol, pch=16, asp = 1)
-lines(SlingshotDataSet(sim), lwd=2, col='black')
-
-plot(reducedDims(sim)$PCA, col = brewer.pal(9,'Set1')[sim$GMM], pch=16, asp = 1)
-lines(SlingshotDataSet(sim), lwd=2, type = 'lineages', col = 'black')
-
+ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cell_type2, 
+                         colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("First Slingshot pseudotime") + ylab("cell type") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
 
+ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cell_type2, 
+                         colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("Second Slingshot pseudotime") + ylab("cell type") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
+ggplot(slingshot_df, aes(x = slingPseudotime_1, y = slingPseudotime_2, 
+                         colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("First Slingshot pseudotime") + ylab("Second Slingshot pseudotime") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
-sim
-
-
-sim5 <- slingshot(sim, clusterLabels = 'GMM', reducedDim = 'PCA',
-                  approx_points = 5)
-
-sim5
-
-colors <- colorRampPalette(brewer.pal(11,'Spectral')[-6])(100)
-plotcol <- colors[cut(sim5$slingPseudotime_1, breaks=100)]
-
-plot(reducedDims(sim5)$PCA, col = plotcol, pch=16, asp = 1)
-lines(SlingshotDataSet(sim5), lwd=2, col='black')
