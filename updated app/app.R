@@ -46,11 +46,10 @@ cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="
 cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
 
 
-dim(cdScFiltAnnot)
-#dimnames(cdScFiltAnnot)
+cellLabels <- cdScFiltAnnot$cellType
+deng <- counts(cdScFiltAnnot)
+colnames(deng) <- cellLabels
 
-counts <- assays(cdScFiltAnnot)$counts
-#View(counts)
 
 
 
@@ -3412,43 +3411,62 @@ server <- function(input, output, session) {
   
   
   ## Slingshot
-  output$trajectory_slingshotOT <- plotly::renderPlotly({
+  output$trajectory_slingshotOT <- renderPlot({
     
-    rownames(counts) <- paste0('G',1:12022)
-    colnames(counts) <- paste0('c',1:1741)
-    sim <- SingleCellExperiment(assays = List(counts = counts))
-    geneFilter <- apply(assays(sim)$counts,1,function(x){
-      sum(x >= 3) >= 10
-    })
-    sim <- sim[geneFilter, ]
-    FQnorm <- function(counts){
-      rk <- apply(counts,2,rank,ties.method='min')
-      counts.sort <- apply(counts,2,sort)
-      refdist <- apply(counts.sort,1,median)
-      norm <- apply(rk,2,function(r){ refdist[r] })
-      rownames(norm) <- rownames(counts)
-      return(norm)
-    }
-    assays(sim)$norm <- FQnorm(assays(sim)$counts)
+    # Run PCA on Deng data. Use the runPCA function from the SingleCellExperiment package.
+    cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
     
-    rd <- cdScFiltAnnot$rd
-    cl <- cdScFiltAnnot$cl
-    dim(rd) # data representing cells in a reduced dimensional space
-    length(cl) # vector of cluster labels
+    # Use the reducedDim function to access the PCA and store the results. 
+    pca <- reducedDim(cdScFiltAnnot, "PCA")
     
-    pca <- prcomp(t(log1p(assays(sim)$norm)), scale. = FALSE)
-    rd1 <- pca$x[,1:2]
+    # Describe how the PCA is stored in a matrix. Why does it have this structure?
+    head(pca)
+    dim(pca)
     
-    plot(rd1, col = rgb(0,0,0,.5), pch=16, asp = 1)
     
-    sim5 <- slingshot(sim, clusterLabels = 'GMM', reducedDim = 'PCA',
-                      approx_points = 5)
+    # Add PCA data to the deng_SCE object.
+    cdScFiltAnnot$PC1 <- pca[, 1]
+    cdScFiltAnnot$PC2 <- pca[, 2]
     
-    colors <- colorRampPalette(brewer.pal(11,'Spectral')[-6])(100)
-    plotcol <- colors[cut(sim5$slingPseudotime_1, breaks=100)]
     
-    plot(reducedDims(sim5)$PCA, col = plotcol, pch=16, asp = 1)
-    lines(cdScFiltAnnot(sim5), lwd=2, col='black')
+    # Plot PC biplot with cells colored by cell_type2. 
+    # colData(deng_SCE) accesses the cell metadata DataFrame object for deng_SCE.
+    # Look at Figure 1A of the paper as a comparison to your PC biplot.
+    ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = PC1, y = PC2, color = cellType)) + geom_quasirandom(groupOnX = FALSE) +
+      scale_color_tableau() + theme_classic() +
+      xlab("PC1") + ylab("PC2") + ggtitle("PC biplot")
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    # Read the Slingshot documentation (?slingshot) and then run Slingshot below. 
+    # Given your understanding of the algorithm and the documentation, what is one 
+    # major set of parameters we omitted here when running Slingshot?
+    sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
+    
+    # Plot PC1 vs PC2 colored by Slingshot pseudotime.
+    colors <- rainbow(50, alpha = 1)
+    plot(reducedDims(sce)$PCA, col = colors[cut(sce$slingPseudotime_1,breaks=50)], pch=16, asp = 1)
+    lines(SlingshotDataSet(sce), lwd=2)
+    
+    # Plot Slingshot pseudotime vs cell stage. 
+    ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y = cellType, 
+                                                      colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_color_tableau() + theme_classic() +
+      xlab("Slingshot pseudotime") + ylab("Timepoint") +
+      ggtitle("Cells ordered by Slingshot pseudotime")
+    plot(reducedDims(sce)$PCA, col = colors[cut(sce$slingPseudotime_1,breaks=50)], pch=16, asp = 1)
+    lines(SlingshotDataSet(sce), lwd=2)
+    
     
    })                                                                                                                                                                                           
   ##----------------------------------------------------------------------------##
