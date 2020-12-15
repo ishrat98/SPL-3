@@ -191,8 +191,11 @@ ui <- dashboardPage(
                menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
                menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
+               menuSubItem('Tscan', tabName = 'trajectory_Tscan'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
-               menuSubItem('Monocle', tabName = 'trajectory_monocle')),
+               menuSubItem('Monocle', tabName = 'trajectory_monocle'),
+               menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
+               menuSubItem('Slicer', tabName = 'trajectory_slicer')),
       menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
@@ -946,6 +949,15 @@ ui <- dashboardPage(
               )
       ),
       
+      tabItem(tabName = 'trajectory_Tscan',
+              box(
+                title = "TSCAN", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_TscanOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
+      ),
+      
       tabItem(tabName = 'trajectory_slingshot',
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
@@ -1053,6 +1065,24 @@ ui <- dashboardPage(
                 )
                
               )
+      ),
+      
+      tabItem(tabName = 'trajectory_monocle3',
+              box(
+                title = "Monocle3", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+
+      ),
+      
+      tabItem(tabName = 'trajectory_slicer',
+              box(
+                title = "Slicer", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_slicerOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
       ),
       
       tabItem(tabName = 'analysisInfo',
