@@ -3440,6 +3440,13 @@ server <- function(input, output, session) {
   ############################################
   
   
+  ## TSCAN
+  
+  output$trajectory_TscanOT <- renderPlot({
+    
+    
+  })
+  
   ## Slingshot
   output$trajectory_slingshotOT <- renderPlot({
     
