@@ -14,6 +14,8 @@ library(SLICER)
 #library(ouija)
 set.seed(1)
 
+
+
 deng_SCE <- readRDS("data/deng-reads.rds")
 deng_SCE
 deng_SCE$cell_type2 <- factor(
@@ -34,7 +36,31 @@ set.seed(723451) # for reproducibility
 my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
 names(my_color) <- unique(as.character(deng_SCE$cell_type2))
 
+procdeng <- TSCAN::preprocess(counts(deng_SCE))
 
+colnames(procdeng) <- 1:ncol(deng_SCE)
+
+dengclust <- TSCAN::exprmclust(procdeng, clusternum = 10)
+
+TSCAN::plotmclust(dengclust)
+
+dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
+pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
+deng_SCE$pseudotime_order_tscan <- NA
+deng_SCE$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
+  dengorderTSCAN$Pseudotime
+
+## TSCAN Psedutime
+
+ggplot(as.data.frame(colData(deng_SCE)), 
+       aes(x = pseudotime_order_tscan, 
+           y = cell_type2, colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_manual(values = my_color) + theme_classic() +
+  xlab("TSCAN pseudotime") + ylab("Timepoint") +
+  ggtitle("Cells ordered by TSCAN pseudotime")
+
+## slingshot
 
 deng_SCE <- slingshot(deng_SCE, clusterLabels = 'cell_type2',reducedDim = "PCA",
                       allow.breaks = FALSE)
