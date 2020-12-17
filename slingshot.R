@@ -2,6 +2,7 @@ library(SingleCellExperiment)
 library(TSCAN)
 library(M3Drop)
 library(monocle)
+library(monocle3)
 #library(destiny)
 library(scater)
 library(ggplot2)
@@ -15,6 +16,7 @@ library(SLICER)
 set.seed(1)
 
 
+## Dataset
 
 deng_SCE <- readRDS("data/deng-reads.rds")
 deng_SCE
@@ -35,6 +37,8 @@ deng_SCE <- scater::runPCA(deng_SCE,ncomponent = 5)
 set.seed(723451) # for reproducibility
 my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
 names(my_color) <- unique(as.character(deng_SCE$cell_type2))
+
+##TSCAN
 
 procdeng <- TSCAN::preprocess(counts(deng_SCE))
 
@@ -99,3 +103,18 @@ ggplot(slingshot_df, aes(x = slingPseudotime_1, y = slingPseudotime_2,
   xlab("First Slingshot pseudotime") + ylab("Second Slingshot pseudotime") +
   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
+
+##Monocle3
+
+
+
+gene_meta <- rowData(deng_SCE)
+#gene_metadata must contain a column verbatim named 'gene_short_name' for certain functions.
+gene_meta$gene_short_name  <- rownames(gene_meta)
+cds <- new_cell_data_set(expression_data = counts(deng_SCE),
+                         cell_metadata = colData(deng_SCE),
+                         gene_metadata = gene_meta)
+
+## Step 1: Normalize and pre-process the data
+cds <- preprocess_cds(cds,num_dim = 5)
+plot_pc_variance_explained(cds)
