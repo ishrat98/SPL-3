@@ -111,6 +111,48 @@ m3dGenes <- as.character(
   M3DropFeatureSelection(deng)$Gene
 )
 
+# component1
+d <- deng_SCE[which(rownames(deng_SCE) %in% m3dGenes), ]
+d <- d[!duplicated(rownames(d)), ]
+
+colnames(d) <- 1:ncol(d)
+geneNames <- rownames(d)
+rownames(d) <- 1:nrow(d)
+pd <- data.frame(timepoint = cellLabels)
+pd <- new("AnnotatedDataFrame", data=pd)
+fd <- data.frame(gene_short_name = geneNames)
+fd <- new("AnnotatedDataFrame", data=fd)
+
+dCellData <- newCellDataSet(counts(d), phenoData = pd, featureData = fd)
+#
+dCellData <- setOrderingFilter(dCellData, which(geneNames %in% m3dGenes))
+dCellData <- estimateSizeFactors(dCellData)
+dCellDataSet <- reduceDimension(dCellData,reduction_method = "DDRTree", pseudo_expr = 1)
+dCellDataSet <- orderCells(dCellDataSet, reverse = FALSE)
+plot_cell_trajectory(dCellDataSet)
+
+
+# Store the ordering
+pseudotime_monocle2 <-
+  data.frame(
+    Timepoint = phenoData(dCellDataSet)$timepoint,
+    pseudotime = phenoData(dCellDataSet)$Pseudotime,
+    State = phenoData(dCellDataSet)$State
+  )
+rownames(pseudotime_monocle2) <- 1:ncol(d)
+pseudotime_order_monocle <-
+  rownames(pseudotime_monocle2[order(pseudotime_monocle2$pseudotime), ])
+
+deng_SCE$pseudotime_monocle2 <- pseudotime_monocle2$pseudotime
+
+ggplot(as.data.frame(colData(deng_SCE)), 
+       aes(x = pseudotime_monocle2, 
+           y = cell_type2, colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_manual(values = my_color) + theme_classic() +
+  xlab("monocle2 pseudotime") + ylab("Timepoint") +
+  ggtitle("Cells ordered by monocle2 pseudotime")
+
 
 
 
