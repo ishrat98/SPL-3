@@ -3,7 +3,7 @@ library(TSCAN)
 library(M3Drop)
 library(monocle)
 #library(monocle3)
-#library(destiny)
+library(destiny)
 library(scater)
 library(ggplot2)
 library(ggthemes)
@@ -155,4 +155,30 @@ ggplot(as.data.frame(colData(deng_SCE)),
 
 
 
+#diffusion map1
+deng <- logcounts(deng_SCE)
+colnames(deng) <- cellLabels
+dm <- DiffusionMap(t(deng)) #library destiny
 
+tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
+                  DC2 = eigenvectors(dm)[,2],
+                  Timepoint = deng_SCE$cell_type2)
+ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
+  geom_point() +  scale_color_manual(values = my_color) +
+  xlab("Diffusion component 1") + 
+  ylab("Diffusion component 2") +
+  theme_classic()
+
+
+#part2
+
+deng_SCE$pseudotime_diffusionmap <- rank(eigenvectors(dm)[,1])
+
+ggplot(as.data.frame(colData(deng_SCE)), 
+       aes(x = pseudotime_diffusionmap, 
+           y = cell_type2, colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_manual(values = my_color)  + theme_classic() +
+  xlab("Diffusion map pseudotime (first diffusion map component)") +
+  ylab("Timepoint") +
+  ggtitle("Cells ordered by diffusion map pseudotime")
