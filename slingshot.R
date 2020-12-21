@@ -210,3 +210,5 @@ ggplot(data = plot_df)+geom_point(mapping = aes(x = slicer1,
 slicer_traj_graph <- conn_knn_graph(slicer_traj_lle, 10)
 plot(slicer_traj_graph, main = "Fully connected kNN graph from SLICER")
 
+
+ends <- find_extreme_cells(slicer_traj_graph, slicer_traj_lle)
