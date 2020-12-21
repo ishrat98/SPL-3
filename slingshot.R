@@ -2,7 +2,7 @@ library(SingleCellExperiment)
 library(TSCAN)
 library(M3Drop)
 library(monocle)
-library(monocle3)
+#library(monocle3)
 #library(destiny)
 library(scater)
 library(ggplot2)
@@ -104,17 +104,13 @@ ggplot(slingshot_df, aes(x = slingPseudotime_1, y = slingPseudotime_2,
   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
 
-##Monocle3
+##Monocle2
+deng <- counts(deng_SCE)
+
+m3dGenes <- as.character(
+  M3DropFeatureSelection(deng)$Gene
+)
 
 
 
-gene_meta <- rowData(deng_SCE)
-#gene_metadata must contain a column verbatim named 'gene_short_name' for certain functions.
-gene_meta$gene_short_name  <- rownames(gene_meta)
-cds <- new_cell_data_set(expression_data = counts(deng_SCE),
-                         cell_metadata = colData(deng_SCE),
-                         gene_metadata = gene_meta)
 
-## Step 1: Normalize and pre-process the data
-cds <- preprocess_cds(cds,num_dim = 5)
-plot_pc_variance_explained(cds)
