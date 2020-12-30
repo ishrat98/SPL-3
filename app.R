@@ -48,6 +48,9 @@ cdScFiltAnnot$PC1 <- pca[, 1]
 cdScFiltAnnot$PC2 <- pca[, 2]
 
 
+my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
+names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
+
 # Plot PC biplot with cells colored by cell_type2. 
 # colData(deng_SCE) accesses the cell metadata DataFrame object for deng_SCE.
 # Look at Figure 1A of the paper as a comparison to your PC biplot.
@@ -93,4 +96,27 @@ ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y =
   scale_color_tableau() + theme_classic() +
   xlab("Slingshot pseudotime") + ylab("Timepoint") +
   ggtitle("Cells ordered by Slingshot pseudotime")
+
+
+
+procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
+
+colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+
+dengclust <- TSCAN::exprmclust(procdeng, clusternum = 10)
+
+TSCAN::plotmclust(dengclust)
+
+dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
+pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
+deng_SCE$pseudotime_order_tscan <- NA
+deng_SCE$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
+  dengorderTSCAN$Pseudotime
+ggplot(as.data.frame(colData(deng_SCE)), 
+       aes(x = pseudotime_order_tscan, 
+           y = cellType, colour = cellType)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_manual(values = my_color) + theme_classic() +
+  xlab("TSCAN pseudotime") + ylab("Timepoint") +
+  ggtitle("Cells ordered by TSCAN pseudotime")
 
