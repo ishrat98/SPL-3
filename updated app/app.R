@@ -32,8 +32,7 @@ library(Seurat)
 library(scales)
 library(viridis)
 library(Matrix)
-
-
+library(lle)
 
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
@@ -3823,6 +3822,30 @@ server <- function(input, output, session) {
     
   })
   
+  
+  output$trajectory_slicerOT<- renderPlot({
+    
+    deng <- logcounts(cdScFiltAnnot)
+    colnames(deng) <- cellLabels
+    dm <- DiffusionMap(t(deng))
+    
+    
+    slicer_genes <- select_genes(t(deng))
+    k <- select_k(t(deng[slicer_genes,]), kmin = 30, kmax=60)
+    
+    
+    reducedDim(deng_SCE, "LLE") <- slicer_traj_lle
+    
+    slicer_traj_lle <- lle(t(deng[slicer_genes,]), m = 2, k)$Y
+    
+    plot_df <- data.frame(slicer1 = reducedDim(cdScFiltAnnot, "LLE")[,1],
+                          slicer2 = reducedDim(cdScFiltAnnot, "LLE")[,2],
+                          cellType =  cdScFiltAnnot$cellType)
+    
+    slicer_traj_graph <- conn_knn_graph(slicer_traj_lle, 10)
+    plot(slicer_traj_graph, main = "Fully connected kNN graph from SLICER")
+    
+  })
   
 }
 
