@@ -3836,15 +3836,16 @@ server <- function(input, output, session) {
     
     reducedDim(deng_SCE, "LLE") <- slicer_traj_lle
     
-    slicer_traj_lle <- lle(t(deng[slicer_genes,]), m = 2, k)$Y
-    
-    plot_df <- data.frame(slicer1 = reducedDim(cdScFiltAnnot, "LLE")[,1],
-                          slicer2 = reducedDim(cdScFiltAnnot, "LLE")[,2],
-                          cellType =  cdScFiltAnnot$cellType)
-    
-    slicer_traj_graph <- conn_knn_graph(slicer_traj_lle, 10)
-    plot(slicer_traj_graph, main = "Fully connected kNN graph from SLICER")
-    
+    plot_df <- data.frame(slicer1 = reducedDim(deng_SCE, "LLE")[,1],
+                          slicer2 = reducedDim(deng_SCE, "LLE")[,2],
+                          cell_type2 =  deng_SCE$cell_type2)
+    ggplot(data = plot_df)+geom_point(mapping = aes(x = slicer1, 
+                                                    y = slicer2, 
+                                                    color = cell_type2))+
+      scale_color_manual(values = my_color)+ xlab("LLE component 1") +
+      ylab("LLE component 2") +
+      ggtitle("Locally linear embedding of cells from SLICER")+
+      theme_classic()
   })
   
 }
