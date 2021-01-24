@@ -51,8 +51,20 @@ deng <- counts(cdScFiltAnnot)
 colnames(deng) <- cellLabels
 
 
+# Run PCA on Deng data. Use the runPCA function from the SingleCellExperiment package.
+cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
+
+# Use the reducedDim function to access the PCA and store the results. 
+pca <- reducedDim(cdScFiltAnnot, "PCA")
+
+# Describe how the PCA is stored in a matrix. Why does it have this structure?
+head(pca)
+dim(pca)
 
 
+# Add PCA data to the deng_SCE object.
+cdScFiltAnnot$PC1 <- pca[, 1]
+cdScFiltAnnot$PC2 <- pca[, 2]
 c30 <- c("dodgerblue2",#1
          "#E31A1C", #2 red
          "green4", #3
@@ -3444,26 +3456,24 @@ server <- function(input, output, session) {
   
   output$trajectory_TscanOT <- renderPlot({
     
+    #PCA_df
+    pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
+                         PC2 = reducedDim(cdScFiltAnnot,"PCA")[,2],
+                         cellType = cdScFiltAnnot$cellType)
+    
+    ggplot(pca_df, aes(x = PC1, y = cellType, 
+                       colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_colour_manual(values = my_color) + theme_classic() +
+      xlab("First principal component") + ylab("Timepoint") +
+      ggtitle("Cells ordered by first principal component") 
     
   })
   
   ## Slingshot
   output$trajectory_slingshotOT <- renderPlot({
     
-    # Run PCA on Deng data. Use the runPCA function from the SingleCellExperiment package.
-    cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
     
-    # Use the reducedDim function to access the PCA and store the results. 
-    pca <- reducedDim(cdScFiltAnnot, "PCA")
-    
-    # Describe how the PCA is stored in a matrix. Why does it have this structure?
-    head(pca)
-    dim(pca)
-    
-    
-    # Add PCA data to the deng_SCE object.
-    cdScFiltAnnot$PC1 <- pca[, 1]
-    cdScFiltAnnot$PC2 <- pca[, 2]
     
     
     # Plot PC biplot with cells colored by cell_type2. 
@@ -3800,7 +3810,18 @@ server <- function(input, output, session) {
   
   
   
-  
+  output$trajectory_monocle3OT <- renderPlot({
+    
+    
+    #d <- deng_SCE[m3dGenes,]
+    ## feature selection 
+    deng <- counts(cdScFiltAnnot)
+    
+    m3dGenes <- as.character(
+      M3DropFeatureSelection(deng)$Gene
+    )
+    
+  })
   
   
 }
