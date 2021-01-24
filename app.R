@@ -120,3 +120,45 @@ ggplot(as.data.frame(colData(deng_SCE)),
   xlab("TSCAN pseudotime") + ylab("Timepoint") +
   ggtitle("Cells ordered by TSCAN pseudotime")
 
+
+
+## slingshot
+
+cdScFiltAnnot <- slingshot(cdScFiltAnnot, clusterLabels = 'cellType',reducedDim = "PCA",
+                      allow.breaks = FALSE)
+summary(cdScFiltAnnot$slingPseudotime_1)
+lnes <- getLineages(reducedDim(deng_SCE,"PCA"),
+                    cdScFiltAnnot$cellType)
+
+plot(reducedDims(cdScFiltAnnot)$PCA, col = my_color[as.character(cdScFiltAnnot$cellType)], 
+     pch=16, 
+     asp = 1)
+legend("bottomleft",legend = names(my_color[levels(cdScFiltAnnot$cellType)]),  
+       fill = my_color[levels(cdScFiltAnnot$cellType)])
+  lines(SlingshotDataSet(cdScFiltAnnot), lwd=2, type = 'lineages', col = c("black"))
+
+
+## Plotting the pseudotime inferred by slingshot by cell types
+
+slingshot_df <- data.frame(colData(cdScFiltAnnot))
+
+ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cell_type2, 
+                         colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("First Slingshot pseudotime") + ylab("cell type") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+
+
+ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cell_type2, 
+                         colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("Second Slingshot pseudotime") + ylab("cell type") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+
+ggplot(slingshot_df, aes(x = slingPseudotime_1, y = slingPseudotime_2, 
+                         colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("First Slingshot pseudotime") + ylab("Second Slingshot pseudotime") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+
+
