@@ -64,6 +64,9 @@ dim(pca)
 # Add PCA data to the deng_SCE object.
 cdScFiltAnnot$PC1 <- pca[, 1]
 cdScFiltAnnot$PC2 <- pca[, 2]
+
+my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
+names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
 c30 <- c("dodgerblue2",#1
          "#E31A1C", #2 red
          "green4", #3
