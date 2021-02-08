@@ -3473,7 +3473,7 @@ server <- function(input, output, session) {
   })
   
   ## Slingshot
-  output$trajectory_slingshotOT <- renderPlot({
+  output$trajectory_slingshotOT <- renderPlotly({
     
     
     
@@ -3812,7 +3812,7 @@ server <- function(input, output, session) {
   
   
   
-  output$trajectory_monocle3OT <- renderPlot({
+  output$trajectory_monocle3OT <- renderPlotly({
     
     
     #d <- deng_SCE[m3dGenes,]
