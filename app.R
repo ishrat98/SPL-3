@@ -48,7 +48,7 @@ cdScFiltAnnot$PC1 <- pca[, 1]
 cdScFiltAnnot$PC2 <- pca[, 2]
 
 
-my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
+my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
 names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
 
 # Plot PC biplot with cells colored by cell_type2. 
