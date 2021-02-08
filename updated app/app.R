@@ -3832,32 +3832,24 @@ server <- function(input, output, session) {
     colnames(deng) <- cellLabels
     dm <- DiffusionMap(t(deng))
     
-    tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
-                      DC2 = eigenvectors(dm)[,2],
-                      Timepoint = deng_SCE$cell_type2)
-    ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
-      geom_point() +  scale_color_manual(values = my_color) +
-      xlab("Diffusion component 1") + 
-      ylab("Diffusion component 2") +
+
+    slicer_genes <- select_genes(t(deng))
+    k <- select_k(t(deng[slicer_genes,]), kmin = 30, kmax=60)
+    slicer_traj_lle <- lle(t(deng[slicer_genes,]), m = 2, k)$Y
+
+
+    reduceddim(deng_sce, "lle") <- slicer_traj_lle
+
+    plot_df <- data.frame(slicer1 = reduceddim(deng_sce, "lle")[,1],
+                          slicer2 = reduceddim(deng_sce, "lle")[,2],
+                          cell_type2 =  deng_sce$cell_type2)
+    ggplot(data = plot_df)+geom_point(mapping = aes(x = slicer1,
+                                                    y = slicer2,
+                                                    color = cell_type2))+
+      scale_color_manual(values = my_color)+ xlab("lle component 1") +
+      ylab("lle component 2") +
+      ggtitle("locally linear embedding of cells from slicer")+
       theme_classic()
-    
-    
-    # slicer_genes <- select_genes(t(deng))
-    # k <- select_k(t(deng[slicer_genes,]), kmin = 30, kmax=60)
-    # 
-    # 
-    # reducedDim(deng_SCE, "LLE") <- slicer_traj_lle
-    # 
-    # plot_df <- data.frame(slicer1 = reducedDim(deng_SCE, "LLE")[,1],
-    #                       slicer2 = reducedDim(deng_SCE, "LLE")[,2],
-    #                       cell_type2 =  deng_SCE$cell_type2)
-    # ggplot(data = plot_df)+geom_point(mapping = aes(x = slicer1, 
-    #                                                 y = slicer2, 
-    #                                                 color = cell_type2))+
-    #   scale_color_manual(values = my_color)+ xlab("LLE component 1") +
-    #   ylab("LLE component 2") +
-    #   ggtitle("Locally linear embedding of cells from SLICER")+
-    #   theme_classic()
   })
   
 }
