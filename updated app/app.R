@@ -967,7 +967,7 @@ ui <- dashboardPage(
               box(
                 title = "TSCAN", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_TscanOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_TscanOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -3456,7 +3456,7 @@ server <- function(input, output, session) {
   
   ## TSCAN
   
-  output$trajectory_TscanOT <- renderPlot({
+  output$trajectory_TscanOT <- renderPlotly({
     
     #PCA_df
     pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
