@@ -205,7 +205,7 @@ ui <- dashboardPage(
                menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
                menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
-               menuSubItem('Tscan', tabName = 'trajectory_Tscan'),
+               menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
                menuSubItem('Monocle', tabName = 'trajectory_monocle'),
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
@@ -963,11 +963,16 @@ ui <- dashboardPage(
               )
       ),
       
-      tabItem(tabName = 'trajectory_Tscan',
+      tabItem(tabName = 'trajectory_FirstLook',
               box(
-                title = "TSCAN", status = "primary", solidHeader = TRUE,
+                title = "PC1", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_TscanOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_FirstLookOT1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "First Principal Component", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("FirstPrincipalComponent", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -3454,9 +3459,22 @@ server <- function(input, output, session) {
   ############################################
   
   
-  ## TSCAN
+  ## FirstLook
   
-  output$trajectory_TscanOT <- renderPlotly({
+  output$trajectory_FirstLookOT1 <- renderPlotly({
+    
+    pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
+                         PC2 = reducedDim(cdScFiltAnnot,"PCA")[,2],
+                         cellType = cdScFiltAnnot$cellType)
+    
+    ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cell_type2))+
+      scale_colour_manual(values = my_color)+theme_classic()
+    
+  })
+  
+  ##First Principal Component
+  
+  output$FirstPrincipalComponent <- renderPlotly({
     
     #PCA_df
     pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
