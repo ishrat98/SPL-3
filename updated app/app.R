@@ -209,6 +209,7 @@ ui <- dashboardPage(
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
                menuSubItem('Monocle', tabName = 'trajectory_monocle'),
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
+               menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
       menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
     )
@@ -981,7 +982,7 @@ ui <- dashboardPage(
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -1090,16 +1091,31 @@ ui <- dashboardPage(
               box(
                 title = "Monocle3", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
 
+      ),
+      
+      
+      tabItem(tabName = 'trajectory_TSCAN',
+              box(
+                title = "PCA Dimension 1", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_TSCAN_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "TSCAN Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_TSCAN_Pseudotime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
       ),
       
       tabItem(tabName = 'trajectory_slicer',
               box(
                 title = "Slicer", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_slicerOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_slicerOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -3491,7 +3507,7 @@ server <- function(input, output, session) {
   })
   
   ## Slingshot
-  output$trajectory_slingshotOT <- renderPlotly({
+  output$trajectory_slingshotOT <- plotly::renderPlotly({
     
     
     
@@ -3830,7 +3846,7 @@ server <- function(input, output, session) {
   
   
   
-  output$trajectory_monocle3OT <- renderPlotly({
+  output$trajectory_monocle3OT <- plotly::renderPlotly({
     
     
     #d <- deng_SCE[m3dGenes,]
@@ -3843,8 +3859,49 @@ server <- function(input, output, session) {
     
   })
   
+  output$trajectory_trajectory_TSCAN_1 <- renderPlotly({
+    
+    
+    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
+    
+    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    
+    dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
+    
+    TSCAN::plotmclust(dengclust)
+    
+  })
   
-  output$trajectory_slicerOT<- renderPlot({
+  
+  output$trajectory_TSCAN_Pseudotime <- renderPlotly({
+    
+    
+    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
+    
+    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    
+    dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
+    
+    dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
+    pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
+    cdScFiltAnnot$pseudotime_order_tscan <- NA
+    cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
+      dengorderTSCAN$Pseudotime
+    
+    cellLabels[dengclust$clusterid == 14]
+    
+    ggplot(as.data.frame(colData(cdScFiltAnnot)), 
+           aes(x = pseudotime_order_tscan, 
+               y = cellType, colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_color_manual(values = my_color) + theme_classic() +
+      xlab("TSCAN pseudotime") + ylab("Timepoint") +
+      ggtitle("Cells ordered by TSCAN pseudotime")
+    
+  })
+  
+  
+  output$trajectory_slicerOT<- renderPlotly({
     
     deng <- logcounts(cdScFiltAnnot)
     colnames(deng) <- cellLabels
