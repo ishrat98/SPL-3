@@ -13,6 +13,7 @@ library(Polychrome)
 library(slingshot)
 library(SLICER)
 library(Seurat)
+library(gam)
 
 cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="updated app/cdScFiltAnnotHDF5", prefix="")
 
@@ -174,7 +175,7 @@ ggplot(slingshot_df, aes(x = slingPseudotime_1, y = slingPseudotime_2,
 
 
 ##Heatmap
-library(gam)
+
 t <- cdScFiltAnnot$slingPseudotime_1
 
 # for time, only look at the 100 most variable genes 
