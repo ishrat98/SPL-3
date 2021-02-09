@@ -97,22 +97,33 @@ ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y =
   xlab("Slingshot pseudotime") + ylab("Timepoint") +
   ggtitle("Cells ordered by Slingshot pseudotime")
 
+##tscan
+ggplot(as.data.frame(colData(cdScFiltAnnot)), 
+       aes(x = pseudotime_order_tscan, 
+           y = cellType, colour = cellType)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_manual(values = my_color) + theme_classic() +
+  xlab("TSCAN pseudotime") + ylab("Timepoint") +
+  ggtitle("Cells ordered by TSCAN pseudotime")
 
 
 procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
 
 colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
 
-dengclust <- TSCAN::exprmclust(procdeng, clusternum = 10)
+dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
 
 TSCAN::plotmclust(dengclust)
 
 dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
 pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
-deng_SCE$pseudotime_order_tscan <- NA
-deng_SCE$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
+cdScFiltAnnot$pseudotime_order_tscan <- NA
+cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
   dengorderTSCAN$Pseudotime
-ggplot(as.data.frame(colData(deng_SCE)), 
+
+cellLabels[dengclust$clusterid == 14]
+
+ggplot(as.data.frame(colData(cdScFiltAnnot)), 
        aes(x = pseudotime_order_tscan, 
            y = cellType, colour = cellType)) +
   geom_quasirandom(groupOnX = FALSE) +
