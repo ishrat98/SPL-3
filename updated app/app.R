@@ -981,7 +981,17 @@ ui <- dashboardPage(
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "Second Slingshot Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -3508,10 +3518,8 @@ server <- function(input, output, session) {
   })
   
   ## Slingshot
-  output$trajectory_slingshotOT <- plotly::renderPlotly({
-    
-    
-    
+  output$trajectory_slingshotOT <- renderPlot({
+
     
     # Plot PC biplot with cells colored by cell_type2. 
     # colData(deng_SCE) accesses the cell metadata DataFrame object for deng_SCE.
@@ -3520,16 +3528,7 @@ server <- function(input, output, session) {
       scale_color_tableau() + theme_classic() +
       xlab("PC1") + ylab("PC2") + ggtitle("PC biplot")
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     
     # Read the Slingshot documentation (?slingshot) and then run Slingshot below. 
     # Given your understanding of the algorithm and the documentation, what is one 
@@ -3552,7 +3551,32 @@ server <- function(input, output, session) {
     lines(SlingshotDataSet(sce), lwd=2)
     
     
-   })                                                                                                                                                                                           
+   })
+  
+  output$trajectory_FirstSlingshot <- renderPlot({
+    ## Plotting the pseudotime inferred by slingshot by cell types
+    
+    slingshot_df <- data.frame(colData(cdScFiltAnnot))
+    
+    ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
+                             colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+      xlab("First Slingshot pseudotime") + ylab("cell type") +
+      ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+    
+    
+  })
+  
+  output$trajectory_FirstSlingshot <- renderPlot({
+    
+  ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cellType, 
+                           colour = cellType)) +
+    geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+    xlab("Second Slingshot pseudotime") + ylab("cell type") +
+    ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+    
+  })
+  
   ##----------------------------------------------------------------------------##
   ## Projection.
   ##----------------------------------------------------------------------------##
