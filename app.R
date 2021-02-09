@@ -173,3 +173,32 @@ ggplot(slingshot_df, aes(x = slingPseudotime_1, y = slingPseudotime_2,
   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
 
+##Heatmap
+library(gam)
+t <- cdScFiltAnnot$slingPseudotime_1
+
+# for time, only look at the 100 most variable genes 
+Y <- log1p(assay(cdScFiltAnnot,"logcounts"))
+
+var100 <- names(sort(apply(Y,1,var),decreasing = TRUE))[1:100]
+Y <- Y[var100,]
+
+# fit a GAM with a loess term for pseudotime
+gam.pval <- apply(Y,1,function(z){
+  d <- data.frame(z=z, t=t)
+  suppressWarnings({
+    tmp <- gam(z ~ lo(t), data=d)
+  })
+  p <- summary(tmp)[3][[1]][2,3]
+  p
+})
+
+## Plot the top 100 genes' expression 
+
+topgenes <- names(sort(gam.pval, decreasing = FALSE))[1:100]
+
+heatdata <- assays(cdScFiltAnnot)$logcounts[topgenes, order(t, na.last = NA)]
+heatclus <- cdScFiltAnnot$cellType[order(t, na.last = NA)]
+
+heatmap(heatdata, Colv = NA,
+        ColSideColors = my_color[heatclus],cexRow = 1,cexCol = 1)

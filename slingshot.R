@@ -212,3 +212,35 @@ plot(slicer_traj_graph, main = "Fully connected kNN graph from SLICER")
 
 
 ends <- find_extreme_cells(slicer_traj_graph, slicer_traj_lle)
+
+
+#heatmap
+library(gam)
+t <- deng_SCE$slingPseudotime_1
+
+# for time, only look at the 100 most variable genes 
+Y <- log1p(assay(deng_SCE,"logcounts"))
+
+var100 <- names(sort(apply(Y,1,var),decreasing = TRUE))[1:100]
+Y <- Y[var100,]
+
+# fit a GAM with a loess term for pseudotime
+gam.pval <- apply(Y,1,function(z){
+  d <- data.frame(z=z, t=t)
+  suppressWarnings({
+    tmp <- gam(z ~ lo(t), data=d)
+  })
+  p <- summary(tmp)[3][[1]][2,3]
+  p
+})
+
+## Plot the top 100 genes' expression 
+
+topgenes <- names(sort(gam.pval, decreasing = FALSE))[1:100]
+
+heatdata <- assays(deng_SCE)$logcounts[topgenes, order(t, na.last = NA)]
+heatclus <- deng_SCE$cell_type2[order(t, na.last = NA)]
+
+heatmap(heatdata, Colv = NA,
+        ColSideColors = my_color[heatclus],cexRow = 1,cexCol = 1)
+
