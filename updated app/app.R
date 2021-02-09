@@ -3530,6 +3530,23 @@ server <- function(input, output, session) {
     
 
     
+    
+    
+    
+   })
+  
+  output$trajectory_FirstSlingshot <- renderPlot({
+    # ## Plotting the pseudotime inferred by slingshot by cell types
+    # 
+    # slingshot_df <- data.frame(colData(cdScFiltAnnot))
+    # 
+    # ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
+    #                          colour = cellType)) +
+    #   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+    #   xlab("First Slingshot pseudotime") + ylab("cell type") +
+    #   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+    # 
+    
     # Read the Slingshot documentation (?slingshot) and then run Slingshot below. 
     # Given your understanding of the algorithm and the documentation, what is one 
     # major set of parameters we omitted here when running Slingshot?
@@ -3549,22 +3566,6 @@ server <- function(input, output, session) {
       ggtitle("Cells ordered by Slingshot pseudotime")
     plot(reducedDims(sce)$PCA, col = colors[cut(sce$slingPseudotime_1,breaks=50)], pch=16, asp = 1)
     lines(SlingshotDataSet(sce), lwd=2)
-    
-    
-   })
-  
-  output$trajectory_FirstSlingshot <- renderPlot({
-    ## Plotting the pseudotime inferred by slingshot by cell types
-    
-    slingshot_df <- data.frame(colData(cdScFiltAnnot))
-    
-    ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
-                             colour = cellType)) +
-      geom_quasirandom(groupOnX = FALSE) + theme_classic() +
-      xlab("First Slingshot pseudotime") + ylab("cell type") +
-      ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
-    
-    
   })
   
   output$trajectory_SecondSlingshot <- renderPlot({
