@@ -3922,6 +3922,13 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle2Psedutime <- renderPlotly({
     
+    dCellData <- newCellDataSet(counts(d), phenoData = pd, featureData = fd)
+    #
+    dCellData <- setOrderingFilter(dCellData, which(geneNames %in% m3dGenes))
+    dCellData <- estimateSizeFactors(dCellData)
+    dCellDataSet <- reduceDimension(dCellData,reduction_method = "DDRTree", pseudo_expr = 1)
+    dCellDataSet <- orderCells(dCellDataSet, reverse = FALSE)
+    
     # Store the ordering
     pseudotime_monocle2 <-
       data.frame(
