@@ -3467,7 +3467,7 @@ server <- function(input, output, session) {
                          PC2 = reducedDim(cdScFiltAnnot,"PCA")[,2],
                          cellType = cdScFiltAnnot$cellType)
     
-    ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cell_type2))+
+    ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cellType))+
       scale_colour_manual(values = my_color)+theme_classic()
     
   })
