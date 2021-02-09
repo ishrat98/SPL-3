@@ -1098,9 +1098,19 @@ ui <- dashboardPage(
       
       tabItem(tabName = 'trajectory_monocle3',
               box(
-                title = "Monocle3", status = "primary", solidHeader = TRUE,
+                title = "Monocle2", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_monocle2OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "Component", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_monocle2Component", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_monocle2Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
 
       ),
@@ -3872,7 +3882,45 @@ server <- function(input, output, session) {
   
   
   
-  output$trajectory_monocle3OT <- plotly::renderPlotly({
+  output$trajectory_monocle2OT <- renderPlot({
+    
+    
+    #d <- deng_SCE[m3dGenes,]
+    ## feature selection 
+    deng <- counts(cdScFiltAnnot)
+    
+    m3dGenes <- as.character(
+      M3DropFeatureSelection(deng)$Gene
+    )
+    
+  })
+  
+  
+  output$trajectory_monocle2Component <- renderPlotly({
+    
+    
+    d <- deng_SCE[which(rownames(deng_SCE) %in% m3dGenes), ]
+    d <- d[!duplicated(rownames(d)), ]
+    
+    colnames(d) <- 1:ncol(d)
+    geneNames <- rownames(d)
+    rownames(d) <- 1:nrow(d)
+    pd <- data.frame(timepoint = cellLabels)
+    pd <- new("AnnotatedDataFrame", data=pd)
+    fd <- data.frame(gene_short_name = geneNames)
+    fd <- new("AnnotatedDataFrame", data=fd)
+    
+    dCellData <- newCellDataSet(counts(d), phenoData = pd, featureData = fd)
+    #
+    dCellData <- setOrderingFilter(dCellData, which(geneNames %in% m3dGenes))
+    dCellData <- estimateSizeFactors(dCellData)
+    dCellDataSet <- reduceDimension(dCellData,reduction_method = "DDRTree", pseudo_expr = 1)
+    dCellDataSet <- orderCells(dCellDataSet, reverse = FALSE)
+    plot_cell_trajectory(dCellDataSet)
+    
+  })
+  
+  output$trajectory_monocle2Psedutime <- renderPlotly({
     
     
     #d <- deng_SCE[m3dGenes,]
