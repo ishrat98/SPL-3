@@ -1100,7 +1100,7 @@ ui <- dashboardPage(
               box(
                 title = "Monocle2", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle2OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_monocle2OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = "Component", status = "primary", solidHeader = TRUE,
@@ -3899,7 +3899,7 @@ server <- function(input, output, session) {
   output$trajectory_monocle2Component <- renderPlotly({
     
     
-    d <- deng_SCE[which(rownames(deng_SCE) %in% m3dGenes), ]
+    d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
     d <- d[!duplicated(rownames(d)), ]
     
     colnames(d) <- 1:ncol(d)
@@ -3922,14 +3922,27 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle2Psedutime <- renderPlotly({
     
+    # Store the ordering
+    pseudotime_monocle2 <-
+      data.frame(
+        Timepoint = phenoData(dCellDataSet)$timepoint,
+        pseudotime = phenoData(dCellDataSet)$Pseudotime,
+        State = phenoData(dCellDataSet)$State
+      )
+    rownames(pseudotime_monocle2) <- 1:ncol(d)
+    pseudotime_order_monocle <-
+      rownames(pseudotime_monocle2[order(pseudotime_monocle2$pseudotime), ])
+
     
-    #d <- deng_SCE[m3dGenes,]
-    ## feature selection 
-    deng <- counts(cdScFiltAnnot)
+    cdScFiltAnnot$pseudotime_monocle2 <- pseudotime_monocle2$pseudotime
     
-    m3dGenes <- as.character(
-      M3DropFeatureSelection(deng)$Gene
-    )
+    ggplot(as.data.frame(colData(cdScFiltAnnot)), 
+           aes(x = pseudotime_monocle2, 
+               y = cellType, colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_color_manual(values = my_color) + theme_classic() +
+      xlab("monocle2 pseudotime") + ylab("Timepoint") +
+      ggtitle("Cells ordered by monocle2 pseudotime")
     
   })
   
