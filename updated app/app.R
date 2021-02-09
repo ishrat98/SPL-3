@@ -3567,7 +3567,7 @@ server <- function(input, output, session) {
     
   })
   
-  output$trajectory_FirstSlingshot <- renderPlot({
+  output$trajectory_SecondSlingshot <- renderPlot({
     
   ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cellType, 
                            colour = cellType)) +
