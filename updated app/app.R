@@ -65,8 +65,7 @@ dim(pca)
 cdScFiltAnnot$PC1 <- pca[, 1]
 cdScFiltAnnot$PC2 <- pca[, 2]
 
-my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
-names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
+
 c30 <- c("dodgerblue2",#1
          "#E31A1C", #2 red
          "green4", #3
@@ -3492,6 +3491,8 @@ server <- function(input, output, session) {
   
   output$FirstPrincipalComponent <- renderPlotly({
     
+    my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
+    names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
     #PCA_df
     pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
                          PC2 = reducedDim(cdScFiltAnnot,"PCA")[,2],
