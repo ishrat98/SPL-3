@@ -3499,12 +3499,6 @@ server <- function(input, output, session) {
   ##----------------------------------------------------------------------------##
   ## Trajectory
   ##----------------------------------------------------------------------------##
-
-  ##----------------------------------------------------------------------------##
-  ## Distribution along pseudotime.
-  ##----------------------------------------------------------------------------##
-  
-
   
   ###################################
   
@@ -3512,8 +3506,6 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle2OT <- renderPlot({
     
-    
-    #d <- deng_SCE[m3dGenes,]
     ## feature selection 
     deng <- counts(cdScFiltAnnot)
     
