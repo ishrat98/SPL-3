@@ -206,8 +206,7 @@ ui <- dashboardPage(
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
-               menuSubItem('Monocle', tabName = 'trajectory_monocle'),
-               menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
+               menuSubItem('Monocle2', tabName = 'trajectory_monocle2'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
       menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
@@ -996,105 +995,6 @@ ui <- dashboardPage(
               
       ),
               
-      
-      tabItem(tabName = 'trajectory_monocle',
-              fluidRow(
-                box(title = p(tags$span("Input parameters", style="padding-right:8px;"), 
-                              actionButton("trajectory_input", "info",
-                                           class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 4,
-                selectInput(
-                  inputId = "trajectory_projection_info",
-                  label = "Trajectory", 
-                  #choices = names(cdScFiltAnnot$trajectory$monocle2),
-                 # choices = unique(levels(as.factor(cdScFiltAnnot$trajectory$monocle2))),
-                 # choices = names(as.factor(cdScFiltAnnot$trajectory$monocle2)
-                 # choices = unique(levels(as.factor(cdScFiltAnnot$samples))), 
-                 # selected = unique(levels(as.factor(cdScFiltAnnot$samples))),
-                 choices = c('tSNE','UMAP'),
-                 multiple = FALSE,
-                 selectize = FALSE
-                ),
-                pickerInput(
-                  inputId = "trajectory_samples_to_display", 
-                  label = "Samples to display",
-                  # choices = cdScFiltAnnot$sample_names,
-                  # selected = cdScFiltAnnot$sample_names,
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  selected = '',
-                  options = list("actions-box" = TRUE),
-                  multiple = TRUE
-                  
-                ),
-                pickerInput(
-                  inputId = "trajectory_clusters_to_display", 
-                  label = "Clusters to display",
-                  # choices = cdScFiltAnnot$cluster_names,
-                  # selected = cdScFiltAnnot$cluster_names,
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                  selected = '',
-                  options = list("actions-box" = TRUE),
-                  multiple = TRUE
-                  
-                ),
-                sliderInput(
-                  "trajectory_percentage_cells_to_show",
-                  label = "Show % of cells",
-                  min = scatter_plot_percentage_cells_to_show[["min"]],
-                  max = scatter_plot_percentage_cells_to_show[["max"]],
-                  step = scatter_plot_percentage_cells_to_show[["step"]],
-                  value = scatter_plot_percentage_cells_to_show[["default"]]
-                ),
-                
-
-                selectInput(
-                  "trajectory_dot_color",
-                  label = "Color cells by",
-                  # choices = c("state","pseudotime",names(cdScFiltAnnot$cells)[! names(cdScFiltAnnot$cells) %in% c("cell_barcode")])
-                  # choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
-                  # selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
-                  choices = c('state','pseudotime','Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
-                  multiple = FALSE,
-                  selectize = FALSE
-                  ),
-                
-                sliderInput(
-                  "trajectory_dot_size",
-                  label = "Dot size",
-                  min = scatter_plot_dot_size[["min"]],
-                  max = scatter_plot_dot_size[["max"]],
-                  step = scatter_plot_dot_size[["step"]],
-                  value = scatter_plot_dot_size[["default"]]
-                ),
-                sliderInput(
-                  "trajectory_dot_opacity",
-                  label = "Dot opacity",
-                  min = scatter_plot_dot_opacity[["min"]],
-                  max = scatter_plot_dot_opacity[["max"]],
-                  step = scatter_plot_dot_opacity[["step"]],
-                  value = scatter_plot_dot_opacity[["default"]]
-                )
-                
-                
-                ),
-                
-                box(title = p(tags$span("Trajectory", style="padding-right:8px;"),
-                              actionButton("trajectory_projection_info", "info",
-                                           class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE, width = 8,
-                plotOutput("trajectory_projection") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-
-                box(
-                  title = "Distribution along pseudotime", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("trajectory_density_plott", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-               
-              )
-      ),
       
       tabItem(tabName = 'trajectory_monocle3',
               box(
@@ -3580,7 +3480,15 @@ server <- function(input, output, session) {
   
   output$trajectory_SecondSlingshot <- renderPlot({
     
-  ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cellType, 
+    cdS <- slingshot(cdScFiltAnnot, clusterLabels = 'cellType',reducedDim = "PCA",
+                          allow.breaks = FALSE)
+    ## get lineages inferred by slingshot
+    lnes <- getLineages(reducedDim(cdS,"PCA"),
+                        cdScFiltAnnot$cellType)
+    
+    
+    slingshot_df <- data.frame(colData(cdScFiltAnnot))  
+  ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
                            colour = cellType)) +
     geom_quasirandom(groupOnX = FALSE) + theme_classic() +
     xlab("Second Slingshot pseudotime") + ylab("cell type") +
