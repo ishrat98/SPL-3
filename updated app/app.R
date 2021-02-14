@@ -983,14 +983,14 @@ ui <- dashboardPage(
                 plotlyOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
-                title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
+                title = " Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
-                title = "Second Slingshot Psedutime", status = "primary", solidHeader = TRUE,
+                title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -3428,7 +3428,7 @@ server <- function(input, output, session) {
   })
   
   ## Slingshot
-  output$trajectory_slingshotOT <- renderPlotly({
+  output$trajectory_psedutime <- renderPlotly({
 
     
     # Plot PC biplot with cells colored by cell_type2. 
@@ -3465,7 +3465,7 @@ server <- function(input, output, session) {
     lines(SlingshotDataSet(sce), lwd=2)
   })
   
-  output$trajectory_SecondSlingshot <- renderPlotly({
+  output$trajectory_FirstSlingshot <- renderPlotly({
     sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
     
     # Plot PC1 vs PC2 colored by Slingshot pseudotime.
