@@ -197,14 +197,14 @@ heatmap(heatdata, Colv = NA,
 
 ########## Monocle2 ########
 ## Part - 1
-# library(monocle)
-# #d <- cdScFiltAnnot[m3dGenes,]
-# ## feature selection 
-# deng <- counts(cdScFiltAnnot)
-# 
-# m3dGenes <- as.character(
-#   M3DropFeatureSelection(deng)$Gene
-# )
+library(monocle)
+#d <- cdScFiltAnnot[m3dGenes,]
+## feature selection
+deng <- counts(cdScFiltAnnot)
+
+m3dGenes <- as.character(
+  M3DropFeatureSelection(deng)$Gene
+)
 
 ##part -2
 d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
