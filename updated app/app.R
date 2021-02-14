@@ -3482,6 +3482,23 @@ server <- function(input, output, session) {
     
   })
   
+  
+  output$trajectory_SecondSlingshot <- renderPlotly({
+    sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
+    
+    # Plot PC1 vs PC2 colored by Slingshot pseudotime.
+    colors <- rainbow(50, alpha = 1)
+    
+    ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y = cellType, 
+                                                      colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_color_tableau() + theme_classic() +
+      xlab("Slingshot pseudotime") + ylab("Timepoint") +
+      ggtitle("Cells ordered by Slingshot pseudotime")
+    
+    
+  })
+  
   ##----------------------------------------------------------------------------##
   ## Trajectory
   ##----------------------------------------------------------------------------##
