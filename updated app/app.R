@@ -991,6 +991,11 @@ ui <- dashboardPage(
                 title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "Second Slingshot Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -3437,11 +3442,7 @@ server <- function(input, output, session) {
     ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = PC1, y = PC2, color = cellType)) + geom_quasirandom(groupOnX = FALSE) +
       scale_color_tableau() + theme_classic() +
       xlab("PC1") + ylab("PC2") + ggtitle("PC biplot")
-    
 
-    
-    
-    
     
    })
   
@@ -3478,19 +3479,6 @@ server <- function(input, output, session) {
       xlab("Slingshot pseudotime") + ylab("Timepoint") +
       ggtitle("Cells ordered by Slingshot pseudotime")
     
-  #   cdS <- slingshot(cdScFiltAnnot, clusterLabels = 'cellType',reducedDim = "PCA",
-  #                         allow.breaks = FALSE)
-  #   ## get lineages inferred by slingshot
-  #   lnes <- getLineages(reducedDim(cdS,"PCA"),
-  #                       cdScFiltAnnot$cellType)
-  #   
-  #   
-  #   slingshot_df <- data.frame(colData(cdScFiltAnnot))  
-  # ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
-  #                          colour = cellType)) +
-  #   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
-  #   xlab("Second Slingshot pseudotime") + ylab("cell type") +
-  #   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
     
   })
   
