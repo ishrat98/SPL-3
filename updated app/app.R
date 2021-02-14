@@ -3428,7 +3428,7 @@ server <- function(input, output, session) {
   })
   
   ## Slingshot
-  output$trajectory_psedutime <- renderPlotly({
+  output$trajectory_psedutime <- renderPlot({
 
     
     # Plot PC biplot with cells colored by cell_type2. 
@@ -3445,7 +3445,7 @@ server <- function(input, output, session) {
     
    })
   
-  output$trajectory_FirstSlingshot <- renderPlot({
+  output$trajectory_FirstSlingshot <- renderPlotly({
     
     sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
     
