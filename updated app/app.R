@@ -3465,21 +3465,32 @@ server <- function(input, output, session) {
     lines(SlingshotDataSet(sce), lwd=2)
   })
   
-  output$trajectory_SecondSlingshot <- renderPlot({
+  output$trajectory_SecondSlingshot <- renderPlotly({
+    sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
     
-    cdS <- slingshot(cdScFiltAnnot, clusterLabels = 'cellType',reducedDim = "PCA",
-                          allow.breaks = FALSE)
-    ## get lineages inferred by slingshot
-    lnes <- getLineages(reducedDim(cdS,"PCA"),
-                        cdScFiltAnnot$cellType)
+    # Plot PC1 vs PC2 colored by Slingshot pseudotime.
+    colors <- rainbow(50, alpha = 1)
     
+    ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y = cellType, 
+                                                      colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_color_tableau() + theme_classic() +
+      xlab("Slingshot pseudotime") + ylab("Timepoint") +
+      ggtitle("Cells ordered by Slingshot pseudotime")
     
-    slingshot_df <- data.frame(colData(cdScFiltAnnot))  
-  ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
-                           colour = cellType)) +
-    geom_quasirandom(groupOnX = FALSE) + theme_classic() +
-    xlab("Second Slingshot pseudotime") + ylab("cell type") +
-    ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+  #   cdS <- slingshot(cdScFiltAnnot, clusterLabels = 'cellType',reducedDim = "PCA",
+  #                         allow.breaks = FALSE)
+  #   ## get lineages inferred by slingshot
+  #   lnes <- getLineages(reducedDim(cdS,"PCA"),
+  #                       cdScFiltAnnot$cellType)
+  #   
+  #   
+  #   slingshot_df <- data.frame(colData(cdScFiltAnnot))  
+  # ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
+  #                          colour = cellType)) +
+  #   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  #   xlab("Second Slingshot pseudotime") + ylab("cell type") +
+  #   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
     
   })
   
