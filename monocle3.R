@@ -1,5 +1,5 @@
 library(monocle3)
-
+library(SummarizedExperiment)
 deng_SCE <- readRDS("data/deng-reads.rds")
 deng_SCE
 deng_SCE$cell_type2 <- factor(
@@ -24,3 +24,24 @@ cds <- new_cell_data_set(expression_data = counts(deng_SCE),
 ## Step 1: Normalize and pre-process the data
 cds <- preprocess_cds(cds,num_dim = 5)
 plot_pc_variance_explained(cds)
+
+
+## Step 3: Reduce the dimensions using UMAP
+cds <- reduce_dimension(cds)
+## No preprocess_method specified, using preprocess_method = 'PCA'
+## Step 4: Cluster the cells
+cds <- cluster_cells(cds)
+
+## change the clusters
+
+## cds@clusters$UMAP$clusters <- deng_SCE$cell_type2
+
+## Step 5: Learn a graph
+cds <- learn_graph(cds,use_partition = TRUE)
+
+## Step 6: Order cells
+cds <- order_cells(cds, root_cells = c("zy","zy.1","zy.2","zy.3") )
+
+plot_cells(cds, color_cells_by="cell_type2", graph_label_size = 4, cell_size = 2,
+           group_label_size = 6)+ scale_color_manual(values = my_color) 
+
