@@ -980,7 +980,7 @@ ui <- dashboardPage(
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
@@ -3428,7 +3428,7 @@ server <- function(input, output, session) {
   })
   
   ## Slingshot
-  output$trajectory_slingshotOT <- renderPlot({
+  output$trajectory_slingshotOT <- renderPlotly({
 
     
     # Plot PC biplot with cells colored by cell_type2. 
@@ -3446,20 +3446,7 @@ server <- function(input, output, session) {
    })
   
   output$trajectory_FirstSlingshot <- renderPlot({
-    # ## Plotting the pseudotime inferred by slingshot by cell types
-    # 
-    # slingshot_df <- data.frame(colData(cdScFiltAnnot))
-    # 
-    # ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
-    #                          colour = cellType)) +
-    #   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
-    #   xlab("First Slingshot pseudotime") + ylab("cell type") +
-    #   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
-    # 
     
-    # Read the Slingshot documentation (?slingshot) and then run Slingshot below. 
-    # Given your understanding of the algorithm and the documentation, what is one 
-    # major set of parameters we omitted here when running Slingshot?
     sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
     
     # Plot PC1 vs PC2 colored by Slingshot pseudotime.
