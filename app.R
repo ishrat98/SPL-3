@@ -52,7 +52,7 @@ cdScFiltAnnot$PC2 <- pca[, 2]
 my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
 names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
 
-# Plot PC biplot with cells colored by cell_type2. 
+# Plot PC biplot with cells colored by cellType. 
 # colData(deng_SCE) accesses the cell metadata DataFrame object for deng_SCE.
 # Look at Figure 1A of the paper as a comparison to your PC biplot.
 ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = PC1, y = PC2, color = cellType)) + geom_quasirandom(groupOnX = FALSE) +
@@ -154,21 +154,21 @@ legend("bottomleft",legend = names(my_color[levels(cdScFiltAnnot$cellType)]),
 
 slingshot_df <- data.frame(colData(cdScFiltAnnot))
 
-ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cell_type2, 
-                         colour = cell_type2)) +
+ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
+                         colour = cellType)) +
   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
   xlab("First Slingshot pseudotime") + ylab("cell type") +
   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
 
-ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cell_type2, 
-                         colour = cell_type2)) +
+ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cellType, 
+                         colour = cellType)) +
   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
   xlab("Second Slingshot pseudotime") + ylab("cell type") +
   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
 
 ggplot(slingshot_df, aes(x = slingPseudotime_1, y = slingPseudotime_2, 
-                         colour = cell_type2)) +
+                         colour = cellType)) +
   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
   xlab("First Slingshot pseudotime") + ylab("Second Slingshot pseudotime") +
   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
