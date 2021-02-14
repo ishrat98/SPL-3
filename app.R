@@ -44,7 +44,7 @@ head(pca)
 dim(pca)
 
 
-# Add PCA data to the deng_SCE object.
+# Add PCA data to the cdScFiltAnnot object.
 cdScFiltAnnot$PC1 <- pca[, 1]
 cdScFiltAnnot$PC2 <- pca[, 2]
 
@@ -53,7 +53,7 @@ my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
 names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
 
 # Plot PC biplot with cells colored by cellType. 
-# colData(deng_SCE) accesses the cell metadata DataFrame object for deng_SCE.
+# colData(cdScFiltAnnot) accesses the cell metadata DataFrame object for cdScFiltAnnot.
 # Look at Figure 1A of the paper as a comparison to your PC biplot.
 ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = PC1, y = PC2, color = cellType)) + geom_quasirandom(groupOnX = FALSE) +
   scale_color_tableau() + theme_classic() +
@@ -130,7 +130,7 @@ ggplot(as.data.frame(colData(cdScFiltAnnot)),
 cdScFiltAnnot <- slingshot(cdScFiltAnnot, clusterLabels = 'cellType',reducedDim = "PCA",
                       allow.breaks = FALSE)
 summary(cdScFiltAnnot$slingPseudotime_1)
-lnes <- getLineages(reducedDim(deng_SCE,"PCA"),
+lnes <- getLineages(reducedDim(cdScFiltAnnot,"PCA"),
                     cdScFiltAnnot$cellType)
 
 plot(reducedDims(cdScFiltAnnot)$PCA, col = my_color[as.character(cdScFiltAnnot$cellType)], 
@@ -198,7 +198,7 @@ heatmap(heatdata, Colv = NA,
 ########## Monocle2 ########
 ## Part - 1
 library(monocle)
-#d <- deng_SCE[m3dGenes,]
+#d <- cdScFiltAnnot[m3dGenes,]
 ## feature selection 
 deng <- counts(cdScFiltAnnot)
 
@@ -207,7 +207,7 @@ m3dGenes <- as.character(
 )
 
 ##part -2
-d <- deng_SCE[which(rownames(deng_SCE) %in% m3dGenes), ]
+d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
 d <- d[!duplicated(rownames(d)), ]
 
 colnames(d) <- 1:ncol(d)
@@ -239,9 +239,9 @@ rownames(pseudotime_monocle2) <- 1:ncol(d)
 pseudotime_order_monocle <-
   rownames(pseudotime_monocle2[order(pseudotime_monocle2$pseudotime), ])
 
-deng_SCE$pseudotime_monocle2 <- pseudotime_monocle2$pseudotime
+cdScFiltAnnot$pseudotime_monocle2 <- pseudotime_monocle2$pseudotime
 
-ggplot(as.data.frame(colData(deng_SCE)), 
+ggplot(as.data.frame(colData(cdScFiltAnnot)), 
        aes(x = pseudotime_monocle2, 
            y = cellType, colour = cellType)) +
   geom_quasirandom(groupOnX = FALSE) +
