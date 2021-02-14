@@ -3488,13 +3488,12 @@ server <- function(input, output, session) {
     
     # Plot PC1 vs PC2 colored by Slingshot pseudotime.
     colors <- rainbow(50, alpha = 1)
-    
-    ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y = cellType, 
-                                                      colour = cellType)) +
-      geom_quasirandom(groupOnX = FALSE) +
-      scale_color_tableau() + theme_classic() +
-      xlab("Slingshot pseudotime") + ylab("Timepoint") +
-      ggtitle("Cells ordered by Slingshot pseudotime")
+    slingshot_df <- data.frame(colData(cdScFiltAnnot))
+    ggplot(slingshot_df, aes(x = sce$slingPseudotime_2, y = cellType, 
+                             colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+      xlab("Second Slingshot pseudotime") + ylab("cell type") +
+      ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
     
     
   })
