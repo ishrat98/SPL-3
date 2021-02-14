@@ -1,5 +1,20 @@
 library(monocle3)
-library(SummarizedExperiment)
+library(SingleCellExperiment)
+library(HDF5Array)
+library(TSCAN)
+library(M3Drop)
+library(monocle)
+library(destiny)
+library(scater)
+library(ggplot2)
+library(ggthemes)
+library(ggbeeswarm)
+library(corrplot)
+library(Polychrome)
+library(slingshot)
+library(SLICER)
+library(Seurat)
+library(gam)
 deng_SCE <- readRDS("data/deng-reads.rds")
 deng_SCE
 deng_SCE$cell_type2 <- factor(
@@ -11,6 +26,11 @@ deng_SCE$cell_type2 <- factor(
 cellLabels <- deng_SCE$cell_type2
 deng <- counts(deng_SCE)
 colnames(deng) <- cellLabels
+
+
+set.seed(723451) # for reproducibility
+my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
+names(my_color) <- unique(as.character(deng_SCE$cell_type2))
 
 deng_SCE <- scater::runPCA(deng_SCE,ncomponent = 5)
 
