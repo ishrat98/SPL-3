@@ -980,7 +980,7 @@ ui <- dashboardPage(
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_SlingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = " Psedutime", status = "primary", solidHeader = TRUE,
@@ -3428,7 +3428,7 @@ server <- function(input, output, session) {
   })
   
   ## Slingshot
-  output$trajectory_psedutime <- renderPlot({
+  output$trajectory_SlingshotOT <- renderPlotly({
 
     
     # Plot PC biplot with cells colored by cell_type2. 
@@ -3445,7 +3445,7 @@ server <- function(input, output, session) {
     
    })
   
-  output$trajectory_FirstSlingshot <- renderPlotly({
+  output$trajectory_psedutime <- renderPlot({
     
     sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
     
