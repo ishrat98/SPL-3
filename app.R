@@ -61,15 +61,6 @@ ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = PC1, y = PC2, color = cell
 
 
 
-
-
-
-
-
-
-
-
-
 # Read the Slingshot documentation (?slingshot) and then run Slingshot below. 
 # Given your understanding of the algorithm and the documentation, what is one 
 # major set of parameters we omitted here when running Slingshot?
@@ -209,7 +200,7 @@ heatmap(heatdata, Colv = NA,
 library(monocle)
 #d <- deng_SCE[m3dGenes,]
 ## feature selection 
-deng <- counts(deng_SCE)
+deng <- counts(cdScFiltAnnot)
 
 m3dGenes <- as.character(
   M3DropFeatureSelection(deng)$Gene
@@ -252,7 +243,7 @@ deng_SCE$pseudotime_monocle2 <- pseudotime_monocle2$pseudotime
 
 ggplot(as.data.frame(colData(deng_SCE)), 
        aes(x = pseudotime_monocle2, 
-           y = cell_type2, colour = cell_type2)) +
+           y = cellType, colour = cellType)) +
   geom_quasirandom(groupOnX = FALSE) +
   scale_color_manual(values = my_color) + theme_classic() +
   xlab("monocle2 pseudotime") + ylab("Timepoint") +
