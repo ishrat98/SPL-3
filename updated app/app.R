@@ -1020,7 +1020,7 @@ ui <- dashboardPage(
               box(
                 title = "PCA Dimension 1", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_TSCAN_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_TSCAN_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = "TSCAN Psedutime", status = "primary", solidHeader = TRUE,
@@ -3585,12 +3585,15 @@ server <- function(input, output, session) {
     
   })
   
-  output$trajectory_trajectory_TSCAN_1 <- renderPlotly({
+  output$trajectory_trajectory_TSCAN_1 <- renderPlot({
     
-    
-    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
-    
-    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    # procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
+    # 
+    # colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    # 
+    # dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
+    # 
+    # TSCAN::plotmclust(dengclust)
     
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
     
@@ -3602,11 +3605,30 @@ server <- function(input, output, session) {
   output$trajectory_TSCAN_Pseudotime <- renderPlotly({
     
     
-    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
-    
-    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    # procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
+    # 
+    # colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    # 
+    # dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
+    # 
+    # dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
+    # pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
+    # cdScFiltAnnot$pseudotime_order_tscan <- NA
+    # cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
+    #   dengorderTSCAN$Pseudotime
+    # 
+    # cellLabels[dengclust$clusterid == 14]
+    # 
+    # ggplot(as.data.frame(colData(cdScFiltAnnot)), 
+    #        aes(x = pseudotime_order_tscan, 
+    #            y = cellType, colour = cellType)) +
+    #   geom_quasirandom(groupOnX = FALSE) +
+    #   scale_color_manual(values = my_color) + theme_classic() +
+    #   xlab("TSCAN pseudotime") + ylab("Timepoint") +
+    #   ggtitle("Cells ordered by TSCAN pseudotime")
     
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
+    
     
     dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
     pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
@@ -3614,7 +3636,6 @@ server <- function(input, output, session) {
     cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
       dengorderTSCAN$Pseudotime
     
-    cellLabels[dengclust$clusterid == 14]
     
     ggplot(as.data.frame(colData(cdScFiltAnnot)), 
            aes(x = pseudotime_order_tscan, 
