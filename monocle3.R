@@ -105,3 +105,15 @@ ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
   xlab("Diffusion component 1") + 
   ylab("Diffusion component 2") +
   theme_classic()
+##second part
+
+deng_SCE$pseudotime_diffusionmap <- rank(eigenvectors(dm)[,1])
+
+ggplot(as.data.frame(colData(deng_SCE)), 
+       aes(x = pseudotime_diffusionmap, 
+           y = cell_type2, colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_manual(values = my_color)  + theme_classic() +
+  xlab("Diffusion map pseudotime (first diffusion map component)") +
+  ylab("Timepoint") +
+  ggtitle("Cells ordered by diffusion map pseudotime")
