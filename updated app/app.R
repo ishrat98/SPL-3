@@ -207,6 +207,7 @@ ui <- dashboardPage(
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
                menuSubItem('Monocle2', tabName = 'trajectory_monocle2'),
+               menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
       menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
