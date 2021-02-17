@@ -3608,6 +3608,24 @@ server <- function(input, output, session) {
     
   })
   
+  #######Monocle3##########
+  
+  output$trajectory_monocle3OT <- renderPlot({
+    
+    ## feature selection 
+    deng <- counts(cdScFiltAnnot)
+    
+    m3dGenes <- as.character(
+      M3DropFeatureSelection(deng)$Gene
+    )
+    
+  })
+  
+  output$trajectory_monocle3Component <- renderPlotly({
+    
+    
+  })
+  
   output$trajectory_trajectory_TSCAN_1 <- renderPlot({
     
     # procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
