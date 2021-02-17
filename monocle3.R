@@ -80,3 +80,13 @@ plot_cells(cds, color_cells_by="cell_type2", graph_label_size = 4, cell_size = 2
 plot_cells(cds,  graph_label_size = 6, cell_size = 1, 
            color_cells_by="pseudotime",
            group_label_size = 6)
+pdata_cds <- pData(cds)
+pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
+
+ggplot(as.data.frame(pdata_cds), 
+       aes(x = pseudotime_monocle3, 
+           y = cell_type2, colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_manual(values = my_color) + theme_classic() +
+  xlab("monocle3 pseudotime") + ylab("Timepoint") +
+  ggtitle("Cells ordered by monocle3 pseudotime")
