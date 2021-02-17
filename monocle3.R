@@ -90,3 +90,18 @@ ggplot(as.data.frame(pdata_cds),
   scale_color_manual(values = my_color) + theme_classic() +
   xlab("monocle3 pseudotime") + ylab("Timepoint") +
   ggtitle("Cells ordered by monocle3 pseudotime")
+
+##diffusion map
+
+deng <- logcounts(deng_SCE)
+colnames(deng) <- cellLabels
+dm <- DiffusionMap(t(deng))
+
+tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
+                  DC2 = eigenvectors(dm)[,2],
+                  Timepoint = deng_SCE$cell_type2)
+ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
+  geom_point() +  scale_color_manual(values = my_color) +
+  xlab("Diffusion component 1") + 
+  ylab("Diffusion component 2") +
+  theme_classic()
