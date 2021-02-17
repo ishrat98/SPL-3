@@ -3623,7 +3623,16 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle3Component <- renderPlotly({
     
+    pdata_cds <- pData(cdScFiltAnnot)
+    pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
     
+    ggplot(as.data.frame(pdata_cds), 
+           aes(x = pseudotime_monocle3, 
+               y = cellType, colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_color_manual(values = my_color) + theme_classic() +
+      xlab("monocle3 pseudotime") + ylab("Timepoint") +
+      ggtitle("Cells ordered by monocle3 pseudotime")
   })
   
   output$trajectory_trajectory_TSCAN_1 <- renderPlot({
