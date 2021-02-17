@@ -13,8 +13,8 @@ library(corrplot)
 library(Polychrome)
 library(slingshot)
 library(SLICER)
-library(Seurat)
-library(gam)
+##library(Seurat)
+##library(gam)
 deng_SCE <- readRDS("data/deng-reads.rds")
 deng_SCE
 deng_SCE$cell_type2 <- factor(
