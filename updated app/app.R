@@ -1001,7 +1001,7 @@ ui <- dashboardPage(
       ),
               
       
-      tabItem(tabName = 'trajectory_monocle3',
+      tabItem(tabName = 'trajectory_monocle2',
               box(
                 title = "Monocle2", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
