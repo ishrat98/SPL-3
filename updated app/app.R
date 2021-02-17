@@ -23,6 +23,7 @@ library(colourpicker)
 library(shinyWidgets)
 library(shinyjs)
 library(monocle)
+library(monocle3)
 library(SingleCellExperiment)
 library(slingshot)
 library(RColorBrewer)
@@ -3623,16 +3624,16 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle3Component <- renderPlotly({
     
-    pdata_cds <- pData(cdScFiltAnnot)
-    pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
+    gene_meta <- rowData(cdScFiltAnnot)
+    #gene_metadata must contain a column verbatim named 'gene_short_name' for certain functions.
+    gene_meta$gene_short_name  <- rownames(gene_meta)
+    cds <- new_cell_data_set(expression_data = counts(cdScFiltAnnot),
+                             cell_metadata = colData(cdScFiltAnnot),
+                             gene_metadata = gene_meta)
     
-    ggplot(as.data.frame(pdata_cds), 
-           aes(x = pseudotime_monocle3, 
-               y = cellType, colour = cellType)) +
-      geom_quasirandom(groupOnX = FALSE) +
-      scale_color_manual(values = my_color) + theme_classic() +
-      xlab("monocle3 pseudotime") + ylab("Timepoint") +
-      ggtitle("Cells ordered by monocle3 pseudotime")
+    ## Step 1: Normalize and pre-process the data
+    cds <- preprocess_cds(cdScFiltAnnot,num_dim = 5)
+    plot_pc_variance_explained(cds)
   })
   
   output$trajectory_trajectory_TSCAN_1 <- renderPlot({
