@@ -117,3 +117,10 @@ ggplot(as.data.frame(colData(deng_SCE)),
   xlab("Diffusion map pseudotime (first diffusion map component)") +
   ylab("Timepoint") +
   ggtitle("Cells ordered by diffusion map pseudotime")
+
+
+##Slicer
+
+library("lle")
+slicer_genes <- select_genes(t(deng))
+k <- select_k(t(deng[slicer_genes,]), kmin = 30, kmax=60)
