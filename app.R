@@ -12,7 +12,7 @@ library(corrplot)
 library(Polychrome)
 library(slingshot)
 library(SLICER)
-library(Seurat)
+#library(Seurat)
 library(gam)
 
 cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="updated app/cdScFiltAnnotHDF5", prefix="")
