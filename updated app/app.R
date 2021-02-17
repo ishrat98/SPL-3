@@ -1021,6 +1021,25 @@ ui <- dashboardPage(
 
       ),
       
+      tabItem(tabName = 'trajectory_monocle3',
+              box(
+                title = "Monocle2", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "Component", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_monocle3Component", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
+      ),
+      
       
       tabItem(tabName = 'trajectory_TSCAN',
               box(
