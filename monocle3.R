@@ -3,7 +3,7 @@ library(SingleCellExperiment)
 library(HDF5Array)
 library(TSCAN)
 library(M3Drop)
-library(monocle)
+#library(monocle)
 library(destiny)
 library(scater)
 library(ggplot2)
@@ -15,6 +15,7 @@ library(slingshot)
 library(SLICER)
 ##library(Seurat)
 ##library(gam)
+
 deng_SCE <- readRDS("data/deng-reads.rds")
 deng_SCE
 deng_SCE$cell_type2 <- factor(
@@ -33,6 +34,15 @@ my_color <- createPalette(10, c("#010101", "#ff0000"), M=1000)
 names(my_color) <- unique(as.character(deng_SCE$cell_type2))
 
 deng_SCE <- scater::runPCA(deng_SCE,ncomponent = 5)
+
+library(monocle)
+#d <- deng_SCE[m3dGenes,]
+## feature selection 
+deng <- counts(deng_SCE)
+
+m3dGenes <- as.character(
+  M3DropFeatureSelection(deng)$Gene
+)
 
 gene_meta <- rowData(deng_SCE)
 #gene_metadata must contain a column verbatim named 'gene_short_name' for certain functions.
@@ -65,3 +75,8 @@ cds <- order_cells(cds, root_cells = c("zy","zy.1","zy.2","zy.3") )
 plot_cells(cds, color_cells_by="cell_type2", graph_label_size = 4, cell_size = 2,
            group_label_size = 6)+ scale_color_manual(values = my_color) 
 
+
+
+plot_cells(cds,  graph_label_size = 6, cell_size = 1, 
+           color_cells_by="pseudotime",
+           group_label_size = 6)
