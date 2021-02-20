@@ -1,6 +1,6 @@
 library(shiny)
 library(shinydashboard)
-
+library(SingleCellExperiment)
 
 library(scater)
 library(plotly)
@@ -24,7 +24,8 @@ library(shinyWidgets)
 library(shinyjs)
 library(monocle)
 library(monocle3)
-library(SingleCellExperiment)
+library(Biobase)
+
 library(slingshot)
 library(RColorBrewer)
 #library(Seurat)
@@ -209,6 +210,7 @@ ui <- dashboardPage(
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
                menuSubItem('Monocle2', tabName = 'trajectory_monocle2'),
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
+               menuSubItem('Diffusion Map', tabName = 'trajectory_diffusionMap'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
       menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
@@ -228,7 +230,7 @@ ui <- dashboardPage(
                               
                               /* navbar (rest of the header) */
                               .skin-blue .main-header .navbar {
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }        
                               
                               
@@ -1024,7 +1026,7 @@ ui <- dashboardPage(
       
       tabItem(tabName = 'trajectory_monocle3',
               box(
-                title = "Monocle2", status = "primary", solidHeader = TRUE,
+                title = "Monocle3", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
@@ -1040,6 +1042,13 @@ ui <- dashboardPage(
               )
               
       ),
+      
+      tabItem(tabName = 'trajectory_diffusionMap',
+              box(
+                title = "Diffusion Map", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_diffusionMapOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
       
       
       tabItem(tabName = 'trajectory_TSCAN',
@@ -3627,7 +3636,7 @@ server <- function(input, output, session) {
     gene_meta <- rowData(cdScFiltAnnot)
     #gene_metadata must contain a column verbatim named 'gene_short_name' for certain functions.
     gene_meta$gene_short_name  <- rownames(gene_meta)
-    cds <- new_cell_data_set(expression_data = counts(cdScFiltAnnot),
+    cds <- new_cell_data_set(expression_data = logcounts(cdScFiltAnnot),
                              cell_metadata = colData(cdScFiltAnnot),
                              gene_metadata = gene_meta)
     
@@ -3635,6 +3644,40 @@ server <- function(input, output, session) {
     cds <- preprocess_cds(cdScFiltAnnot,num_dim = 5)
     plot_pc_variance_explained(cds)
   })
+  
+  output$trajectory_monocle3Psedutime <- renderPlotly({
+  
+  pdata_cds <- pData(cdScFiltAnnot)
+  pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cdScFiltAnnot)
+  
+  ggplot(as.data.frame(pdata_cds), 
+         aes(x = pseudotime_monocle3, 
+             y = cellType, colour = cellType)) +
+    geom_quasirandom(groupOnX = FALSE) +
+    scale_color_manual(values = my_color) + theme_classic() +
+    xlab("monocle3 pseudotime") + ylab("Timepoint") +
+    ggtitle("Cells ordered by monocle3 pseudotime")
+  
+  })
+  
+  
+  output$trajectory_diffusionMapOT <- renderPlot({
+    
+    cds <- logcounts(cdScFiltAnnot)
+    colnames(deng) <- cellLabels
+    dm <- DiffusionMap(t(cds))
+    
+    tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
+                      DC2 = eigenvectors(dm)[,2],
+                      Timepoint = cdScFiltAnnot$cellType)
+    ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
+      geom_point() +  scale_color_manual(values = my_color) +
+      xlab("Diffusion component 1") + 
+      ylab("Diffusion component 2") +
+      theme_classic()
+    
+  })
+  
   
   output$trajectory_trajectory_TSCAN_1 <- renderPlot({
     
