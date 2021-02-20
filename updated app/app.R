@@ -220,12 +220,12 @@ ui <- dashboardPage(
     tags$head(tags$style(HTML('
         /* logo */
                               .skin-blue .main-header .logo {
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }
                               
                               /* logo when hovered */
                               .skin-blue .main-header .logo:hover {
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }
                               
                               /* navbar (rest of the header) */
@@ -237,22 +237,22 @@ ui <- dashboardPage(
                               
                               /* other links in the sidebarmenu when hovered */
                               .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }
                               /* toggle button when hovered  */                    
                               .skin-blue .main-header .navbar .sidebar-toggle:hover{
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }
                               .box.box-solid.box-primary>.box-header {
                                color:#fff;
-                               background:#800080
+                               background:#aaaaaa
                               }
                               
                               .box.box-solid.box-primary{
-                              border-bottom-color:#800080;
-                              border-left-color:#800080;
-                              border-right-color:#800080;
-                              border-top-color:#800080
+                              border-bottom-color:#aaaaaa;
+                              border-left-color:#aaaaaa;
+                              border-right-color:#aaaaaa;
+                              border-top-color:#aaaaaa
                               
                               }
 
