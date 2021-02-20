@@ -1048,7 +1048,8 @@ ui <- dashboardPage(
                 title = "Diffusion Map", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotOutput("trajectory_diffusionMapOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
+              )
+      ),
       
       
       tabItem(tabName = 'trajectory_TSCAN',
