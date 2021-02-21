@@ -2,7 +2,7 @@ library(SingleCellExperiment)
 library(TSCAN)
 library(M3Drop)
 library(monocle)
-#library(monocle3)
+library(monocle3)
 library(destiny)
 library(scater)
 library(ggplot2)
@@ -214,33 +214,52 @@ plot(slicer_traj_graph, main = "Fully connected kNN graph from SLICER")
 ends <- find_extreme_cells(slicer_traj_graph, slicer_traj_lle)
 
 
-#heatmap
-library(gam)
-t <- deng_SCE$slingPseudotime_1
+##monocle3
+gene_meta <- rowData(deng_SCE)
+#gene_metadata must contain a column verbatim named 'gene_short_name' for certain functions.
+gene_meta$gene_short_name  <- rownames(gene_meta)
+cds <- new_cell_data_set(expression_data = counts(deng_SCE),
+                         cell_metadata = colData(deng_SCE),
+                         gene_metadata = gene_meta)
 
-# for time, only look at the 100 most variable genes 
-Y <- log1p(assay(deng_SCE,"logcounts"))
+## Step 1: Normalize and pre-process the data
+cds <- preprocess_cds(cds,num_dim = 5)
+plot_pc_variance_explained(cds)
 
-var100 <- names(sort(apply(Y,1,var),decreasing = TRUE))[1:100]
-Y <- Y[var100,]
 
-# fit a GAM with a loess term for pseudotime
-gam.pval <- apply(Y,1,function(z){
-  d <- data.frame(z=z, t=t)
-  suppressWarnings({
-    tmp <- gam(z ~ lo(t), data=d)
-  })
-  p <- summary(tmp)[3][[1]][2,3]
-  p
-})
+## Step 3: Reduce the dimensions using UMAP
+cds <- reduce_dimension(cds)
+## No preprocess_method specified, using preprocess_method = 'PCA'
+## Step 4: Cluster the cells
+cds <- cluster_cells(cds)
 
-## Plot the top 100 genes' expression 
+## change the clusters
 
-topgenes <- names(sort(gam.pval, decreasing = FALSE))[1:100]
+## cds@clusters$UMAP$clusters <- deng_SCE$cell_type2
 
-heatdata <- assays(deng_SCE)$logcounts[topgenes, order(t, na.last = NA)]
-heatclus <- deng_SCE$cell_type2[order(t, na.last = NA)]
+## Step 5: Learn a graph
+cds <- learn_graph(cds,use_partition = TRUE)
 
-heatmap(heatdata, Colv = NA,
-        ColSideColors = my_color[heatclus],cexRow = 1,cexCol = 1)
+## Step 6: Order cells
+cds <- order_cells(cds, root_cells = c("zy","zy.1","zy.2","zy.3") )
+
+plot_cells(cds, color_cells_by="cell_type2", graph_label_size = 4, cell_size = 2,
+           group_label_size = 6)+ scale_color_manual(values = my_color) 
+
+
+
+plot_cells(cds,  graph_label_size = 6, cell_size = 1, 
+           color_cells_by="pseudotime",
+           group_label_size = 6)
+pdata_cds <- pData(cds)
+pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
+
+ggplot(as.data.frame(pdata_cds), 
+       aes(x = pseudotime_monocle3, 
+           y = cell_type2, colour = cell_type2)) +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_manual(values = my_color) + theme_classic() +
+  xlab("monocle3 pseudotime") + ylab("Timepoint") +
+  ggtitle("Cells ordered by monocle3 pseudotime")
+
 

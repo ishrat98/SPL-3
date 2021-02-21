@@ -1,7 +1,7 @@
 library(shiny)
 library(shinydashboard)
 library(SingleCellExperiment)
-
+library(SummarizedExperiment)
 library(scater)
 library(plotly)
 library(reshape2)
@@ -176,7 +176,7 @@ scatter_plot_percentage_cells_to_show <- list(
 ui <- dashboardPage(
   #skin = "purple",
   dashboardHeader(
-    title = "UoM Single cell"
+    title = "CISTRON"
   ),
   
   # Sidebar #############################
@@ -191,29 +191,18 @@ ui <- dashboardPage(
                menuSubItem('Single gene expression', tabName = "Gene_expression"),
                menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
       menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
-      menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
-      menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
-      menuItem("Heatmap", tabName = "multiple_cluster_heatmap", icon = icon("columns"),
-               menuSubItem('Cluster heatmap', tabName = 'clusterHeatmap'),
-               menuSubItem('Sample heatmap', tabName = 'sampleHeatmap'),
-               menuSubItem('Sample & cluster heatmap', tabName = 'sampleClusterHeatmap')),
-      menuItem("Bubble plot", tabName = "bubblePlot", icon = icon("dot-circle"),
-               menuSubItem('Cluster bubble plot', tabName = 'clusterBubblePlot'),
-               menuSubItem('Sample bubble plot', tabName = 'sampleBubblePlot')),
-      menuItem('Differential Expression', tabName = 'DE_menus', icon = icon('line-chart'), 
-               menuSubItem('DE between clusters', tabName = 'DE_between_clusters'),
-               menuSubItem('DE between samples', tabName = 'DE_between_samples'),
-               menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
-               menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
                menuSubItem('Monocle2', tabName = 'trajectory_monocle2'),
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
-               menuSubItem('Diffusion Map', tabName = 'trajectory_diffusionMap'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
-      menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
+      menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
+      menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
+      menuItem('Differential Expression', tabName = 'DE_menus', icon = icon('line-chart'), 
+               menuSubItem('DE between clusters', tabName = 'DE_between_clusters')),
+      menuItem('About', tabName = 'about', icon = icon('info'))
     )
   ),
   dashboardBody(
@@ -264,9 +253,19 @@ ui <- dashboardPage(
               fluidRow(
                 column(12,tags$h1('Load data')),
                 column(12,
-                       fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = c(".rds",".crb",".cerebro","h5"),
-                                 width = NULL, buttonLabel = "Browse...",
-                                 placeholder = "No file selected")),
+                       # fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = c(".rds",".crb",".cerebro","h5"),
+                       #           width = NULL, buttonLabel = "Browse...",
+                       #           placeholder = "No file selected")),
+                fileInput(
+                  inputId = "input_file",
+                  label = "Select input data (.h5 or .rds file)",
+                  multiple = FALSE,
+                  accept = c(".rds",".crb","h5"),
+                  width = '350px',
+                  buttonLabel = "Browse...",
+                  placeholder = "No file selected"
+                  )
+                ),
                 
                 br(),br(),br(),br(),br(),br(),br(),
                 column(4, align="center",
@@ -3665,6 +3664,9 @@ server <- function(input, output, session) {
   output$trajectory_diffusionMapOT <- renderPlot({
     
     cds <- logcounts(cdScFiltAnnot)
+    
+    cellLabels <- cdScFiltAnnot$cellType
+    
     colnames(deng) <- cellLabels
     dm <- DiffusionMap(t(cds))
     
@@ -3757,12 +3759,12 @@ server <- function(input, output, session) {
 
     reduceddim(deng_sce, "lle") <- slicer_traj_lle
 
-    plot_df <- data.frame(slicer1 = reduceddim(deng_sce, "lle")[,1],
-                          slicer2 = reduceddim(deng_sce, "lle")[,2],
-                          cell_type2 =  deng_sce$cell_type2)
+    plot_df <- data.frame(slicer1 = reduceddim(cdScFiltAnnot, "lle")[,1],
+                          slicer2 = reduceddim(cdScFiltAnnot, "lle")[,2],
+                          cellType =  cdScFiltAnnot$cellType)
     ggplot(data = plot_df)+geom_point(mapping = aes(x = slicer1,
                                                     y = slicer2,
-                                                    color = cell_type2))+
+                                                    color = cellType))+
       scale_color_manual(values = my_color)+ xlab("lle component 1") +
       ylab("lle component 2") +
       ggtitle("locally linear embedding of cells from slicer")+
