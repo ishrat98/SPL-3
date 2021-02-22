@@ -2,6 +2,8 @@ library(shiny)
 library(shinydashboard)
 library(SingleCellExperiment)
 library(SummarizedExperiment)
+library(HDF5Array)
+
 library(scater)
 library(plotly)
 library(reshape2)
@@ -23,14 +25,12 @@ library(colourpicker)
 library(shinyWidgets)
 library(shinyjs)
 library(monocle)
-library(monocle3)
-library(Biobase)
-
+library(SingleCellExperiment)
 library(slingshot)
 library(RColorBrewer)
-#library(Seurat)
+library(Seurat)
 library(TSCAN)
-#library(Seurat)
+library(Seurat)
 library(scales)
 library(viridis)
 library(Matrix)
@@ -176,7 +176,7 @@ scatter_plot_percentage_cells_to_show <- list(
 ui <- dashboardPage(
   #skin = "purple",
   dashboardHeader(
-    title = "CISTRON"
+    title = "UoM Single cell"
   ),
   
   # Sidebar #############################
@@ -191,57 +191,67 @@ ui <- dashboardPage(
                menuSubItem('Single gene expression', tabName = "Gene_expression"),
                menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
       menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
+      menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
+      menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
+      menuItem("Heatmap", tabName = "multiple_cluster_heatmap", icon = icon("columns"),
+               menuSubItem('Cluster heatmap', tabName = 'clusterHeatmap'),
+               menuSubItem('Sample heatmap', tabName = 'sampleHeatmap'),
+               menuSubItem('Sample & cluster heatmap', tabName = 'sampleClusterHeatmap')),
+      menuItem("Bubble plot", tabName = "bubblePlot", icon = icon("dot-circle"),
+               menuSubItem('Cluster bubble plot', tabName = 'clusterBubblePlot'),
+               menuSubItem('Sample bubble plot', tabName = 'sampleBubblePlot')),
+      menuItem('Differential Expression', tabName = 'DE_menus', icon = icon('line-chart'), 
+               menuSubItem('DE between clusters', tabName = 'DE_between_clusters'),
+               menuSubItem('DE between samples', tabName = 'DE_between_samples'),
+               menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
+               menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
-               menuSubItem('Monocle2', tabName = 'trajectory_monocle2'),
+               menuSubItem('Monocle', tabName = 'trajectory_monocle'),
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
-      menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
-      menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
-      menuItem('Differential Expression', tabName = 'DE_menus', icon = icon('line-chart'), 
-               menuSubItem('DE between clusters', tabName = 'DE_between_clusters')),
-      menuItem('About', tabName = 'about', icon = icon('info'))
+      menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
   dashboardBody(
     tags$head(tags$style(HTML('
         /* logo */
                               .skin-blue .main-header .logo {
-                              background-color: #aaaaaa;
+                              background-color: #800080;
                               }
                               
                               /* logo when hovered */
                               .skin-blue .main-header .logo:hover {
-                              background-color: #aaaaaa;
+                              background-color: #800080;
                               }
                               
                               /* navbar (rest of the header) */
                               .skin-blue .main-header .navbar {
-                              background-color: #aaaaaa;
+                              background-color: #800080;
                               }        
                               
                               
                               
                               /* other links in the sidebarmenu when hovered */
                               .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-                              background-color: #aaaaaa;
+                              background-color: #800080;
                               }
                               /* toggle button when hovered  */                    
                               .skin-blue .main-header .navbar .sidebar-toggle:hover{
-                              background-color: #aaaaaa;
+                              background-color: #800080;
                               }
                               .box.box-solid.box-primary>.box-header {
                                color:#fff;
-                               background:#aaaaaa
+                               background:#800080
                               }
                               
                               .box.box-solid.box-primary{
-                              border-bottom-color:#aaaaaa;
-                              border-left-color:#aaaaaa;
-                              border-right-color:#aaaaaa;
-                              border-top-color:#aaaaaa
+                              border-bottom-color:#800080;
+                              border-left-color:#800080;
+                              border-right-color:#800080;
+                              border-top-color:#800080
                               
                               }
 
@@ -253,19 +263,9 @@ ui <- dashboardPage(
               fluidRow(
                 column(12,tags$h1('Load data')),
                 column(12,
-                       # fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = c(".rds",".crb",".cerebro","h5"),
-                       #           width = NULL, buttonLabel = "Browse...",
-                       #           placeholder = "No file selected")),
-                fileInput(
-                  inputId = "input_file",
-                  label = "Select input data (.h5 or .rds file)",
-                  multiple = FALSE,
-                  accept = c(".rds",".crb","h5"),
-                  width = '350px',
-                  buttonLabel = "Browse...",
-                  placeholder = "No file selected"
-                  )
-                ),
+                       fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = c(".rds",".crb",".cerebro","h5"),
+                                 width = NULL, buttonLabel = "Browse...",
+                                 placeholder = "No file selected")),
                 
                 br(),br(),br(),br(),br(),br(),br(),
                 column(4, align="center",
@@ -983,28 +983,122 @@ ui <- dashboardPage(
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_SlingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = " Psedutime", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = "Second Slingshot Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
               
       
-      tabItem(tabName = 'trajectory_monocle2',
+      tabItem(tabName = 'trajectory_monocle',
+              fluidRow(
+                box(title = p(tags$span("Input parameters", style="padding-right:8px;"), 
+                              actionButton("trajectory_input", "info",
+                                           class = "btn-xs", title = "Additional information for this panel")
+                ), status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 4,
+                selectInput(
+                  inputId = "trajectory_projection_info",
+                  label = "Trajectory", 
+                  #choices = names(cdScFiltAnnot$trajectory$monocle2),
+                 # choices = unique(levels(as.factor(cdScFiltAnnot$trajectory$monocle2))),
+                 # choices = names(as.factor(cdScFiltAnnot$trajectory$monocle2)
+                 # choices = unique(levels(as.factor(cdScFiltAnnot$samples))), 
+                 # selected = unique(levels(as.factor(cdScFiltAnnot$samples))),
+                 choices = c('tSNE','UMAP'),
+                 multiple = FALSE,
+                 selectize = FALSE
+                ),
+                pickerInput(
+                  inputId = "trajectory_samples_to_display", 
+                  label = "Samples to display",
+                  # choices = cdScFiltAnnot$sample_names,
+                  # selected = cdScFiltAnnot$sample_names,
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+                  selected = '',
+                  options = list("actions-box" = TRUE),
+                  multiple = TRUE
+                  
+                ),
+                pickerInput(
+                  inputId = "trajectory_clusters_to_display", 
+                  label = "Clusters to display",
+                  # choices = cdScFiltAnnot$cluster_names,
+                  # selected = cdScFiltAnnot$cluster_names,
+                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
+                  selected = '',
+                  options = list("actions-box" = TRUE),
+                  multiple = TRUE
+                  
+                ),
+                sliderInput(
+                  "trajectory_percentage_cells_to_show",
+                  label = "Show % of cells",
+                  min = scatter_plot_percentage_cells_to_show[["min"]],
+                  max = scatter_plot_percentage_cells_to_show[["max"]],
+                  step = scatter_plot_percentage_cells_to_show[["step"]],
+                  value = scatter_plot_percentage_cells_to_show[["default"]]
+                ),
+                
+
+                selectInput(
+                  "trajectory_dot_color",
+                  label = "Color cells by",
+                  # choices = c("state","pseudotime",names(cdScFiltAnnot$cells)[! names(cdScFiltAnnot$cells) %in% c("cell_barcode")])
+                  # choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
+                  # selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
+                  choices = c('state','pseudotime','Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
+                  multiple = FALSE,
+                  selectize = FALSE
+                  ),
+                
+                sliderInput(
+                  "trajectory_dot_size",
+                  label = "Dot size",
+                  min = scatter_plot_dot_size[["min"]],
+                  max = scatter_plot_dot_size[["max"]],
+                  step = scatter_plot_dot_size[["step"]],
+                  value = scatter_plot_dot_size[["default"]]
+                ),
+                sliderInput(
+                  "trajectory_dot_opacity",
+                  label = "Dot opacity",
+                  min = scatter_plot_dot_opacity[["min"]],
+                  max = scatter_plot_dot_opacity[["max"]],
+                  step = scatter_plot_dot_opacity[["step"]],
+                  value = scatter_plot_dot_opacity[["default"]]
+                )
+                
+                
+                ),
+                
+                box(title = p(tags$span("Trajectory", style="padding-right:8px;"),
+                              actionButton("trajectory_projection_info", "info",
+                                           class = "btn-xs", title = "Additional information for this panel")
+                ), status = "primary", solidHeader = TRUE, width = 8,
+                plotOutput("trajectory_projection") %>% withSpinner(type = getOption("spinner.type", default = 8))
+                ),
+
+                box(
+                  title = "Distribution along pseudotime", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 12,
+                  plotOutput("trajectory_density_plott", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                )
+               
+              )
+      ),
+      
+      tabItem(tabName = 'trajectory_monocle3',
               box(
                 title = "Monocle2", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -1023,39 +1117,12 @@ ui <- dashboardPage(
 
       ),
       
-      tabItem(tabName = 'trajectory_monocle3',
-              box(
-                title = "Monocle3", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "Component", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle3Component", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              )
-              
-      ),
-      
-      tabItem(tabName = 'trajectory_diffusionMap',
-              box(
-                title = "Diffusion Map", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_diffusionMapOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              )
-      ),
-      
       
       tabItem(tabName = 'trajectory_TSCAN',
               box(
                 title = "PCA Dimension 1", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_TSCAN_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_TSCAN_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = "TSCAN Psedutime", status = "primary", solidHeader = TRUE,
@@ -3438,7 +3505,7 @@ server <- function(input, output, session) {
                          cellType = cdScFiltAnnot$cellType)
     
     ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cellType))+
-      scale_colour_manual(values = my_color)+theme_classic()
+      scale_colour_manual(values = )+theme_classic()
     
   })
   
@@ -3446,8 +3513,8 @@ server <- function(input, output, session) {
   
   output$FirstPrincipalComponent <- renderPlotly({
     
-    my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
-    names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
+     <- createPalette(14, c("#010101", "#ff0000"), M=1000)
+    names() <- unique(as.character(cdScFiltAnnot$cellType))
     #PCA_df
     pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
                          PC2 = reducedDim(cdScFiltAnnot,"PCA")[,2],
@@ -3456,14 +3523,14 @@ server <- function(input, output, session) {
     ggplot(pca_df, aes(x = PC1, y = cellType, 
                        colour = cellType)) +
       geom_quasirandom(groupOnX = FALSE) +
-      scale_colour_manual(values = my_color) + theme_classic() +
+      scale_colour_manual(values = ) + theme_classic() +
       xlab("First principal component") + ylab("Timepoint") +
       ggtitle("Cells ordered by first principal component") 
     
   })
   
   ## Slingshot
-  output$trajectory_SlingshotOT <- renderPlotly({
+  output$trajectory_slingshotOT <- renderPlot({
 
     
     # Plot PC biplot with cells colored by cell_type2. 
@@ -3472,12 +3539,29 @@ server <- function(input, output, session) {
     ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = PC1, y = PC2, color = cellType)) + geom_quasirandom(groupOnX = FALSE) +
       scale_color_tableau() + theme_classic() +
       xlab("PC1") + ylab("PC2") + ggtitle("PC biplot")
+    
 
+    
+    
+    
     
    })
   
-  output$trajectory_psedutime <- renderPlot({
+  output$trajectory_FirstSlingshot <- renderPlot({
+    # ## Plotting the pseudotime inferred by slingshot by cell types
+    # 
+    # slingshot_df <- data.frame(colData(cdScFiltAnnot))
+    # 
+    # ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
+    #                          colour = cellType)) +
+    #   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+    #   xlab("First Slingshot pseudotime") + ylab("cell type") +
+    #   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = )
+    # 
     
+    # Read the Slingshot documentation (?slingshot) and then run Slingshot below. 
+    # Given your understanding of the algorithm and the documentation, what is one 
+    # major set of parameters we omitted here when running Slingshot?
     sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
     
     # Plot PC1 vs PC2 colored by Slingshot pseudotime.
@@ -3496,42 +3580,305 @@ server <- function(input, output, session) {
     lines(SlingshotDataSet(sce), lwd=2)
   })
   
-  output$trajectory_FirstSlingshot <- renderPlotly({
-    sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
+  output$trajectory_SecondSlingshot <- renderPlot({
     
-    # Plot PC1 vs PC2 colored by Slingshot pseudotime.
-    colors <- rainbow(50, alpha = 1)
-    
-    ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y = cellType, 
-                                                      colour = cellType)) +
-      geom_quasirandom(groupOnX = FALSE) +
-      scale_color_tableau() + theme_classic() +
-      xlab("Slingshot pseudotime") + ylab("Timepoint") +
-      ggtitle("Cells ordered by Slingshot pseudotime")
-    
-    
-  })
-  
-  
-  output$trajectory_SecondSlingshot <- renderPlotly({
-   
-    sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
-  
-    colors <- rainbow(50, alpha = 1)
-    
-    ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_2, y = cellType, 
-                                                      colour = cellType)) +
-      geom_quasirandom(groupOnX = FALSE) +
-      scale_color_tableau() + theme_classic() +
-      xlab("Second Slingshot pseudotime") + ylab("cell type") +
-      ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
-    
+  ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cellType, 
+                           colour = cellType)) +
+    geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+    xlab("Second Slingshot pseudotime") + ylab("cell type") +
+    ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = )
     
   })
   
   ##----------------------------------------------------------------------------##
-  ## Trajectory
+  ## Projection.
   ##----------------------------------------------------------------------------##
+  output$trajectory_projection <- plotly::renderPlotly({
+    # don't do anything before these inputs are selected
+    req(
+      input[["trajectory_to_display"]],
+      input[["trajectory_samples_to_display"]],
+      input[["trajectory_clusters_to_display"]],
+      input[["trajectory_percentage_cells_to_show"]],
+      input[["trajectory_dot_color"]],
+      input[["trajectory_dot_size"]],
+      input[["trajectory_dot_opacity"]]
+    )
+    
+    trajectory_to_display <- input[["trajectory_to_display"]]
+    samples_to_display <- input[["trajectory_samples_to_display"]]
+    clusters_to_display <- input[["trajectory_clusters_to_display"]]
+    cells_to_display <- which(
+      (cdScFiltAnnot$cellType$sample %in% samples_to_display) &
+        (cdScFiltAnnot$cellType$cluster %in% clusters_to_display)
+    )
+    
+    # randomly remove cells
+    if ( input[["trajectory_percentage_cells_to_show"]] < 100 ) {
+      number_of_cells_to_plot <- ceiling(
+        input[["trajectory_percentage_cells_to_show"]] / 100 * length(cells_to_display)
+      )
+      cells_to_display <- cells_to_display[ sample(1:length(cells_to_display), number_of_cells_to_plot) ]
+    }
+    
+    # extract cells to plot
+    to_plot <- cbind(
+      cdScFiltAnnot$trajectory$monocle2[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
+      cdScFiltAnnot$cellType[ cells_to_display , ]
+    ) %>%
+      dplyr::filter(!is.na(pseudotime))
+    to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
+    
+    color_variable <- input[["trajectory_dot_color"]]
+  
+    # convert edges of trajectory into list format to plot with plotly
+    trajectory_edges <- cdScFiltAnnot$trajectory$monocle2[[trajectory_to_display]][["edges"]]
+    trajectory_lines <- list()
+    for (i in 1:nrow(trajectory_edges) ) {
+      line = list(
+        type = "line",
+        line = list(color = "black"),
+        xref = "x",
+        yref = "y",
+        x0 = trajectory_edges$source_dim_1[i],
+        y0 = trajectory_edges$source_dim_2[i],
+        x1 = trajectory_edges$target_dim_1[i],
+        y1 = trajectory_edges$target_dim_2[i]
+      )
+      trajectory_lines <- c(trajectory_lines, list(line))
+    }
+    
+    if ( is.factor(to_plot[[ color_variable ]]) || is.character(to_plot[[ color_variable ]]) ) {
+      if ( color_variable == "sample" ) {
+        colors_this_plot <- reactive_colors()$sampless
+      } else if ( color_variable == "cluster" ) {
+        colors_this_plot <- reactive_colors()$clusters
+      } else if ( color_variable %in% c("cell_cycle_seurat","cell_cycle_cyclone") ) {
+        colors_this_plot <- cell_cycle_colorset
+      } else if ( is.factor(to_plot[[ color_variable ]]) ) {
+        colors_this_plot <- setNames(
+          default_colorset[1:length(levels(to_plot[[ color_variable ]]))],
+          levels(to_plot[[ color_variable ]])
+        )
+      } else {
+        colors_this_plot <- default_colorset
+      }
+      plot <- plotly::plot_ly(
+        to_plot,
+        x = ~DR_1,
+        y = ~DR_2,
+        color = ~to_plot[[ color_variable ]],
+        colors = colors_this_plot,
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          opacity = input[["trajectory_dot_opacity"]],
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          shapes = trajectory_lines,
+          xaxis = list(
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_1) * 1.1
+          ),
+          yaxis = list(
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_2) * 1.1
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences[["use_webgl"]] == TRUE ) {
+        plot %>% plotly::toWebGL()
+      } else {
+        plot
+      }
+    } else {
+      plot <- plotly::plot_ly(
+        data = to_plot,
+        x = ~DR_1,
+        y = ~DR_2,
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          colorbar = list(
+            title = colnames(to_plot)[which(colnames(to_plot) == color_variable)]
+          ),
+          color = ~to_plot[[ color_variable ]],
+          opacity = input[["trajectory_dot_opacity"]],
+          colorscale = "YlGnBu",
+          reversescale = TRUE,
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          shapes = trajectory_lines,
+          xaxis = list(
+            title = colnames(to_plot)[1],
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_1) * 1.1
+          ),
+          yaxis = list(
+            title = colnames(to_plot)[2],
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_2) * 1.1
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences$use_webgl == TRUE ) {
+        plotly::toWebGL(plot)
+      } else {
+        plot
+      }
+    }
+  })
+  ##----------------------------------------------------------------------------##
+  ## Distribution along pseudotime.
+  ##----------------------------------------------------------------------------##
+  
+  output[["trajectory_density_plot"]] <- plotly::renderPlotly({
+    # don't do anything before these inputs are selected
+    req(
+      input[["trajectory_to_display"]],
+      input[["trajectory_samples_to_display"]],
+      input[["trajectory_clusters_to_display"]],
+      input[["trajectory_dot_color"]]
+    )
+    
+    trajectory_to_display <- input[["trajectory_to_display"]]
+    samples_to_display <- input[["trajectory_samples_to_display"]]
+    clusters_to_display <- input[["trajectory_clusters_to_display"]]
+    cells_to_display <- which(
+      (cdScFiltAnnot$cells$sample %in% samples_to_display) &
+        (cdScFiltAnnot$cells$cluster %in% clusters_to_display)
+    )
+    
+    # extract cells to plot
+    to_plot <- cbind(
+      input$trajectory_projection_info[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
+      cdScFiltAnnot$cells[ cells_to_display , ]
+    ) %>%
+      dplyr::filter(!is.na(pseudotime))
+    to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
+    
+    color_variable <- input[["trajectory_dot_color"]]
+    
+    if ( is.factor(to_plot[[ color_variable ]]) || is.character(to_plot[[ color_variable ]]) ) {
+      if ( color_variable == "sample" ) {
+        colors_this_plot <- reactive_colors()$samples
+      } else if ( color_variable == "cluster" ) {
+        colors_this_plot <- reactive_colors()$clusters
+      } else if ( color_variable %in% c("cell_cycle_seurat","cell_cycle_cyclone") ) {
+        colors_this_plot <- cell_cycle_colorset
+      } else if ( is.factor(to_plot[[ color_variable ]]) ) {
+        colors_this_plot <- setNames(
+          default_colorset[1:length(levels(to_plot[[ color_variable ]]))],
+          levels(to_plot[[ color_variable ]])
+        )
+      } else {
+        colors_this_plot <- default_colorset
+      }
+      p <- ggplot(to_plot, aes_string(x = "pseudotime", fill = color_variable)) +
+        geom_density(alpha = 0.4, color = "black") +
+        theme_bw() +
+        labs(x = "Pseudotime", y = "Density") +
+        scale_fill_manual(values = colors_this_plot) +
+        guides(fill = guide_legend(override.aes = list(alpha = 1)))
+      plotly::ggplotly(p, tooltip = "text") %>%
+        plotly::style(
+          hoveron = "fill"
+        )
+    } else {
+      colors_this_plot <- setNames(
+        default_colorset[1:length(levels(cdScFiltAnnot$trajectory$monocle2[[ input[["trajectory_to_display"]] ]][["meta"]]$state))],
+        levels(cdScFiltAnnot$trajectory$monocle2[[ input[["trajectory_to_display"]] ]][["meta"]]$state)
+      )
+      plot <- plotly::plot_ly(
+        data = to_plot,
+        x = ~pseudotime,
+        y = ~to_plot[[ color_variable ]],
+        type = "scatter",
+        mode = "markers",
+        color = ~state,
+        colors = colors_this_plot,
+        marker = list(
+          opacity = input[["trajectory_dot_opacity"]],
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          xaxis = list(
+            title = "Pseudotime",
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE
+          ),
+          yaxis = list(
+            title = color_variable,
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences$use_webgl == TRUE ) {
+        plotly::toWebGL(plot)
+      } else {
+        plot
+      }
+    }
+  })
+  
   
   ###################################
   
@@ -3539,6 +3886,8 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle2OT <- renderPlot({
     
+    
+    #d <- deng_SCE[m3dGenes,]
     ## feature selection 
     deng <- counts(cdScFiltAnnot)
     
@@ -3612,85 +3961,18 @@ server <- function(input, output, session) {
            aes(x = pseudotime_monocle2, 
                y = cellType, colour = cellType)) +
       geom_quasirandom(groupOnX = FALSE) +
-      scale_color_manual(values = my_color) + theme_classic() +
+      scale_color_manual(values = ) + theme_classic() +
       xlab("monocle2 pseudotime") + ylab("Timepoint") +
       ggtitle("Cells ordered by monocle2 pseudotime")
     
   })
   
-  #######Monocle3##########
-  
-  output$trajectory_monocle3OT <- renderPlot({
+  output$trajectory_trajectory_TSCAN_1 <- renderPlotly({
     
-    ## feature selection 
-    deng <- counts(cdScFiltAnnot)
     
-    m3dGenes <- as.character(
-      M3DropFeatureSelection(deng)$Gene
-    )
+    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
     
-  })
-  
-  output$trajectory_monocle3Component <- renderPlotly({
-    
-    gene_meta <- rowData(cdScFiltAnnot)
-    #gene_metadata must contain a column verbatim named 'gene_short_name' for certain functions.
-    gene_meta$gene_short_name  <- rownames(gene_meta)
-    cds <- new_cell_data_set(expression_data = logcounts(cdScFiltAnnot),
-                             cell_metadata = colData(cdScFiltAnnot),
-                             gene_metadata = gene_meta)
-    
-    ## Step 1: Normalize and pre-process the data
-    cds <- preprocess_cds(cdScFiltAnnot,num_dim = 5)
-    plot_pc_variance_explained(cds)
-  })
-  
-  output$trajectory_monocle3Psedutime <- renderPlotly({
-  
-  pdata_cds <- pData(cdScFiltAnnot)
-  pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cdScFiltAnnot)
-  
-  ggplot(as.data.frame(pdata_cds), 
-         aes(x = pseudotime_monocle3, 
-             y = cellType, colour = cellType)) +
-    geom_quasirandom(groupOnX = FALSE) +
-    scale_color_manual(values = my_color) + theme_classic() +
-    xlab("monocle3 pseudotime") + ylab("Timepoint") +
-    ggtitle("Cells ordered by monocle3 pseudotime")
-  
-  })
-  
-  
-  output$trajectory_diffusionMapOT <- renderPlot({
-    
-    cds <- logcounts(cdScFiltAnnot)
-    
-    cellLabels <- cdScFiltAnnot$cellType
-    
-    colnames(deng) <- cellLabels
-    dm <- DiffusionMap(t(cds))
-    
-    tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
-                      DC2 = eigenvectors(dm)[,2],
-                      Timepoint = cdScFiltAnnot$cellType)
-    ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
-      geom_point() +  scale_color_manual(values = my_color) +
-      xlab("Diffusion component 1") + 
-      ylab("Diffusion component 2") +
-      theme_classic()
-    
-  })
-  
-  
-  output$trajectory_trajectory_TSCAN_1 <- renderPlot({
-    
-    # procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
-    # 
-    # colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
-    # 
-    # dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
-    # 
-    # TSCAN::plotmclust(dengclust)
+    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
     
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
     
@@ -3702,30 +3984,11 @@ server <- function(input, output, session) {
   output$trajectory_TSCAN_Pseudotime <- renderPlotly({
     
     
-    # procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
-    # 
-    # colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
-    # 
-    # dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
-    # 
-    # dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
-    # pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
-    # cdScFiltAnnot$pseudotime_order_tscan <- NA
-    # cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
-    #   dengorderTSCAN$Pseudotime
-    # 
-    # cellLabels[dengclust$clusterid == 14]
-    # 
-    # ggplot(as.data.frame(colData(cdScFiltAnnot)), 
-    #        aes(x = pseudotime_order_tscan, 
-    #            y = cellType, colour = cellType)) +
-    #   geom_quasirandom(groupOnX = FALSE) +
-    #   scale_color_manual(values = my_color) + theme_classic() +
-    #   xlab("TSCAN pseudotime") + ylab("Timepoint") +
-    #   ggtitle("Cells ordered by TSCAN pseudotime")
+    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
+    
+    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
     
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
-    
     
     dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
     pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
@@ -3733,12 +3996,13 @@ server <- function(input, output, session) {
     cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
       dengorderTSCAN$Pseudotime
     
+    cellLabels[dengclust$clusterid == 14]
     
     ggplot(as.data.frame(colData(cdScFiltAnnot)), 
            aes(x = pseudotime_order_tscan, 
                y = cellType, colour = cellType)) +
       geom_quasirandom(groupOnX = FALSE) +
-      scale_color_manual(values = my_color) + theme_classic() +
+      scale_color_manual(values = ) + theme_classic() +
       xlab("TSCAN pseudotime") + ylab("Timepoint") +
       ggtitle("Cells ordered by TSCAN pseudotime")
     
@@ -3759,13 +4023,13 @@ server <- function(input, output, session) {
 
     reduceddim(deng_sce, "lle") <- slicer_traj_lle
 
-    plot_df <- data.frame(slicer1 = reduceddim(cdScFiltAnnot, "lle")[,1],
-                          slicer2 = reduceddim(cdScFiltAnnot, "lle")[,2],
-                          cellType =  cdScFiltAnnot$cellType)
+    plot_df <- data.frame(slicer1 = reduceddim(deng_sce, "lle")[,1],
+                          slicer2 = reduceddim(deng_sce, "lle")[,2],
+                          cell_type2 =  deng_sce$cell_type2)
     ggplot(data = plot_df)+geom_point(mapping = aes(x = slicer1,
                                                     y = slicer2,
-                                                    color = cellType))+
-      scale_color_manual(values = my_color)+ xlab("lle component 1") +
+                                                    color = cell_type2))+
+      scale_color_manual(values = )+ xlab("lle component 1") +
       ylab("lle component 2") +
       ggtitle("locally linear embedding of cells from slicer")+
       theme_classic()
