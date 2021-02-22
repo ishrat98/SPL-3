@@ -178,25 +178,6 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Home", tabName = "overview", icon = icon("home")),
       menuItem("Projection", tabName = "projection", icon = icon("th")),
-      menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
-      menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
-               menuSubItem('Single gene expression', tabName = "Gene_expression"),
-               menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
-      menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
-      menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
-      menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
-      menuItem("Heatmap", tabName = "multiple_cluster_heatmap", icon = icon("columns"),
-               menuSubItem('Cluster heatmap', tabName = 'clusterHeatmap'),
-               menuSubItem('Sample heatmap', tabName = 'sampleHeatmap'),
-               menuSubItem('Sample & cluster heatmap', tabName = 'sampleClusterHeatmap')),
-      menuItem("Bubble plot", tabName = "bubblePlot", icon = icon("dot-circle"),
-               menuSubItem('Cluster bubble plot', tabName = 'clusterBubblePlot'),
-               menuSubItem('Sample bubble plot', tabName = 'sampleBubblePlot')),
-      menuItem('Differential Expression', tabName = 'DE_menus', icon = icon('line-chart'), 
-               menuSubItem('DE between clusters', tabName = 'DE_between_clusters'),
-               menuSubItem('DE between samples', tabName = 'DE_between_samples'),
-               menuSubItem('DE between sample & clusters', tabName = 'DE_between_sample_and_clusters'),
-               menuSubItem('DE between manual selection', tabName = 'DE_between_manual_selection')),
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
@@ -204,7 +185,15 @@ ui <- dashboardPage(
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
-      menuItem('Analysis info', tabName = 'analysisInfo', icon = icon('info'))
+      menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
+      menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
+               menuSubItem('Single gene expression', tabName = "Gene_expression"),
+               menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
+      menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
+      menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
+      menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
+      
+      menuItem('About', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
   dashboardBody(
