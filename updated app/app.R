@@ -1,15 +1,19 @@
 library(shiny)
 library(shinydashboard)
+library(colourpicker)
+library(shinyWidgets)
+library(shinyjs)
+library(shinycssloaders)
+
 library(SingleCellExperiment)
 library(SummarizedExperiment)
 library(HDF5Array)
-
 library(scater)
 library(plotly)
 library(reshape2)
 library(circlize)
 library(sSeq)
-library(shinycssloaders)
+
 library(ComplexHeatmap)
 library(tibble)
 library(paletteer)
@@ -21,16 +25,12 @@ library(viridisLite)
 library(HDF5Array)
 library(formattable)
 library(DT)
-library(colourpicker)
-library(shinyWidgets)
-library(shinyjs)
+
 library(monocle)
-library(SingleCellExperiment)
+library(monocle3)
 library(slingshot)
 library(RColorBrewer)
-library(Seurat)
 library(TSCAN)
-library(Seurat)
 library(scales)
 library(viridis)
 library(Matrix)
@@ -38,13 +38,10 @@ library(lle)
 
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
-#cdScFiltAnnot <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
 
+cdSk <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
 
-cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
-
-
-cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
+cdScFiltAnnot <-  as(cdSk, "SingleCellExperiment")
 
 
 cellLabels <- cdScFiltAnnot$cellType
@@ -52,18 +49,14 @@ deng <- counts(cdScFiltAnnot)
 colnames(deng) <- cellLabels
 
 
-# Run PCA on Deng data. Use the runPCA function from the SingleCellExperiment package.
+# Run PCA Use the runPCA function from the SingleCellExperiment package.
 cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
 
 # Use the reducedDim function to access the PCA and store the results. 
 pca <- reducedDim(cdScFiltAnnot, "PCA")
 
-# Describe how the PCA is stored in a matrix. Why does it have this structure?
-head(pca)
-dim(pca)
 
-
-# Add PCA data to the deng_SCE object.
+# Add PCA data to the cds object.
 cdScFiltAnnot$PC1 <- pca[, 1]
 cdScFiltAnnot$PC2 <- pca[, 2]
 
@@ -106,7 +99,6 @@ c_sample_col <- c30[c(1,3,23,19,30)]
 c_clust_col <- c30[c(1,2,3,4,5,6,7,8,9,11,12,14,19,22,24,25)]
 
 my.clusters <- cdScFiltAnnot$Clusters
-#options(bitmapType='cairo')
 
 
 df_shiny <<- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
@@ -176,7 +168,7 @@ scatter_plot_percentage_cells_to_show <- list(
 ui <- dashboardPage(
   #skin = "purple",
   dashboardHeader(
-    title = "UoM Single cell"
+    title = "CISTRON"
   ),
   
   # Sidebar #############################
@@ -219,39 +211,39 @@ ui <- dashboardPage(
     tags$head(tags$style(HTML('
         /* logo */
                               .skin-blue .main-header .logo {
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }
                               
                               /* logo when hovered */
                               .skin-blue .main-header .logo:hover {
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }
                               
                               /* navbar (rest of the header) */
                               .skin-blue .main-header .navbar {
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }        
                               
                               
                               
                               /* other links in the sidebarmenu when hovered */
                               .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }
                               /* toggle button when hovered  */                    
                               .skin-blue .main-header .navbar .sidebar-toggle:hover{
-                              background-color: #800080;
+                              background-color: #aaaaaa;
                               }
                               .box.box-solid.box-primary>.box-header {
                                color:#fff;
-                               background:#800080
+                               background:#aaaaaa
                               }
                               
                               .box.box-solid.box-primary{
-                              border-bottom-color:#800080;
-                              border-left-color:#800080;
-                              border-right-color:#800080;
-                              border-top-color:#800080
+                              border-bottom-color:#aaaaaa;
+                              border-left-color:#aaaaaa;
+                              border-right-color:#aaaaaa;
+                              border-top-color:#aaaaaa
                               
                               }
 
@@ -3513,7 +3505,7 @@ server <- function(input, output, session) {
   
   output$FirstPrincipalComponent <- renderPlotly({
     
-     <- createPalette(14, c("#010101", "#ff0000"), M=1000)
+     my_color<- createPalette(14, c("#010101", "#ff0000"), M=1000)
     names() <- unique(as.character(cdScFiltAnnot$cellType))
     #PCA_df
     pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
@@ -3590,295 +3582,7 @@ server <- function(input, output, session) {
     
   })
   
-  ##----------------------------------------------------------------------------##
-  ## Projection.
-  ##----------------------------------------------------------------------------##
-  output$trajectory_projection <- plotly::renderPlotly({
-    # don't do anything before these inputs are selected
-    req(
-      input[["trajectory_to_display"]],
-      input[["trajectory_samples_to_display"]],
-      input[["trajectory_clusters_to_display"]],
-      input[["trajectory_percentage_cells_to_show"]],
-      input[["trajectory_dot_color"]],
-      input[["trajectory_dot_size"]],
-      input[["trajectory_dot_opacity"]]
-    )
-    
-    trajectory_to_display <- input[["trajectory_to_display"]]
-    samples_to_display <- input[["trajectory_samples_to_display"]]
-    clusters_to_display <- input[["trajectory_clusters_to_display"]]
-    cells_to_display <- which(
-      (cdScFiltAnnot$cellType$sample %in% samples_to_display) &
-        (cdScFiltAnnot$cellType$cluster %in% clusters_to_display)
-    )
-    
-    # randomly remove cells
-    if ( input[["trajectory_percentage_cells_to_show"]] < 100 ) {
-      number_of_cells_to_plot <- ceiling(
-        input[["trajectory_percentage_cells_to_show"]] / 100 * length(cells_to_display)
-      )
-      cells_to_display <- cells_to_display[ sample(1:length(cells_to_display), number_of_cells_to_plot) ]
-    }
-    
-    # extract cells to plot
-    to_plot <- cbind(
-      cdScFiltAnnot$trajectory$monocle2[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
-      cdScFiltAnnot$cellType[ cells_to_display , ]
-    ) %>%
-      dplyr::filter(!is.na(pseudotime))
-    to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
-    
-    color_variable <- input[["trajectory_dot_color"]]
-  
-    # convert edges of trajectory into list format to plot with plotly
-    trajectory_edges <- cdScFiltAnnot$trajectory$monocle2[[trajectory_to_display]][["edges"]]
-    trajectory_lines <- list()
-    for (i in 1:nrow(trajectory_edges) ) {
-      line = list(
-        type = "line",
-        line = list(color = "black"),
-        xref = "x",
-        yref = "y",
-        x0 = trajectory_edges$source_dim_1[i],
-        y0 = trajectory_edges$source_dim_2[i],
-        x1 = trajectory_edges$target_dim_1[i],
-        y1 = trajectory_edges$target_dim_2[i]
-      )
-      trajectory_lines <- c(trajectory_lines, list(line))
-    }
-    
-    if ( is.factor(to_plot[[ color_variable ]]) || is.character(to_plot[[ color_variable ]]) ) {
-      if ( color_variable == "sample" ) {
-        colors_this_plot <- reactive_colors()$sampless
-      } else if ( color_variable == "cluster" ) {
-        colors_this_plot <- reactive_colors()$clusters
-      } else if ( color_variable %in% c("cell_cycle_seurat","cell_cycle_cyclone") ) {
-        colors_this_plot <- cell_cycle_colorset
-      } else if ( is.factor(to_plot[[ color_variable ]]) ) {
-        colors_this_plot <- setNames(
-          default_colorset[1:length(levels(to_plot[[ color_variable ]]))],
-          levels(to_plot[[ color_variable ]])
-        )
-      } else {
-        colors_this_plot <- default_colorset
-      }
-      plot <- plotly::plot_ly(
-        to_plot,
-        x = ~DR_1,
-        y = ~DR_2,
-        color = ~to_plot[[ color_variable ]],
-        colors = colors_this_plot,
-        type = "scatter",
-        mode = "markers",
-        marker = list(
-          opacity = input[["trajectory_dot_opacity"]],
-          line = list(
-            color = "rgb(196,196,196)",
-            width = 1
-          ),
-          size = input[["trajectory_dot_size"]]
-        ),
-        hoverinfo = "text",
-        text = ~paste(
-          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
-          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
-          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
-          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
-          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
-          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
-          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
-        )
-      ) %>%
-        plotly::layout(
-          shapes = trajectory_lines,
-          xaxis = list(
-            mirror = TRUE,
-            showline = TRUE,
-            zeroline = FALSE,
-            range = range(to_plot$DR_1) * 1.1
-          ),
-          yaxis = list(
-            mirror = TRUE,
-            showline = TRUE,
-            zeroline = FALSE,
-            range = range(to_plot$DR_2) * 1.1
-          ),
-          hoverlabel = list(font = list(size = 11))
-        )
-      if ( preferences[["use_webgl"]] == TRUE ) {
-        plot %>% plotly::toWebGL()
-      } else {
-        plot
-      }
-    } else {
-      plot <- plotly::plot_ly(
-        data = to_plot,
-        x = ~DR_1,
-        y = ~DR_2,
-        type = "scatter",
-        mode = "markers",
-        marker = list(
-          colorbar = list(
-            title = colnames(to_plot)[which(colnames(to_plot) == color_variable)]
-          ),
-          color = ~to_plot[[ color_variable ]],
-          opacity = input[["trajectory_dot_opacity"]],
-          colorscale = "YlGnBu",
-          reversescale = TRUE,
-          line = list(
-            color = "rgb(196,196,196)",
-            width = 1
-          ),
-          size = input[["trajectory_dot_size"]]
-        ),
-        hoverinfo = "text",
-        text = ~paste(
-          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
-          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
-          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
-          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
-          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
-          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
-          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
-        )
-      ) %>%
-        plotly::layout(
-          shapes = trajectory_lines,
-          xaxis = list(
-            title = colnames(to_plot)[1],
-            mirror = TRUE,
-            showline = TRUE,
-            zeroline = FALSE,
-            range = range(to_plot$DR_1) * 1.1
-          ),
-          yaxis = list(
-            title = colnames(to_plot)[2],
-            mirror = TRUE,
-            showline = TRUE,
-            zeroline = FALSE,
-            range = range(to_plot$DR_2) * 1.1
-          ),
-          hoverlabel = list(font = list(size = 11))
-        )
-      if ( preferences$use_webgl == TRUE ) {
-        plotly::toWebGL(plot)
-      } else {
-        plot
-      }
-    }
-  })
-  ##----------------------------------------------------------------------------##
-  ## Distribution along pseudotime.
-  ##----------------------------------------------------------------------------##
-  
-  output[["trajectory_density_plot"]] <- plotly::renderPlotly({
-    # don't do anything before these inputs are selected
-    req(
-      input[["trajectory_to_display"]],
-      input[["trajectory_samples_to_display"]],
-      input[["trajectory_clusters_to_display"]],
-      input[["trajectory_dot_color"]]
-    )
-    
-    trajectory_to_display <- input[["trajectory_to_display"]]
-    samples_to_display <- input[["trajectory_samples_to_display"]]
-    clusters_to_display <- input[["trajectory_clusters_to_display"]]
-    cells_to_display <- which(
-      (cdScFiltAnnot$cells$sample %in% samples_to_display) &
-        (cdScFiltAnnot$cells$cluster %in% clusters_to_display)
-    )
-    
-    # extract cells to plot
-    to_plot <- cbind(
-      input$trajectory_projection_info[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
-      cdScFiltAnnot$cells[ cells_to_display , ]
-    ) %>%
-      dplyr::filter(!is.na(pseudotime))
-    to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
-    
-    color_variable <- input[["trajectory_dot_color"]]
-    
-    if ( is.factor(to_plot[[ color_variable ]]) || is.character(to_plot[[ color_variable ]]) ) {
-      if ( color_variable == "sample" ) {
-        colors_this_plot <- reactive_colors()$samples
-      } else if ( color_variable == "cluster" ) {
-        colors_this_plot <- reactive_colors()$clusters
-      } else if ( color_variable %in% c("cell_cycle_seurat","cell_cycle_cyclone") ) {
-        colors_this_plot <- cell_cycle_colorset
-      } else if ( is.factor(to_plot[[ color_variable ]]) ) {
-        colors_this_plot <- setNames(
-          default_colorset[1:length(levels(to_plot[[ color_variable ]]))],
-          levels(to_plot[[ color_variable ]])
-        )
-      } else {
-        colors_this_plot <- default_colorset
-      }
-      p <- ggplot(to_plot, aes_string(x = "pseudotime", fill = color_variable)) +
-        geom_density(alpha = 0.4, color = "black") +
-        theme_bw() +
-        labs(x = "Pseudotime", y = "Density") +
-        scale_fill_manual(values = colors_this_plot) +
-        guides(fill = guide_legend(override.aes = list(alpha = 1)))
-      plotly::ggplotly(p, tooltip = "text") %>%
-        plotly::style(
-          hoveron = "fill"
-        )
-    } else {
-      colors_this_plot <- setNames(
-        default_colorset[1:length(levels(cdScFiltAnnot$trajectory$monocle2[[ input[["trajectory_to_display"]] ]][["meta"]]$state))],
-        levels(cdScFiltAnnot$trajectory$monocle2[[ input[["trajectory_to_display"]] ]][["meta"]]$state)
-      )
-      plot <- plotly::plot_ly(
-        data = to_plot,
-        x = ~pseudotime,
-        y = ~to_plot[[ color_variable ]],
-        type = "scatter",
-        mode = "markers",
-        color = ~state,
-        colors = colors_this_plot,
-        marker = list(
-          opacity = input[["trajectory_dot_opacity"]],
-          line = list(
-            color = "rgb(196,196,196)",
-            width = 1
-          ),
-          size = input[["trajectory_dot_size"]]
-        ),
-        hoverinfo = "text",
-        text = ~paste(
-          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
-          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
-          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
-          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
-          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
-          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
-          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
-        )
-      ) %>%
-        plotly::layout(
-          xaxis = list(
-            title = "Pseudotime",
-            mirror = TRUE,
-            showline = TRUE,
-            zeroline = FALSE
-          ),
-          yaxis = list(
-            title = color_variable,
-            mirror = TRUE,
-            showline = TRUE,
-            zeroline = FALSE
-          ),
-          hoverlabel = list(font = list(size = 11))
-        )
-      if ( preferences$use_webgl == TRUE ) {
-        plotly::toWebGL(plot)
-      } else {
-        plot
-      }
-    }
-  })
-  
+ 
   
   ###################################
   
