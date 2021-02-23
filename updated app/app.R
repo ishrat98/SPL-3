@@ -55,6 +55,8 @@ cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
 # Use the reducedDim function to access the PCA and store the results. 
 pca <- reducedDim(cdScFiltAnnot, "PCA")
 
+my_color<- createPalette(14, c("#010101", "#ff0000"), M=1000)
+#names() <- unique(as.character(cdScFiltAnnot$cellType))
 
 # Add PCA data to the cds object.
 cdScFiltAnnot$PC1 <- pca[, 1]
@@ -3494,8 +3496,7 @@ server <- function(input, output, session) {
   
   output$FirstPrincipalComponent <- renderPlotly({
     
-     my_color<- createPalette(14, c("#010101", "#ff0000"), M=1000)
-    names() <- unique(as.character(cdScFiltAnnot$cellType))
+
     #PCA_df
     pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
                          PC2 = reducedDim(cdScFiltAnnot,"PCA")[,2],
