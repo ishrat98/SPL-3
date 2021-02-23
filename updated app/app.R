@@ -55,8 +55,8 @@ cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
 # Use the reducedDim function to access the PCA and store the results. 
 pca <- reducedDim(cdScFiltAnnot, "PCA")
 
-my_color<- createPalette(14, c("#010101", "#ff0000"), M=1000)
-#names() <- unique(as.character(cdScFiltAnnot$cellType))
+my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
+names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
 
 # Add PCA data to the cds object.
 cdScFiltAnnot$PC1 <- pca[, 1]
@@ -3488,7 +3488,8 @@ server <- function(input, output, session) {
                          cellType = cdScFiltAnnot$cellType)
     
     ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cellType))+
-      scale_colour_manual(values = )+theme_classic()
+      scale_colour_manual(values = my_color)+theme_classic()
+    
     
   })
   
@@ -3505,9 +3506,11 @@ server <- function(input, output, session) {
     ggplot(pca_df, aes(x = PC1, y = cellType, 
                        colour = cellType)) +
       geom_quasirandom(groupOnX = FALSE) +
-      scale_colour_manual(values = ) + theme_classic() +
+      scale_colour_manual(values = my_color) + theme_classic() +
       xlab("First principal component") + ylab("Timepoint") +
       ggtitle("Cells ordered by first principal component") 
+    
+
     
   })
   
