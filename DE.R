@@ -1,142 +1,108 @@
 library(tradeSeq)
 library(RColorBrewer)
 library(SingleCellExperiment)
-library(slingshot)#library(SingleCellExperiment)
-library(SummarizedExperiment)
-library(HDF5Array)
-# cdSk <- loadHDF5SummarizedExperiment(dir="updated app/cdScFiltAnnotHDF5", prefix="")
-# #View(cdSk)
-# 
-# cdScFiltAnnot <-  as(cdSk, "SingleCellExperiment")
-# 
-# #View(cdScFiltAnnot)
-# #install.packages("matrixStats")
-# 
-# palette(brewer.pal(8, "Dark2"))
-# cellLabels <- cdScFiltAnnot$cellType
-# cds <- counts(cdScFiltAnnot)
-# colnames(cds) <- cellLabels
-# counts <- counts(cdScFiltAnnot)
-# 
-# set.seed(5)
-# cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
-# counts <- as.matrix(counts(cdScFiltAnnot))
-# set.seed(5)
-# sds <- SlingshotDataSet(cdScFiltAnnot)
-# icMat <- evaluateK(counts = counts, sds = cdScFiltAnnot, k = 3:20, nGenes = 200, verbose = FALSE)
-# 
-# #icMat <- evaluateK(counts = counts, sds = cdScFiltAnnot, k = 3:10, 
-#  #                  nGenes = 200, verbose = T)
-# 
-# 
-# plotSmoothers(sce[[sigGeneStart]])
-# 
-# 
-# 
-# 
-# cdScFiltAnnot <- slingshot(cdScFiltAnnot, clusterLabels = 'cellType',reducedDim = "PCA",
-#                            allow.breaks = FALSE)
-# summary(cdScFiltAnnot$slingPseudotime_1)
-# lnes <- getLineages(reducedDim(cdScFiltAnnot,"PCA"),
-#                     cdScFiltAnnot$cellType)
-# 
-# plot(reducedDims(cdScFiltAnnot)$PCA, col = my_color[as.character(cdScFiltAnnot$cellType)], 
-#      pch=16, 
-#      asp = 1)
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# set.seed(7)
-# pseudotime <- slingPseudotime(cdScFiltAnnot, na = FALSE)
-# cellWeights <- slingCurveWeights(cdScFiltAnnot)
-# sce <- fitGAM(counts = counts, pseudotime = pseudotime, cellWeights = cellWeights,
-#               nknots = 6, verbose = FALSE)
-# 
-# 
-# 
-# 
-# 
-# startRes <- startVsEndTest(sce)
-# 
-# 
-# 
-# oStart <- order(startRes$waldStat, decreasing = TRUE)
-# sigGeneStart <- names(sce)[oStart[3]]
-# plotSmoothers(sce, counts, gene = sigGeneStart)
+library(monocle)
 
-
-library(tradeSeq)
-library(RColorBrewer)
-library(SingleCellExperiment)
-library(slingshot)
-
-
-cdSk <- loadHDF5SummarizedExperiment(dir="updated app/cdScFiltAnnotHDF5", prefix="")
-
-cdScFiltAnnot <-  as(cdSk, "SingleCellExperiment")
-
-palette(brewer.pal(8, "Dark2"))
-cellLabels <- cdScFiltAnnot$cellType
-#cds <- counts(cdScFiltAnnot)
-colnames(cds) <- cellLabels
-counts <- counts(cdScFiltAnnot)
-cdScFiltAnnot 
-
-cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
-counts <- as.matrix(counts(cdScFiltAnnot))
 # For reproducibility
-RNGversion("3.5.0")
 palette(brewer.pal(8, "Dark2"))
-# data(countMatrix, package = "tradeSeq")
-# counts <- as.matrix(countMatrix)
-# rm(countMatrix)
-data(cdScFiltAnnot, package = "tradeSeq")
-#data(celltype, package = "tradeSeq")
+data(countMatrix, package = "tradeSeq")
+counts <- as.matrix(countMatrix)
+rm(countMatrix)
+data(celltype, package = "tradeSeq")
+#Fit trajectories using
 
-set.seed(5)
-icMat <- evaluateK(counts = counts, sds = cdScFiltAnnot, k = 3:10, 
-                   nGenes = 1741 , verbose = T)
+set.seed(200)
+pd <- data.frame(cells = colnames(counts), cellType = celltype)
+rownames(pd) <- pd$cells
+fd <- data.frame(gene_short_name = rownames(counts))
+rownames(fd) <- fd$gene_short_name
+cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
+                      featureData = new("AnnotatedDataFrame", data = fd))
+cds <- estimateSizeFactors(cds)
+cds <- reduceDimension(cds, max_components = 2)
+cds <- orderCells(cds)
+cds <- orderCells(cds, root_state = 5)
+plot_cell_trajectory(cds)
 
 
-set.seed(7)
-pseudotime <- slingPseudotime(cdScFiltAnnot, na = FALSE)
-cellWeights <- slingCurveWeights(cdScFiltAnnot)
-sce <- fitGAM(counts = counts, pseudotime = pseudotime, cellWeights = cellWeights,
-              nknots = 6, verbose = FALSE)
+info <- extract_monocle_info(cds)
+sce <- fitGAM(counts = Biobase::exprs(cds),
+              cellWeights = info$cellWeights,
+              pseudotime = info$pseudotime)
 
 
-table(rowData(sce)$tradeSeq$converged)
+sce <- fitGAM(cds, verbose = TRUE)
 
-assoRes <- associationTest(sce)
-head(assoRes)
 
-startRes <- startVsEndTest(sce)
+set.seed(22)
+library(monocle3)
+# Create a cell_data_set object
+cds <- new_cell_data_set(counts, cell_metadata = pd,
+                         gene_metadata = data.frame(gene_short_name = rownames(counts),
+                                                    row.names = rownames(counts)))
+# Run PCA then UMAP on the data
+cds <- preprocess_cds(cds, method = "PCA")
+cds <- reduce_dimension(cds, preprocess_method = "PCA",
+                        reduction_method = "UMAP")
 
-oStart <- order(startRes$waldStat, decreasing = TRUE)
-sigGeneStart <- names(sce)[oStart[3]]
-plotSmoothers(sce, counts, gene = sigGeneStart)
+# First display, coloring by the cell types from Paul et al
+plot_cells(cds, label_groups_by_cluster = FALSE, cell_size = 1,
+           color_cells_by = "cellType")
 
-plotGeneCount(cdScFiltAnnot, counts, gene = sigGeneStart)
+# Running the clustering method. This is necessary to the construct the graph
+cds <- cluster_cells(cds, reduction_method = "UMAP")
+# Visualize the clusters
+plot_cells(cds, color_cells_by = "cluster", cell_size = 1)
 
-customRes <- startVsEndTest(sce, pseudotimeValues = c(0.1, 0.8))
+# Construct the graph
+# Note that, for the rest of the code to run, the graph should be fully connected
+cds <- learn_graph(cds, use_partition = FALSE)
 
-endRes <- diffEndTest(sce)
+# We find all the cells that are close to the starting point
+cell_ids <- colnames(cds)[pd$cellType ==  "Multipotent progenitors"]
+closest_vertex <- cds@principal_graph_aux[["UMAP"]]$pr_graph_cell_proj_closest_vertex
+closest_vertex <- as.matrix(closest_vertex[colnames(cds), ])
+closest_vertex <- closest_vertex[cell_ids, ]
+closest_vertex <- as.numeric(names(which.max(table(closest_vertex))))
+mst <- principal_graph(cds)$UMAP
+root_pr_nodes <- igraph::V(mst)$name[closest_vertex]
 
-o <- order(endRes$waldStat, decreasing = TRUE)
-sigGene <- names(sce)[o[1]]
-plotSmoothers(sce, counts, sigGene)
+# We compute the trajectory
+cds <- order_cells(cds, root_pr_nodes = root_pr_nodes)
+plot_cells(cds, color_cells_by = "pseudotime")
 
-plotGeneCount(cdScFiltAnnot, counts, gene = sigGene)
 
-patternRes <- patternTest(sce)
-oPat <- order(patternRes$waldStat, decreasing = TRUE)
-head(rownames(patternRes)[oPat])
 
-plotSmoothers(sce, counts, gene = rownames(patternRes)[oPat][4])
+library(magrittr)
+# Get the closest vertice for every cell
+y_to_cells <-  principal_graph_aux(cds)$UMAP$pr_graph_cell_proj_closest_vertex %>%
+  as.data.frame()
+y_to_cells$cells <- rownames(y_to_cells)
+y_to_cells$Y <- y_to_cells$V1
 
-plotGeneCount(cdScFiltAnnot, counts, gene = rownames(patternRes)[oPat][4])
+# Get the root vertices
+# It is the same node as above
+root <- cds@principal_graph_aux$UMAP$root_pr_nodes
+
+# Get the other endpoints
+endpoints <- names(which(igraph::degree(mst) == 1))
+endpoints <- endpoints[!endpoints %in% root]
+
+# For each endpoint
+cellWeights <- lapply(endpoints, function(endpoint) {
+  # We find the path between the endpoint and the root
+  path <- igraph::shortest_paths(mst, root, endpoint)$vpath[[1]]
+  path <- as.character(path)
+  # We find the cells that map along that path
+  df <- y_to_cells[y_to_cells$Y %in% path, ]
+  df <- data.frame(weights = as.numeric(colnames(cds) %in% df$cells))
+  colnames(df) <- endpoint
+  return(df)
+}) %>% do.call(what = 'cbind', args = .) %>%
+  as.matrix()
+rownames(cellWeights) <- colnames(cds)
+pseudotime <- matrix(pseudotime(cds), ncol = ncol(cellWeights),
+                     nrow = ncol(cds), byrow = FALSE)
+sce <- fitGAM(counts = counts,
+              pseudotime = pseudotime,
+              cellWeights = cellWeights)
