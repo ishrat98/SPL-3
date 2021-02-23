@@ -3669,7 +3669,7 @@ server <- function(input, output, session) {
     
     procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
     
-    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    #colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
     
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
     
@@ -3681,11 +3681,9 @@ server <- function(input, output, session) {
   output$trajectory_TSCAN_Pseudotime <- renderPlotly({
     
     
-    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
-    
-    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
-    
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
+    
+    TSCAN::plotmclust(dengclust)
     
     dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
     pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
@@ -3693,15 +3691,14 @@ server <- function(input, output, session) {
     cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
       dengorderTSCAN$Pseudotime
     
-    cellLabels[dengclust$clusterid == 14]
-    
     ggplot(as.data.frame(colData(cdScFiltAnnot)), 
            aes(x = pseudotime_order_tscan, 
                y = cellType, colour = cellType)) +
       geom_quasirandom(groupOnX = FALSE) +
-      scale_color_manual(values = ) + theme_classic() +
+      scale_color_manual(values = my_color) + theme_classic() +
       xlab("TSCAN pseudotime") + ylab("Timepoint") +
       ggtitle("Cells ordered by TSCAN pseudotime")
+    
     
   })
   
