@@ -25,10 +25,10 @@ cds <- orderCells(cds, root_state = 5)
 plot_cell_trajectory(cds)
 
 
-info <- extract_monocle_info(cds)
-sce <- fitGAM(counts = Biobase::exprs(cds),
-              cellWeights = info$cellWeights,
-              pseudotime = info$pseudotime)
+# info <- extract_monocle_info(cds)
+# sce <- fitGAM(counts = Biobase::exprs(cds),
+#               cellWeights = info$cellWeights,
+#               pseudotime = info$pseudotime)
 
 
 sce <- fitGAM(cds, verbose = TRUE)
@@ -106,3 +106,4 @@ pseudotime <- matrix(pseudotime(cds), ncol = ncol(cellWeights),
 sce <- fitGAM(counts = counts,
               pseudotime = pseudotime,
               cellWeights = cellWeights)
+sce

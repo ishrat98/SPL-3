@@ -243,6 +243,14 @@ ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y =
   xlab("Slingshot pseudotime") + ylab("Timepoint") +
   ggtitle("Cells ordered by Slingshot pseudotime")
 
+
+ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = slingPseudotime_2, y = cellType, 
+                         colour = cellType)) +
+  geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+  xlab("Second Slingshot pseudotime") + ylab("cell type") +
+  ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = my_color)
+
+
 ##tscan
 
 procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
@@ -266,7 +274,6 @@ ggplot(as.data.frame(colData(cdScFiltAnnot)),
   scale_color_manual(values = my_color) + theme_classic() +
   xlab("TSCAN pseudotime") + ylab("Timepoint") +
   ggtitle("Cells ordered by TSCAN pseudotime")
-
 
 
 

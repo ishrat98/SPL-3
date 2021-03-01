@@ -12,7 +12,7 @@ import numpy as np
 import h5py
 import json
 
-import scanpy.api as sc
+import scanpy as sc
 import anndata
 import numba
 import warnings

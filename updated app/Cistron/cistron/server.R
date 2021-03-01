@@ -1,19 +1,24 @@
+#
+# This is the server logic of a Shiny web application. You can run the
+# application by clicking 'Run App' above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+
 library(shiny)
 library(shinydashboard)
-library(colourpicker)
-library(shinyWidgets)
-library(shinyjs)
-library(shinycssloaders)
-
 library(SingleCellExperiment)
 library(SummarizedExperiment)
 library(HDF5Array)
+
 library(scater)
 library(plotly)
 library(reshape2)
 library(circlize)
 library(sSeq)
-
+library(shinycssloaders)
 library(ComplexHeatmap)
 library(tibble)
 library(paletteer)
@@ -25,9 +30,11 @@ library(viridisLite)
 library(HDF5Array)
 library(formattable)
 library(DT)
-
+library(colourpicker)
+library(shinyWidgets)
+library(shinyjs)
 library(monocle)
-library(monocle3)
+library(SingleCellExperiment)
 library(slingshot)
 library(RColorBrewer)
 library(TSCAN)
@@ -36,14 +43,29 @@ library(viridis)
 library(Matrix)
 library(lle)
 
-library(tradeSeq)
+# Define server logic required to draw a histogram
+# shinyServer(function(input, output) {
+# 
+#     output$distPlot <- renderPlot({
+# 
+#         # generate bins based on input$bins from ui.R
+#         x    <- faithful[, 2]
+#         bins <- seq(min(x), max(x), length.out = input$bins + 1)
+# 
+#         # draw the histogram with the specified number of bins
+#         hist(x, breaks = bins, col = 'darkgray', border = 'white')
+# 
+#     })
+# 
+# })
 
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
 
-cdSk <- loadHDF5SummarizedExperiment(dir="cdScFiltAnnotHDF5", prefix="")
+cdScFiltAnnotK <- loadHDF5SummarizedExperiment(dir="F:/SPL-3/updated app/cdScFiltAnnotHDF5", prefix="")
 
-cdScFiltAnnot <-  as(cdSk, "SingleCellExperiment")
+
+cdScFiltAnnot <-  as(cdScFiltAnnotK, "SingleCellExperiment")
 
 
 cellLabels <- cdScFiltAnnot$cellType
@@ -51,16 +73,18 @@ deng <- counts(cdScFiltAnnot)
 colnames(deng) <- cellLabels
 
 
-# Run PCA Use the runPCA function from the SingleCellExperiment package.
+# Run PCA on Deng data. Use the runPCA function from the SingleCellExperiment package.
 cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
 
 # Use the reducedDim function to access the PCA and store the results. 
 pca <- reducedDim(cdScFiltAnnot, "PCA")
-set.seed(723451) 
-my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
-names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
 
-# Add PCA data to the cds object.
+# Describe how the PCA is stored in a matrix. Why does it have this structure?
+head(pca)
+dim(pca)
+
+
+# Add PCA data to the deng_SCE object.
 cdScFiltAnnot$PC1 <- pca[, 1]
 cdScFiltAnnot$PC2 <- pca[, 2]
 
@@ -103,6 +127,7 @@ c_sample_col <- c30[c(1,3,23,19,30)]
 c_clust_col <- c30[c(1,2,3,4,5,6,7,8,9,11,12,14,19,22,24,25)]
 
 my.clusters <- cdScFiltAnnot$Clusters
+#options(bitmapType='cairo')
 
 
 df_shiny <<- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
@@ -136,1006 +161,6 @@ ha = HeatmapAnnotation(df = df)
 
 flag <<- 0
 
-## centre parametrer in trajectory
-
-
-scatter_plot_dot_size <- list(
-  min = 1,
-  max = 20,
-  step = 1,
-  default = 5
-)
-
-scatter_plot_dot_opacity <- list (
-  min = 0.1,
-  max = 1.0,
-  step = 0.1,
-  default = 1.0
-)
-scatter_plot_point_opacity <- list(
-
-  min = 0.1,
-  max = 1.0,
-  step = 0.1,
-  default = 1.0
-)
-
-scatter_plot_percentage_cells_to_show <- list(
-  min = 10,
-  max = 100,
-  step = 10,
-  default = 100
-)
-
-
-
-ui <- dashboardPage(
-  #skin = "purple",
-  dashboardHeader(
-    title = "CISTRON"
-  ),
-  
-  # Sidebar #############################
-  dashboardSidebar(
-    width = 230,
-    
-    sidebarMenu(
-      menuItem("Home", tabName = "overview", icon = icon("home")),
-      menuItem("Projection", tabName = "projection", icon = icon("th")),
-      menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
-               menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
-               menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
-               menuSubItem('Monocle', tabName = 'trajectory_monocle'),
-               menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
-               menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
-               menuSubItem('Slicer', tabName = 'trajectory_slicer')),
-      menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
-      # menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
-      #          menuSubItem('Single gene expression', tabName = "Gene_expression"),
-      #          menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
-      # menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
-      menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
-      menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
-      
-      menuItem('About', tabName = 'analysisInfo', icon = icon('info'))
-    )
-  ),
-  dashboardBody(
-    tags$head(tags$style(HTML('
-        /* logo */
-                              .skin-blue .main-header .logo {
-                              background-color: #aaaaaa;
-                              }
-                              
-                              /* logo when hovered */
-                              .skin-blue .main-header .logo:hover {
-                              background-color: #aaaaaa;
-                              }
-                              
-                              /* navbar (rest of the header) */
-                              .skin-blue .main-header .navbar {
-                              background-color: #aaaaaa;
-                              }        
-                              
-                              
-                              
-                              /* other links in the sidebarmenu when hovered */
-                              .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-                              background-color: #aaaaaa;
-                              }
-                              /* toggle button when hovered  */                    
-                              .skin-blue .main-header .navbar .sidebar-toggle:hover{
-                              background-color: #aaaaaa;
-                              }
-                              .box.box-solid.box-primary>.box-header {
-                               color:#fff;
-                               background:#aaaaaa
-                              }
-                              
-                              .box.box-solid.box-primary{
-                              border-bottom-color:#aaaaaa;
-                              border-left-color:#aaaaaa;
-                              border-right-color:#aaaaaa;
-                              border-top-color:#aaaaaa
-                              
-                              }
-
-                              '))),
-    
-    tabItems(
-      tabItem(tabName = 'overview',
-              
-              fluidRow(
-                column(12,tags$h1('Load data')),
-                column(12,
-                       fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = c(".rds",".crb",".cerebro","h5"),
-                                 width = NULL, buttonLabel = "Browse...",
-                                 placeholder = "No file selected")),
-                
-                br(),br(),br(),br(),br(),br(),br(),
-                column(4, align="center",
-                       box(
-                         title = tags$p(style = "font-size: 200%;font-weight: 900;", dim(cdScFiltAnnot)[2]), width=20,  status = "info", "cells"
-                       )),
-                column(4,align="center",
-                       box(
-                         title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Sample))), width=20,  status = "info","samples"
-                         
-                       )),
-                column(4, align="center",
-                       box(
-                         title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Clusters))), width=20,status = "info", "clusters"
-                         
-                       ))
-                
-                #downloadButton("exportTsne", label = "Download t-SNE"),
-                #downloadButton("exportUmap", label = "Download UMAP")
-                
-              )
-              
-      ),
-      tabItem(tabName = 'projection',
-              fluidRow(
-                box(
-                  title = p(tags$span("Projection", style="padding-right:8px;"), 
-                            actionButton("projectionInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  column(width=6, selectInput("projection", "Projection",
-                                              choices = c('tSNE','UMAP'),
-                                              multiple = FALSE,
-                                              selectize = FALSE)),
-                  column(width = 6, selectInput("colorCellsBy", "Color cells by",
-                                                choices = c('Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
-                                                multiple = FALSE,
-                                                selectize = FALSE)),
-                  column(width = 6, sliderInput("plotOverviewDotSize", "Dot size:", 0, 10, 3.5, 0.5)),
-                  column(width = 6, sliderInput("plotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1)),
-                  column(width=12,plotlyOutput("tsnePlotCluster", width = "100%") %>% withSpinner(type = getOption("spinner.type", default = 8))),
-                  column(width = 4, pickerInput(
-                    inputId = "checkboxProjectionSample", 
-                    label = "Select/deselect samples", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  )),
-                  column(width = 4, pickerInput(
-                    inputId = "checkboxProjectionCluster", 
-                    label = "Select/deselect clusters", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  )),
-                  column(width = 4, pickerInput(
-                    inputId = "checkboxProjectionCellType", 
-                    label = "Select/deselect celltype", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ))
-                )
-              )
-      ),
-      tabItem(tabName = 'Summary',
-              fluidRow(
-                box(
-                  title = p(tags$span("Samples by clusters", style="padding-right:8px;"), 
-                            actionButton("sampleByclustersInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  DT::dataTableOutput("tableSampleClust") %>% withSpinner(type = getOption("spinner.type", default = 8)) %>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("Percent of clusters in sample", style="padding-right:8px;"), 
-                            actionButton("percentClusterInSampleInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("sampleClusterProp", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("UMI in sample", style="padding-right:8px;"), 
-                            actionButton("umiinSampleInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("samplenUMI", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("Number of genes expressed", style="padding-right:8px;"), 
-                            actionButton("numberOfGenesExpressedInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ),status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("samplenGene", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("UMI in clusters", style="padding-right:8px;"), 
-                            actionButton("umiInClustersInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("clusternUMI", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("Number of genes expressed in clusters", style="padding-right:8px;"), 
-                            actionButton("numberOfGenesExpressedInClustersInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("clusternGene", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-              
-      ),
-      tabItem(tabName = 'HEG',
-              fluidRow(
-                box(title='Highly expressed genes for samples', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
-                    selectInput('hegChooseSample', 'Sample', 
-                                choices = levels(as.factor(cdScFiltAnnot$Sample)), 
-                                selected = '', multiple = FALSE,
-                                selectize = FALSE),
-                    DT::dataTableOutput("hegTableSample") %>% withSpinner(type = getOption("spinner.type", default = 8))%>% withSpinner(type = getOption("spinner.type", default = 8))
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Highly expressed genes for clusters", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  selectInput('hegChooseCluster', 'Cluster', 
-                              choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                              selected = '', multiple = FALSE,
-                              selectize = FALSE),
-                  DT::dataTableOutput("hegTableCluster") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'MarkerGenes',
-              fluidRow(
-                box(title='Marker genes for samples', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
-                    selectInput('markerChooseSample', 'Sample', 
-                                choices = levels(as.factor(cdScFiltAnnot$Sample)), 
-                                selected = '', multiple = FALSE,
-                                selectize = FALSE),
-                    DT::dataTableOutput("markerTableSample") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Marker genes for clusters", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  selectInput('markerChooseCluster', 'Cluster', 
-                              choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                              selected = '', multiple = FALSE,
-                              selectize = FALSE),
-                  DT::dataTableOutput("markerTableCluster") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'Enriched_pathway',
-              fluidRow(
-                box(title='Pathway enrichment for samples', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
-                    column(width=6, selectInput('ENChooseSample', 'Sample', 
-                                                choices = levels(as.factor(cdScFiltAnnot$Sample)), 
-                                                selected = '', multiple = FALSE,
-                                                selectize = FALSE)),
-                    column(width=6,selectInput('ENChooseSampleGO', 'Sample', 
-                                               choices = levels(as.factor(cdScFiltAnnot$Sample)), 
-                                               selected = '', multiple = FALSE,
-                                               selectize = FALSE)),
-                    column(width=12,DT::dataTableOutput("ENTableSample") %>% withSpinner(type = getOption("spinner.type", default = 8)))
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Pathway enrichment for clusters", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  column(width=6,selectInput('ENChooseCluster', 'Cluster', 
-                                             choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                                             multiple = FALSE,
-                                             selectize = FALSE)),
-                  # column(width=6, selectInput('ENChooseCluster', 'Cluster', 
-                  #                             choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                  #                             selected = '', multiple = FALSE,
-                  #                             selectize = FALSE)),
-                  column(width = 6, selectInput('ENChooseClusterGO', 'Cluster', 
-                                                choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                                                selected = '', multiple = FALSE,
-                                                selectize = FALSE)),
-                  column(width=12,DT::dataTableOutput("ENTableCluster") %>% withSpinner(type = getOption("spinner.type", default = 8)))
-                )
-              )
-      ),
-      tabItem(tabName = 'Gene_expression',
-              fluidRow(
-                box(
-                  title = "Gene expression", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  column(width=6,selectInput("geneName", "Gene Name", selected = GeneNameSorted[1], 
-                                             choices = GeneNameSorted,
-                                             multiple = FALSE,
-                                             selectize = FALSE)),
-                  column(width=6, selectInput("geneExprProjection", "Projection",
-                                              choices = c('tSNE','UMAP'),
-                                              multiple = FALSE,
-                                              selectize = FALSE)),
-                  column(width=6, sliderInput("geneExpressionplotOverviewDotSize", "Dot size:", 0, 10, 0.5, 0.5)),
-                  column(width=6,sliderInput("geneExpressionplotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1)),
-                  column(width=6, colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "firebrick1")),
-                  column(width=6, colourpicker::colourInput("colmingeneExp", "Select colour for minimum", "gray88")),
-                  column(width=12,plotOutput("PlotGeneExpr", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))),
-                  column(width = 4, pickerInput(
-                    inputId = "checkboxGeneExpressionSample", 
-                    label = "Select/deselect samples", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  )),
-                  column(width = 4, pickerInput(
-                    inputId = "checkboxGeneExpressionCluster", 
-                    label = "Select/deselect clusters", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  )),
-                  column(width = 4, pickerInput(
-                    inputId = "checkboxGeneExpressionCellType", 
-                    label = "Select/deselect celltype", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ))
-                ),
-                box(
-                  title = "Violin plot sample", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("violinPlot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = "Violin plot cluster", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("violinPlotClusterOrig", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'Gene_expressionMultiple',
-              fluidRow(
-                box(
-                  title = "Multiple gene expression", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 4,
-                  selectizeInput("geneNameMultiple", "List of genes", 
-                                 selected = '', 
-                                 choices = GeneNameSorted,
-                                 multiple = TRUE),
-                  selectInput("geneExprProjectionMultiple", "Projection",
-                              choices = c('tSNE','UMAP'),
-                              multiple = FALSE,
-                              selectize = FALSE),
-                  sliderInput("geneExpressionplotOverviewDotSizeMultiple", "Dot size:", 0, 10, 0.5, 0.5),
-                  sliderInput("geneExpressionplotOverviewDotOpacityMultiple", "Dot opacity:", 0, 1, 1, 0.1),
-                  colourpicker::colourInput("colmaxgeneExpMultiple", "Select colour for maximum value", "firebrick1"),
-                  colourpicker::colourInput("colmingeneExpMultiple", "Select colour for minimum", "gray88"),
-                  pickerInput(
-                    inputId = "checkboxGeneExpressionSampleMultiple", 
-                    label = "Select/deselect samples", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  pickerInput(
-                    inputId = "checkboxGeneExpressionClusterMultiple", 
-                    label = "Select/deselect clusters", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  pickerInput(
-                    inputId = "checkboxGeneExpressionCellTypeMultiple", 
-                    label = "Select/deselect celltype", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  tags$form(
-                    actionButton("buttonForMultipleGeneExpresion", "Visualize gene expression", styleclass = "primary")
-                  )
-                ),
-                box(
-                  title = "Multiple gene panel", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 8,
-                  plotOutput("PlotGeneExprMultiple", width = "100%") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'clusterHeatmap',
-              fluidRow(
-                box(title='Input for cluster heatmap', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 4,
-                    selectizeInput('ChooseClustersHeatmap', 'Select your clusters', 
-                                   choices = as.factor(cdScFiltAnnot$Clusters[order(cdScFiltAnnot$Clusters)]), 
-                                   selected = '', 
-                                   multiple = TRUE),
-                    textAreaInput('ClusterGeneList', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
-                    tags$form(
-                      actionButton("buttonForClusterHeatmap", "Generate Heatmap", styleclass = "primary")
-                    )
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Heatmap", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 8,
-                  plotOutput("plotClusterHeatmap", height = "600px"),
-                  column(width=4, colourpicker::colourInput("colmaxClustHeatmap", "Maximum value", "red")),
-                  column(width=4, colourpicker::colourInput("colmidClustHeatmap", "Middle value", "white")),
-                  column(width=4, colourpicker::colourInput("colminClustHeatmap", "Minimum value", "blue"))
-                )
-              )
-      ),
-      tabItem(tabName = 'sampleHeatmap',
-              fluidRow(
-                box(title='Input for sample heatmap', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 4,
-                    selectizeInput('ChooseSampleHeatmap', 'Select your samples', 
-                                   choices = as.factor(cdScFiltAnnot$Sample[order(cdScFiltAnnot$Sample)]), 
-                                   selected = '', 
-                                   multiple = TRUE),
-                    textAreaInput('SampleGeneList', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
-                    tags$form(
-                      actionButton("buttonForSampleHeatmap", "Generate Heatmap", styleclass = "primary")
-                    )
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Heatmap", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 8,
-                  plotOutput("plotSampleHeatmap", height = "600px"),
-                  column(width=4, colourpicker::colourInput("colmaxSampleHeatmap", "Maximum value", "red")),
-                  column(width=4, colourpicker::colourInput("colmidSampleHeatmap", "Middle value", "white")),
-                  column(width=4, colourpicker::colourInput("colminSampleHeatmap", "Minimum value", "blue"))
-                )
-              )
-      ),
-      tabItem(tabName = 'sampleClusterHeatmap',
-              fluidRow(
-                box(title='Input for sample & cluster heatmap', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 4,
-                    selectizeInput('ChooseSampleClusterHeatmapSample', 'Select your samples', 
-                                   choices = as.factor(cdScFiltAnnot$Sample[order(cdScFiltAnnot$Sample)]), 
-                                   selected = '', 
-                                   multiple = TRUE),
-                    selectizeInput('ChooseSampleClusterHeatmapCluster', 'Select your clusters', 
-                                   choices = as.factor(cdScFiltAnnot$Clusters[order(cdScFiltAnnot$Clusters)]), 
-                                   selected = '', 
-                                   multiple = TRUE),
-                    textAreaInput('SampleClusterGeneList', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
-                    tags$form(
-                      actionButton("buttonForSampleClusterHeatmap", "Generate Heatmap", styleclass = "primary")
-                    )
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Heatmap", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 8,
-                  plotOutput("plotSampleClusterHeatmap", height = "600px"),
-                  column(width=4, colourpicker::colourInput("colmaxSampleClusterHeatmap", "Maximum value", "red")),
-                  column(width=4, colourpicker::colourInput("colmidSampleClusterHeatmap", "Middle value", "white")),
-                  column(width=4, colourpicker::colourInput("colminSampleClusterHeatmap", "Minimum value", "blue"))
-                )
-              )
-      ),
-      tabItem(tabName = 'clusterBubblePlot',
-              fluidRow(
-                box(title='Input for cluster bubbleplot', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 4,
-                    selectizeInput('ChooseClustersBubblePlot', 'Select your clusters', 
-                                   choices = as.factor(cdScFiltAnnot$Clusters[order(cdScFiltAnnot$Clusters)]), 
-                                   selected = '', 
-                                   multiple = TRUE),
-                    textAreaInput('ClusterGeneListClusterBubblePlot', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
-                    tags$form(
-                      actionButton("buttonForClusterBubbleplot", "Generate Bubbleplot", styleclass = "primary")
-                    )
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Bubble plot", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 8,
-                  plotOutput("plotClusterBubbleplot", height = "600px")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'sampleBubblePlot',
-              fluidRow(
-                box(title='Input for sample bubbleplot', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 4,
-                    selectizeInput('ChooseSampleBubblePlot', 'Select your samples', 
-                                   choices = as.factor(cdScFiltAnnot$Sample[order(cdScFiltAnnot$Sample)]), 
-                                   selected = '', 
-                                   multiple = TRUE),
-                    textAreaInput('sampleGeneListSampleBubblePlot', 'Paste your Gene list', value = '', width = "180px", height = "250px"),
-                    tags$form(
-                      actionButton("buttonForSampleBubbleplot", "Generate Bubbleplot", styleclass = "primary")
-                    )
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Bubble plot", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 8,
-                  plotOutput("plotSampleBubbleplot", height = "600px")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'DE_menus',
-              h2('Selected Sub-Item Four')
-      ),
-      tabItem(tabName = 'DE_between_clusters',
-              fluidRow(
-                box(title='Input for DE between clusters', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
-                    column(width = 6,
-                           selectizeInput("clust1", "Select Cluster/Clusters for Group1",
-                                          choices = as.factor(my.clusters[order(my.clusters)]),
-                                          multiple = TRUE)),
-                    column(width = 6,
-                           selectizeInput("clust2", "Select Cluster/Clusters for Group2",
-                                          choices = as.factor(my.clusters[order(my.clusters)]),
-                                          multiple = TRUE)),
-                    column(width = 4,
-                           tags$form(
-                             actionButton("buttonForTwoClustDE", "Run DE", styleclass = "primary")
-                           )),
-                    column(width = 12,
-                           plotlyOutput("AllClustTwoClustComp") %>% withSpinner(type = getOption("spinner.type", default = 8))),
-                    column(width = 12,
-                           plotOutput("plotSelectClust") %>% withSpinner(type = getOption("spinner.type", default = 8)) )
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "DE results", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  DT::dataTableOutput("mytableTwoClust") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'DE_between_samples',
-              fluidRow(
-                box(title='Input for DE between samples', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
-                    column(width = 6,
-                           selectInput("sample1", "Select Sample-1",
-                                       choices = as.factor(colData(cdScFiltAnnot)[,'Sample']), multiple = TRUE)),
-                    column(width = 6,
-                           selectInput("sample2", "Select Sample-2",
-                                       choices = as.factor(colData(cdScFiltAnnot)[,'Sample']), multiple = TRUE)),
-                    column(width = 4,
-                           tags$form(
-                             actionButton("buttonForTwoSampleDE", "Run DE for two Samples", styleclass = "primary")
-                           )),
-                    column(width = 12,
-                           plotlyOutput("AllClustTwoSampleComp") %>% withSpinner(type = getOption("spinner.type", default = 8)) ),
-                    column(width = 12,
-                           plotOutput("plotSelectSample") %>% withSpinner(type = getOption("spinner.type", default = 8)))
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "DE results", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  DT::dataTableOutput("mytableTwoSample") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'DE_between_sample_and_clusters',
-              fluidRow(
-                box(title = p(tags$span("Input selection", style="padding-right:8px;"), 
-                              actionButton("DE_between_sample_and_clustersSelectionInfo", "help", 
-                                           class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 4,
-                pickerInput(
-                  inputId = "checkboxMultiSelectionSampleSel1", 
-                  label = "Selection-1 samples", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  selected = '', 
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
-                  multiple = TRUE
-                ),
-                pickerInput(
-                  inputId = "checkboxMultiSelectionClusterSel1", 
-                  label = "Selection1 clusters", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                  selected = '',
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
-                  multiple = TRUE
-                ),
-                pickerInput(
-                  inputId = "checkboxMultiSelectionSampleSel2", 
-                  label = "Selection-2 samples", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  selected = '', 
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
-                  multiple = TRUE
-                ),
-                pickerInput(
-                  inputId = "checkboxMultiSelectionClusterSel2", 
-                  label = "Selection-2 clusters", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                  selected = '',
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
-                  multiple = TRUE
-                ),
-                selectInput("selectProjectionMixtureSelection", "Projection by",
-                            choices = c('tSNE','UMAP'),
-                            multiple = FALSE,
-                            selectize = FALSE),
-                selectInput("colorCellsByMixtureSelection", "Color cells by",
-                            choices = c('Sample','Cluster'),
-                            multiple = FALSE,
-                            selectize = FALSE),
-                
-                tags$form(
-                  actionButton("buttonForDEMixedSelection", "Run DE", styleclass = "primary")
-                )
-                ),
-                #downloadButton("exportTsne", label = "Download t-SNE"),
-                #downloadButton("exportUmap", label = "Download UMAP")
-                box(title = p(tags$span("Cell projection", style="padding-right:8px;"), 
-                              actionButton("DE_between_sample_and_clustersProjectionInfo", "help", 
-                                           class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE, width = 8,
-                plotOutput("AllClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
-                ),
-                box(title = p(tags$span("Selected cells", style="padding-right:8px;"), 
-                              actionButton("DE_between_sample_and_clustersSelectinCellsInfo", "help", 
-                                           class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE, width = 8,
-                plotOutput("selectedCellsClustMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) 
-                ),
-                box(title = "DE results", status = "primary", solidHeader = TRUE, 
-                    collapsible = TRUE, width = 12,
-                    DT::dataTableOutput("mytableMixedSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'DE_between_manual_selection',
-              fluidRow(
-                box(title=p(tags$span("Manual selection of cells", style="padding-right:8px;"), 
-                            actionButton("DE_in_manual_selection_input", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                column(width = 12, h5('Manually select the two groups of cells by dragging your mouse over the cells. 
-                                         Then click the button')), 
-                column(width = 6,       
-                       tags$form(
-                         actionButton("buttonForDEManualSelection", "Run DE between selected cells", styleclass = "primary")
-                       )),
-                column(width=6, useShinyjs(),
-                       actionButton("reset", "Reset all selection")),
-                column(width = 4, pickerInput(
-                  inputId = "checkboxMultiSelectionSample", 
-                  label = "Select/deselect samples", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
-                  multiple = TRUE
-                )),
-                column(width = 4, pickerInput(
-                  inputId = "checkboxMultiSelectionCluster", 
-                  label = "Select/deselect clusters", 
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                  selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                  options = list(
-                    `actions-box` = TRUE, 
-                    size = 10,
-                    `selected-text-format` = "count > 20"
-                  ), 
-                  multiple = TRUE
-                )),
-                column(width = 4, selectInput("colorCellsByManualSelection", "Color cells by",
-                                              choices = c('Sample','Cluster'),
-                                              multiple = FALSE,
-                                              selectize = FALSE)),
-                column(width = 12,
-                       plotlyOutput("AllClustManualSelection") %>% withSpinner(type = getOption("spinner.type", default = 8)) )
-                
-                #downloadButton("exportTsne", label = "Download t-SNE"),
-                #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "DE results", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  DT::dataTableOutput("mytableManualSelection") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      
-      tabItem(tabName = 'trajectory_FirstLook',
-              box(
-                title = "PC1", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_FirstLookOT1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "First Principal Component", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("FirstPrincipalComponent", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              )
-              
-      ),
-      
-      tabItem(tabName = 'trajectory_slingshot',
-              box(
-                title = "Slingshot", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "Second Slingshot Psedutime", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              )
-              
-      ),
-              
-      
-      tabItem(tabName = 'trajectory_monocle',
-              fluidRow(
-                box(title = p(tags$span("Input parameters", style="padding-right:8px;"), 
-                              actionButton("trajectory_input", "info",
-                                           class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 4,
-                selectInput(
-                  inputId = "trajectory_projection_info",
-                  label = "Trajectory", 
-                  #choices = names(cdScFiltAnnot$trajectory$monocle2),
-                 # choices = unique(levels(as.factor(cdScFiltAnnot$trajectory$monocle2))),
-                 # choices = names(as.factor(cdScFiltAnnot$trajectory$monocle2)
-                 # choices = unique(levels(as.factor(cdScFiltAnnot$samples))), 
-                 # selected = unique(levels(as.factor(cdScFiltAnnot$samples))),
-                 choices = c('tSNE','UMAP'),
-                 multiple = FALSE,
-                 selectize = FALSE
-                ),
-                pickerInput(
-                  inputId = "trajectory_samples_to_display", 
-                  label = "Samples to display",
-                  # choices = cdScFiltAnnot$sample_names,
-                  # selected = cdScFiltAnnot$sample_names,
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  #selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                  selected = '',
-                  options = list("actions-box" = TRUE),
-                  multiple = TRUE
-                  
-                ),
-                pickerInput(
-                  inputId = "trajectory_clusters_to_display", 
-                  label = "Clusters to display",
-                  # choices = cdScFiltAnnot$cluster_names,
-                  # selected = cdScFiltAnnot$cluster_names,
-                  choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                  selected = '',
-                  options = list("actions-box" = TRUE),
-                  multiple = TRUE
-                  
-                ),
-                sliderInput(
-                  "trajectory_percentage_cells_to_show",
-                  label = "Show % of cells",
-                  min = scatter_plot_percentage_cells_to_show[["min"]],
-                  max = scatter_plot_percentage_cells_to_show[["max"]],
-                  step = scatter_plot_percentage_cells_to_show[["step"]],
-                  value = scatter_plot_percentage_cells_to_show[["default"]]
-                ),
-                
-
-                selectInput(
-                  "trajectory_dot_color",
-                  label = "Color cells by",
-                  # choices = c("state","pseudotime",names(cdScFiltAnnot$cells)[! names(cdScFiltAnnot$cells) %in% c("cell_barcode")])
-                  # choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
-                  # selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
-                  choices = c('state','pseudotime','Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
-                  multiple = FALSE,
-                  selectize = FALSE
-                  ),
-                
-                sliderInput(
-                  "trajectory_dot_size",
-                  label = "Dot size",
-                  min = scatter_plot_dot_size[["min"]],
-                  max = scatter_plot_dot_size[["max"]],
-                  step = scatter_plot_dot_size[["step"]],
-                  value = scatter_plot_dot_size[["default"]]
-                ),
-                sliderInput(
-                  "trajectory_dot_opacity",
-                  label = "Dot opacity",
-                  min = scatter_plot_dot_opacity[["min"]],
-                  max = scatter_plot_dot_opacity[["max"]],
-                  step = scatter_plot_dot_opacity[["step"]],
-                  value = scatter_plot_dot_opacity[["default"]]
-                )
-                
-                
-                ),
-                
-                box(title = p(tags$span("Trajectory", style="padding-right:8px;"),
-                              actionButton("trajectory_projection_info", "info",
-                                           class = "btn-xs", title = "Additional information for this panel")
-                ), status = "primary", solidHeader = TRUE, width = 8,
-                plotOutput("trajectory_projection") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-
-                box(
-                  title = "Distribution along pseudotime", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("trajectory_density_plott", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-               
-              )
-      ),
-      
-      tabItem(tabName = 'trajectory_monocle3',
-              box(
-                title = "Monocle3", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "Component", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle3Component", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              )
-
-      ),
-      
-      
-      tabItem(tabName = 'trajectory_TSCAN',
-              box(
-                title = "PCA Dimension 1", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_TSCAN_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "TSCAN Psedutime", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_TSCAN_Pseudotime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              )
-              
-      ),
-      
-      tabItem(tabName = 'trajectory_slicer',
-              box(
-                title = "Slicer", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_slicerOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              )
-              
-      ),
-      
-      tabItem(tabName = 'analysisInfo',
-              h2('CISTRON'),
-              h4('A TRAJECTORY BASED SINGLE CELL ANALYSIS')
-              #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
-      )
-      
-    )
-  )
-)
-
 server <- function(input, output, session) { 
   
   #################################
@@ -1144,7 +169,7 @@ server <- function(input, output, session) {
   #
   #################################
   
- 
+  
   
   output$violinPlot <- renderPlot({
     
@@ -1213,7 +238,7 @@ server <- function(input, output, session) {
   plot_tsnePlotCellType <- function(){ 	
     
     
-  
+    
     
     df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
     df[,'Cell']=as.factor(colData(cdScFiltAnnot)$Barcode)
@@ -1237,7 +262,7 @@ server <- function(input, output, session) {
   
   plot_tsnePlotSample <- function(){ 	
     
-  
+    
     
     df <- as.data.frame(reducedDim(cdScFiltAnnot,'tSNE'))
     df[,'Cell']=as.factor(colData(cdScFiltAnnot)$Barcode)
@@ -1364,7 +389,7 @@ server <- function(input, output, session) {
   plot_UMAPPlotSample <- function(){    
     
     
-
+    
     
     as.tibble(reducedDim(cdScFiltAnnot,'UMAP')) %>%
       mutate(Sample = colData(cdScFiltAnnot)$Sample) %>%
@@ -3491,8 +2516,7 @@ server <- function(input, output, session) {
                          cellType = cdScFiltAnnot$cellType)
     
     ggplot(data = pca_df)+geom_point(mapping = aes(x = PC1, y = PC2, colour = cellType))+
-      scale_colour_manual(values = my_color)+theme_classic()
-    
+      scale_colour_manual(values = )+theme_classic()
     
   })
   
@@ -3500,26 +2524,25 @@ server <- function(input, output, session) {
   
   output$FirstPrincipalComponent <- renderPlotly({
     
-
-    #PCA_df
-    pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
-                         PC2 = reducedDim(cdScFiltAnnot,"PCA")[,2],
-                         cellType = cdScFiltAnnot$cellType)
-    
-    ggplot(pca_df, aes(x = PC1, y = cellType, 
-                       colour = cellType)) +
-      geom_quasirandom(groupOnX = FALSE) +
-      scale_colour_manual(values = my_color) + theme_classic() +
-      xlab("First principal component") + ylab("Timepoint") +
-      ggtitle("Cells ordered by first principal component") 
-    
-
-    
+    <- createPalette(14, c("#010101", "#ff0000"), M=1000)
+  names() <- unique(as.character(cdScFiltAnnot$cellType))
+  #PCA_df
+  pca_df <- data.frame(PC1 = reducedDim(cdScFiltAnnot,"PCA")[,1],
+                       PC2 = reducedDim(cdScFiltAnnot,"PCA")[,2],
+                       cellType = cdScFiltAnnot$cellType)
+  
+  ggplot(pca_df, aes(x = PC1, y = cellType, 
+                     colour = cellType)) +
+    geom_quasirandom(groupOnX = FALSE) +
+    scale_colour_manual(values = ) + theme_classic() +
+    xlab("First principal component") + ylab("Timepoint") +
+    ggtitle("Cells ordered by first principal component") 
+  
   })
   
   ## Slingshot
   output$trajectory_slingshotOT <- renderPlot({
-
+    
     
     # Plot PC biplot with cells colored by cell_type2. 
     # colData(deng_SCE) accesses the cell metadata DataFrame object for deng_SCE.
@@ -3528,15 +2551,28 @@ server <- function(input, output, session) {
       scale_color_tableau() + theme_classic() +
       xlab("PC1") + ylab("PC2") + ggtitle("PC biplot")
     
-
     
     
     
     
-   })
+    
+  })
   
   output$trajectory_FirstSlingshot <- renderPlot({
-   
+    # ## Plotting the pseudotime inferred by slingshot by cell types
+    # 
+    # slingshot_df <- data.frame(colData(cdScFiltAnnot))
+    # 
+    # ggplot(slingshot_df, aes(x = slingPseudotime_1, y = cellType, 
+    #                          colour = cellType)) +
+    #   geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+    #   xlab("First Slingshot pseudotime") + ylab("cell type") +
+    #   ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = )
+    # 
+    
+    # Read the Slingshot documentation (?slingshot) and then run Slingshot below. 
+    # Given your understanding of the algorithm and the documentation, what is one 
+    # major set of parameters we omitted here when running Slingshot?
     sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
     
     # Plot PC1 vs PC2 colored by Slingshot pseudotime.
@@ -3556,25 +2592,310 @@ server <- function(input, output, session) {
   })
   
   output$trajectory_SecondSlingshot <- renderPlot({
-  sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
-  lines(SlingshotDataSet(sce), lwd=2)
-  slingshot_df <- data.frame(colData(cdScFiltAnnot)) 
-  ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y = cellType, 
-                                                    colour = cellType)) +
-    geom_quasirandom(groupOnX = FALSE) +
-    scale_color_tableau() + theme_classic() +
-    xlab("Slingshot pseudotime") + ylab("Timepoint") +
-    ggtitle("Cells ordered by Slingshot pseudotime")
+    
+    ggplot(slingshot_df, aes(x = slingPseudotime_2, y = cellType, 
+                             colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) + theme_classic() +
+      xlab("Second Slingshot pseudotime") + ylab("cell type") +
+      ggtitle("Cells ordered by Slingshot pseudotime")+scale_colour_manual(values = )
     
   })
   
- 
+  ##----------------------------------------------------------------------------##
+  ## Projection.
+  ##----------------------------------------------------------------------------##
+  output$trajectory_projection <- plotly::renderPlotly({
+    # don't do anything before these inputs are selected
+    req(
+      input[["trajectory_to_display"]],
+      input[["trajectory_samples_to_display"]],
+      input[["trajectory_clusters_to_display"]],
+      input[["trajectory_percentage_cells_to_show"]],
+      input[["trajectory_dot_color"]],
+      input[["trajectory_dot_size"]],
+      input[["trajectory_dot_opacity"]]
+    )
+    
+    trajectory_to_display <- input[["trajectory_to_display"]]
+    samples_to_display <- input[["trajectory_samples_to_display"]]
+    clusters_to_display <- input[["trajectory_clusters_to_display"]]
+    cells_to_display <- which(
+      (cdScFiltAnnot$cellType$sample %in% samples_to_display) &
+        (cdScFiltAnnot$cellType$cluster %in% clusters_to_display)
+    )
+    
+    # randomly remove cells
+    if ( input[["trajectory_percentage_cells_to_show"]] < 100 ) {
+      number_of_cells_to_plot <- ceiling(
+        input[["trajectory_percentage_cells_to_show"]] / 100 * length(cells_to_display)
+      )
+      cells_to_display <- cells_to_display[ sample(1:length(cells_to_display), number_of_cells_to_plot) ]
+    }
+    
+    # extract cells to plot
+    to_plot <- cbind(
+      cdScFiltAnnot$trajectory$monocle2[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
+      cdScFiltAnnot$cellType[ cells_to_display , ]
+    ) %>%
+      dplyr::filter(!is.na(pseudotime))
+    to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
+    
+    color_variable <- input[["trajectory_dot_color"]]
+    
+    # convert edges of trajectory into list format to plot with plotly
+    trajectory_edges <- cdScFiltAnnot$trajectory$monocle2[[trajectory_to_display]][["edges"]]
+    trajectory_lines <- list()
+    for (i in 1:nrow(trajectory_edges) ) {
+      line = list(
+        type = "line",
+        line = list(color = "black"),
+        xref = "x",
+        yref = "y",
+        x0 = trajectory_edges$source_dim_1[i],
+        y0 = trajectory_edges$source_dim_2[i],
+        x1 = trajectory_edges$target_dim_1[i],
+        y1 = trajectory_edges$target_dim_2[i]
+      )
+      trajectory_lines <- c(trajectory_lines, list(line))
+    }
+    
+    if ( is.factor(to_plot[[ color_variable ]]) || is.character(to_plot[[ color_variable ]]) ) {
+      if ( color_variable == "sample" ) {
+        colors_this_plot <- reactive_colors()$sampless
+      } else if ( color_variable == "cluster" ) {
+        colors_this_plot <- reactive_colors()$clusters
+      } else if ( color_variable %in% c("cell_cycle_seurat","cell_cycle_cyclone") ) {
+        colors_this_plot <- cell_cycle_colorset
+      } else if ( is.factor(to_plot[[ color_variable ]]) ) {
+        colors_this_plot <- setNames(
+          default_colorset[1:length(levels(to_plot[[ color_variable ]]))],
+          levels(to_plot[[ color_variable ]])
+        )
+      } else {
+        colors_this_plot <- default_colorset
+      }
+      plot <- plotly::plot_ly(
+        to_plot,
+        x = ~DR_1,
+        y = ~DR_2,
+        color = ~to_plot[[ color_variable ]],
+        colors = colors_this_plot,
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          opacity = input[["trajectory_dot_opacity"]],
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          shapes = trajectory_lines,
+          xaxis = list(
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_1) * 1.1
+          ),
+          yaxis = list(
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_2) * 1.1
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences[["use_webgl"]] == TRUE ) {
+        plot %>% plotly::toWebGL()
+      } else {
+        plot
+      }
+    } else {
+      plot <- plotly::plot_ly(
+        data = to_plot,
+        x = ~DR_1,
+        y = ~DR_2,
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          colorbar = list(
+            title = colnames(to_plot)[which(colnames(to_plot) == color_variable)]
+          ),
+          color = ~to_plot[[ color_variable ]],
+          opacity = input[["trajectory_dot_opacity"]],
+          colorscale = "YlGnBu",
+          reversescale = TRUE,
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          shapes = trajectory_lines,
+          xaxis = list(
+            title = colnames(to_plot)[1],
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_1) * 1.1
+          ),
+          yaxis = list(
+            title = colnames(to_plot)[2],
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE,
+            range = range(to_plot$DR_2) * 1.1
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences$use_webgl == TRUE ) {
+        plotly::toWebGL(plot)
+      } else {
+        plot
+      }
+    }
+  })
+  ##----------------------------------------------------------------------------##
+  ## Distribution along pseudotime.
+  ##----------------------------------------------------------------------------##
+  
+  output[["trajectory_density_plot"]] <- plotly::renderPlotly({
+    # don't do anything before these inputs are selected
+    req(
+      input[["trajectory_to_display"]],
+      input[["trajectory_samples_to_display"]],
+      input[["trajectory_clusters_to_display"]],
+      input[["trajectory_dot_color"]]
+    )
+    
+    trajectory_to_display <- input[["trajectory_to_display"]]
+    samples_to_display <- input[["trajectory_samples_to_display"]]
+    clusters_to_display <- input[["trajectory_clusters_to_display"]]
+    cells_to_display <- which(
+      (cdScFiltAnnot$cells$sample %in% samples_to_display) &
+        (cdScFiltAnnot$cells$cluster %in% clusters_to_display)
+    )
+    
+    # extract cells to plot
+    to_plot <- cbind(
+      input$trajectory_projection_info[[ trajectory_to_display ]][["meta"]][ cells_to_display , ],
+      cdScFiltAnnot$cells[ cells_to_display , ]
+    ) %>%
+      dplyr::filter(!is.na(pseudotime))
+    to_plot <- to_plot[ sample(1:nrow(to_plot)) , ]
+    
+    color_variable <- input[["trajectory_dot_color"]]
+    
+    if ( is.factor(to_plot[[ color_variable ]]) || is.character(to_plot[[ color_variable ]]) ) {
+      if ( color_variable == "sample" ) {
+        colors_this_plot <- reactive_colors()$samples
+      } else if ( color_variable == "cluster" ) {
+        colors_this_plot <- reactive_colors()$clusters
+      } else if ( color_variable %in% c("cell_cycle_seurat","cell_cycle_cyclone") ) {
+        colors_this_plot <- cell_cycle_colorset
+      } else if ( is.factor(to_plot[[ color_variable ]]) ) {
+        colors_this_plot <- setNames(
+          default_colorset[1:length(levels(to_plot[[ color_variable ]]))],
+          levels(to_plot[[ color_variable ]])
+        )
+      } else {
+        colors_this_plot <- default_colorset
+      }
+      p <- ggplot(to_plot, aes_string(x = "pseudotime", fill = color_variable)) +
+        geom_density(alpha = 0.4, color = "black") +
+        theme_bw() +
+        labs(x = "Pseudotime", y = "Density") +
+        scale_fill_manual(values = colors_this_plot) +
+        guides(fill = guide_legend(override.aes = list(alpha = 1)))
+      plotly::ggplotly(p, tooltip = "text") %>%
+        plotly::style(
+          hoveron = "fill"
+        )
+    } else {
+      colors_this_plot <- setNames(
+        default_colorset[1:length(levels(cdScFiltAnnot$trajectory$monocle2[[ input[["trajectory_to_display"]] ]][["meta"]]$state))],
+        levels(cdScFiltAnnot$trajectory$monocle2[[ input[["trajectory_to_display"]] ]][["meta"]]$state)
+      )
+      plot <- plotly::plot_ly(
+        data = to_plot,
+        x = ~pseudotime,
+        y = ~to_plot[[ color_variable ]],
+        type = "scatter",
+        mode = "markers",
+        color = ~state,
+        colors = colors_this_plot,
+        marker = list(
+          opacity = input[["trajectory_dot_opacity"]],
+          line = list(
+            color = "rgb(196,196,196)",
+            width = 1
+          ),
+          size = input[["trajectory_dot_size"]]
+        ),
+        hoverinfo = "text",
+        text = ~paste(
+          "<b>Cell</b>: ", to_plot[ , "cell_barcode" ], "<br>",
+          "<b>Sample</b>: ", to_plot[ , "sample" ], "<br>",
+          "<b>Cluster</b>: ", to_plot[ , "cluster" ], "<br>",
+          "<b>Transcripts</b>: ", formatC(to_plot[ , "nUMI" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>Expressed genes</b>: ", formatC(to_plot[ , "nGene" ], format = "f", big.mark = ",", digits = 0), "<br>",
+          "<b>State</b>: ", to_plot[ , "state" ], "<br>",
+          "<b>Pseudotime</b>: ", round(to_plot[ , "pseudotime" ], 3)
+        )
+      ) %>%
+        plotly::layout(
+          xaxis = list(
+            title = "Pseudotime",
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE
+          ),
+          yaxis = list(
+            title = color_variable,
+            mirror = TRUE,
+            showline = TRUE,
+            zeroline = FALSE
+          ),
+          hoverlabel = list(font = list(size = 11))
+        )
+      if ( preferences$use_webgl == TRUE ) {
+        plotly::toWebGL(plot)
+      } else {
+        plot
+      }
+    }
+  })
+  
   
   ###################################
   
   
   
-  output$trajectory_monocle3OT <- renderPlot({
+  output$trajectory_monocle2OT <- renderPlot({
     
     
     #d <- deng_SCE[m3dGenes,]
@@ -3588,7 +2909,7 @@ server <- function(input, output, session) {
   })
   
   
-  output$trajectory_monocle3Component <- renderPlotly({
+  output$trajectory_monocle2Component <- renderPlotly({
     
     
     d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
@@ -3612,7 +2933,7 @@ server <- function(input, output, session) {
     
   })
   
-  output$trajectory_monocle3Psedutime <- renderPlotly({
+  output$trajectory_monocle2Psedutime <- renderPlotly({
     
     d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
     d <- d[!duplicated(rownames(d)), ]
@@ -3643,7 +2964,7 @@ server <- function(input, output, session) {
     rownames(pseudotime_monocle2) <- 1:ncol(d)
     pseudotime_order_monocle <-
       rownames(pseudotime_monocle2[order(pseudotime_monocle2$pseudotime), ])
-
+    
     
     cdScFiltAnnot$pseudotime_monocle2 <- pseudotime_monocle2$pseudotime
     
@@ -3662,7 +2983,7 @@ server <- function(input, output, session) {
     
     procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
     
-    #colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
     
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
     
@@ -3674,9 +2995,11 @@ server <- function(input, output, session) {
   output$trajectory_TSCAN_Pseudotime <- renderPlotly({
     
     
-    dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
+    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
     
-    TSCAN::plotmclust(dengclust)
+    colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    
+    dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
     
     dengorderTSCAN <- TSCAN::TSCANorder(dengclust, orderonly = FALSE)
     pseudotime_order_tscan <- as.character(dengorderTSCAN$sample_name)
@@ -3684,14 +3007,15 @@ server <- function(input, output, session) {
     cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
       dengorderTSCAN$Pseudotime
     
+    cellLabels[dengclust$clusterid == 14]
+    
     ggplot(as.data.frame(colData(cdScFiltAnnot)), 
            aes(x = pseudotime_order_tscan, 
                y = cellType, colour = cellType)) +
       geom_quasirandom(groupOnX = FALSE) +
-      scale_color_manual(values = my_color) + theme_classic() +
+      scale_color_manual(values = ) + theme_classic() +
       xlab("TSCAN pseudotime") + ylab("Timepoint") +
       ggtitle("Cells ordered by TSCAN pseudotime")
-    
     
   })
   
@@ -3702,14 +3026,14 @@ server <- function(input, output, session) {
     colnames(deng) <- cellLabels
     dm <- DiffusionMap(t(deng))
     
-
+    
     slicer_genes <- select_genes(t(deng))
     k <- select_k(t(deng[slicer_genes,]), kmin = 30, kmax=60)
     slicer_traj_lle <- lle(t(deng[slicer_genes,]), m = 2, k)$Y
-
-
+    
+    
     reduceddim(deng_sce, "lle") <- slicer_traj_lle
-
+    
     plot_df <- data.frame(slicer1 = reduceddim(deng_sce, "lle")[,1],
                           slicer2 = reduceddim(deng_sce, "lle")[,2],
                           cell_type2 =  deng_sce$cell_type2)
