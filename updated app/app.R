@@ -3670,7 +3670,51 @@ server <- function(input, output, session) {
     
   })
   
-  output$trajectory_trajectory_TSCAN_1 <- renderPlotly({
+  output$trajectory_DiffusionMap_1 <- renderPlotly({
+    
+    
+    dengg <- as.matrix(logcounts(cdScFiltAnnot))
+    colnames(dengg) <- cellLabels                             
+    dm <- DiffusionMap(t(dengg))
+    
+    tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
+                      DC2 = eigenvectors(dm)[,2],
+                      Timepoint = cds$cellType)
+    ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
+      geom_point() +  scale_color_manual(values = my_color) +
+      xlab("Diffusion component 1") + 
+      ylab("Diffusion component 2") +
+      theme_classic()
+    
+    
+  })
+  
+  output$trajectory_DiffusionMap_Pseudotime <- renderPlotly({
+    
+    
+    dengg <- as.matrix(logcounts(cdScFiltAnnot))
+    colnames(dengg) <- cellLabels                             
+    dm <- DiffusionMap(t(dengg))
+    
+    tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
+                      DC2 = eigenvectors(dm)[,2],
+                      Timepoint = cds$cellType)
+    
+    cdScFiltAnnot$pseudotime_diffusionmap <- rank(eigenvectors(dm)[,1])
+    
+    ggplot(as.data.frame(colData(cdScFiltAnnot)), 
+           aes(x = pseudotime_diffusionmap, 
+               y = cellType, colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_color_manual(values = my_color)  + theme_classic() +
+      xlab("Diffusion map pseudotime (first diffusion map component)") +
+      ylab("Timepoint") +
+      ggtitle("Cells ordered by diffusion map pseudotime")
+    
+    
+    
+  })
+  output$trajectory_TSCAN_1 <- renderPlotly({
     
     
     procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
