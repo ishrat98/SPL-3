@@ -185,8 +185,9 @@ ui <- dashboardPage(
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
-               menuSubItem('Monocle', tabName = 'trajectory_monocle'),
+               #menuSubItem('Monocle', tabName = 'trajectory_monocle'),
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
+               menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
       menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
@@ -1102,7 +1103,19 @@ ui <- dashboardPage(
 
       ),
       
-      
+      tabItem(tabName = 'trajectory_DiffusionMap',
+              box(
+                title = "PCA Dimension 1", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_DiffusionMap_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "TSCAN Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_DiffusionMap_Pseudotime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
+      ),
       tabItem(tabName = 'trajectory_TSCAN',
               box(
                 title = "PCA Dimension 1", status = "primary", solidHeader = TRUE,
@@ -3698,7 +3711,7 @@ server <- function(input, output, session) {
   
   output$trajectory_slicerOT<- renderPlotly({
     
-    deng <- logcounts(cdScFiltAnnot)
+    deng <- as.matrix(logcounts(cdScFiltAnnot))
     colnames(deng) <- cellLabels
     dm <- DiffusionMap(t(deng))
     

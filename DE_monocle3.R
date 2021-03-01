@@ -259,8 +259,10 @@ ggplot(as.data.frame(pdata_cds),
 
 
 ##diffusion map
-dengg<- logcounts(cdScFiltAnnot)
-colnames(dengg) <- cellLabels
+#dengg<- logcounts(cdScFiltAnnot)
+
+dengg <- as.matrix(logcounts(cdScFiltAnnot))
+colnames(dengg) <- cellLabels                             
 dm <- DiffusionMap(t(dengg))
 
 tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
