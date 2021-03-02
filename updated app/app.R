@@ -969,7 +969,7 @@ ui <- dashboardPage(
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
@@ -979,7 +979,7 @@ ui <- dashboardPage(
               box(
                 title = "Second Slingshot Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotlyOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -1110,7 +1110,7 @@ ui <- dashboardPage(
                 plotlyOutput("trajectory_DiffusionMap_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
-                title = "TSCAN Psedutime", status = "primary", solidHeader = TRUE,
+                title = "Diffusion Map Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_DiffusionMap_Pseudotime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
@@ -3531,7 +3531,7 @@ server <- function(input, output, session) {
   })
   
   ## Slingshot
-  output$trajectory_slingshotOT <- renderPlot({
+  output$trajectory_slingshotOT <- renderPlotly({
 
     
     # Plot PC biplot with cells colored by cell_type2. 
@@ -3568,7 +3568,7 @@ server <- function(input, output, session) {
     lines(SlingshotDataSet(sce), lwd=2)
   })
   
-  output$trajectory_SecondSlingshot <- renderPlot({
+  output$trajectory_SecondSlingshot <- renderPlotly({
   sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
   lines(SlingshotDataSet(sce), lwd=2)
   slingshot_df <- data.frame(colData(cdScFiltAnnot)) 
@@ -3717,7 +3717,7 @@ server <- function(input, output, session) {
   output$trajectory_TSCAN_1 <- renderPlotly({
     
     
-    procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
+    #procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
     
     #colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
     
@@ -3756,8 +3756,8 @@ server <- function(input, output, session) {
   output$trajectory_slicerOT<- renderPlotly({
     
     deng <- as.matrix(logcounts(cdScFiltAnnot))
-    colnames(deng) <- cellLabels
-    dm <- DiffusionMap(t(deng))
+    # colnames(deng) <- cellLabels
+    # dm <- DiffusionMap(t(deng))
     
 
     slicer_genes <- select_genes(t(deng))
@@ -3765,14 +3765,14 @@ server <- function(input, output, session) {
     slicer_traj_lle <- lle(t(deng[slicer_genes,]), m = 2, k)$Y
 
 
-    reduceddim(deng_sce, "lle") <- slicer_traj_lle
+    reduceddim(cdScFiltAnnot, "lle") <- slicer_traj_lle
 
-    plot_df <- data.frame(slicer1 = reduceddim(deng_sce, "lle")[,1],
-                          slicer2 = reduceddim(deng_sce, "lle")[,2],
-                          cell_type2 =  deng_sce$cell_type2)
+    plot_df <- data.frame(slicer1 = reduceddim(cdScFiltAnnot, "lle")[,1],
+                          slicer2 = reduceddim(cdScFiltAnnot, "lle")[,2],
+                          cellType =  cdScFiltAnnot$cellType)
     ggplot(data = plot_df)+geom_point(mapping = aes(x = slicer1,
                                                     y = slicer2,
-                                                    color = cell_type2))+
+                                                    color = cellType))+
       scale_color_manual(values = )+ xlab("lle component 1") +
       ylab("lle component 2") +
       ggtitle("locally linear embedding of cells from slicer")+
