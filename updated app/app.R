@@ -185,10 +185,10 @@ ui <- dashboardPage(
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
+               menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                #menuSubItem('Monocle', tabName = 'trajectory_monocle'),
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap'),
-               menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('Slicer', tabName = 'trajectory_slicer')),
       menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
       # menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
@@ -1135,6 +1135,11 @@ ui <- dashboardPage(
                 title = "Slicer", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_slicerOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "Slicer", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_slicer_pseudotime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
               
       ),
@@ -3679,7 +3684,7 @@ server <- function(input, output, session) {
     
     tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
                       DC2 = eigenvectors(dm)[,2],
-                      Timepoint = cds$cellType)
+                      Timepoint = cdScFiltAnnot$cellType)
     ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
       geom_point() +  scale_color_manual(values = my_color) +
       xlab("Diffusion component 1") + 
@@ -3698,7 +3703,7 @@ server <- function(input, output, session) {
     
     tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
                       DC2 = eigenvectors(dm)[,2],
-                      Timepoint = cds$cellType)
+                      Timepoint = cdScFiltAnnot$cellType)
     
     cdScFiltAnnot$pseudotime_diffusionmap <- rank(eigenvectors(dm)[,1])
     
@@ -3740,7 +3745,6 @@ server <- function(input, output, session) {
     cdScFiltAnnot$pseudotime_order_tscan <- NA
     cdScFiltAnnot$pseudotime_order_tscan[as.numeric(dengorderTSCAN$sample_name)] <- 
       dengorderTSCAN$Pseudotime
-    
     ggplot(as.data.frame(colData(cdScFiltAnnot)), 
            aes(x = pseudotime_order_tscan, 
                y = cellType, colour = cellType)) +
@@ -3765,10 +3769,10 @@ server <- function(input, output, session) {
     slicer_traj_lle <- lle(t(deng[slicer_genes,]), m = 2, k)$Y
 
 
-    reduceddim(cdScFiltAnnot, "lle") <- slicer_traj_lle
+    reducedDim(cdScFiltAnnot, "lle") <- slicer_traj_lle
 
-    plot_df <- data.frame(slicer1 = reduceddim(cdScFiltAnnot, "lle")[,1],
-                          slicer2 = reduceddim(cdScFiltAnnot, "lle")[,2],
+    plot_df <- data.frame(slicer1 = reducedDim(cdScFiltAnnot, "lle")[,1],
+                          slicer2 = reducedDim(cdScFiltAnnot, "lle")[,2],
                           cellType =  cdScFiltAnnot$cellType)
     ggplot(data = plot_df)+geom_point(mapping = aes(x = slicer1,
                                                     y = slicer2,
@@ -3779,6 +3783,43 @@ server <- function(input, output, session) {
       theme_classic()
   })
   
+  output$trajectory_slicer_pseudotime <- renderPlotly({
+    
+    deng <- as.matrix(logcounts(cdScFiltAnnot))
+    
+    slicer_genes <- select_genes(t(deng))
+    k <- select_k(t(deng[slicer_genes,]), kmin = 30, kmax=60)
+    slicer_traj_lle <- lle(t(deng[slicer_genes,]), m = 2, k)$Y
+    
+    
+    reducedDim(cdScFiltAnnot, "lle") <- slicer_traj_lle
+    
+    slicer_traj_graph <- conn_knn_graph(slicer_traj_lle, 14)
+    
+    pseudotime_order_slicer <- cell_order(slicer_traj_graph, start)
+    branches <- assign_branches(slicer_traj_graph, start)
+    
+    pseudotime_slicer <-
+      data.frame(
+        Timepoint = cellLabels,
+        pseudotime = NA,
+        State = branches
+      )
+    pseudotime_slicer$pseudotime[pseudotime_order_slicer] <-
+      1:length(pseudotime_order_slicer)
+    cdScFiltAnnot$pseudotime_slicer <- pseudotime_slicer$pseudotime
+    
+    ggplot(as.data.frame(colData(cdScFiltAnnot)), 
+           aes(x = pseudotime_slicer, 
+               y = cellType, colour = cellType)) +
+      geom_quasirandom(groupOnX = FALSE) +
+      scale_color_manual(values = my_color) + theme_classic() +
+      xlab("SLICER pseudotime (cell ordering)") +
+      ylab("Timepoint") +
+      theme_classic()
+
+    
+  })
 }
 
 shinyApp(ui, server)
