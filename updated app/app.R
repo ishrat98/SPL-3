@@ -37,7 +37,10 @@ library(Matrix)
 library(lle)
 
 library(tradeSeq)
-
+library(ggthemes)
+library(ggbeeswarm)
+library(corrplot)
+library(Polychrome)
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
 
@@ -186,10 +189,9 @@ ui <- dashboardPage(
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
-               #menuSubItem('Monocle', tabName = 'trajectory_monocle'),
-               menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap'),
-               menuSubItem('Slicer', tabName = 'trajectory_slicer')),
+               menuSubItem('Slicer', tabName = 'trajectory_slicer'),
+              menuSubItem('Monocle3', tabName = 'trajectory_monocle3')),
       menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
       # menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
       #          menuSubItem('Single gene expression', tabName = "Gene_expression"),
@@ -198,7 +200,7 @@ ui <- dashboardPage(
       menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
       menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
       
-      menuItem('About', tabName = 'analysisInfo', icon = icon('info'))
+      menuItem('Analysis Info', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
   dashboardBody(
@@ -1091,17 +1093,11 @@ ui <- dashboardPage(
                 plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
-                title = "Component", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle3Component", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
                 title = "Monocle UMAP", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_monocle3Umap", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
-              
-              
+
               box(
                 title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -1158,9 +1154,16 @@ ui <- dashboardPage(
       
       tabItem(tabName = 'analysisInfo',
               h2('CISTRON'),
-              h4('A TRAJECTORY BASED SINGLE CELL ANALYSIS')
-              #includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
+              h4('A TRAJECTORY BASED SINGLE CELL ANALYSIS'),
+              h2('Session Info'),
+              htmlOutput("sessionInfo"),
+             # includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
       )
+      # box(
+      #   title = "Session Info", status = "primary", solidHeader = TRUE,
+      #   collapsible = TRUE, width = 12,
+      #   plotOutput("sessionInfo", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+      # )
       
     )
   )
@@ -3616,25 +3619,25 @@ server <- function(input, output, session) {
   })
   
   
-  output$trajectory_monocle3Component <- renderPlotly({
-    
-    cds <- counts(cdScFiltAnnot)
-    counts <- as.matrix(cds)
-    
-    pd <- data.frame(cells = colnames(counts), cellType = cellLabels)
-    rownames(pd) <- pd$cells
-    fd <- data.frame(gene_short_name = rownames(counts))
-    rownames(fd) <- fd$gene_short_name
-    cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
-                          featureData = new("AnnotatedDataFrame", data = fd))
-    cds <- estimateSizeFactors(cds)
-    cds <- reduceDimension(cds, max_components = 2)
-    cds <- orderCells(cds)
-    cds <- orderCells(cds, root_state = 14)
-    plot_cell_trajectory(cds)
-    
-    
-  })
+  # output$trajectory_monocle3Component <- renderPlotly({
+  #   
+  #   cds <- counts(cdScFiltAnnot)
+  #   counts <- as.matrix(cds)
+  #   
+  #   pd <- data.frame(cells = colnames(counts), cellType = cellLabels)
+  #   rownames(pd) <- pd$cells
+  #   fd <- data.frame(gene_short_name = rownames(counts))
+  #   rownames(fd) <- fd$gene_short_name
+  #   cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
+  #                         featureData = new("AnnotatedDataFrame", data = fd))
+  #   cds <- estimateSizeFactors(cds)
+  #   cds <- reduceDimension(cds, max_components = 2)
+  #   cds <- orderCells(cds)
+  #   cds <- orderCells(cds, root_state = 14)
+  #   plot_cell_trajectory(cds)
+  #   
+  #   
+  # })
   
   
   output$trajectory_monocle3Umap <- renderPlotly({
@@ -3875,6 +3878,10 @@ server <- function(input, output, session) {
       theme_classic()
 
     
+  })
+  
+  output$sessionInfo <- renderPrint({
+    capture.output(sessionInfo())
   })
 }
 
