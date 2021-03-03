@@ -1086,7 +1086,7 @@ ui <- dashboardPage(
       
       tabItem(tabName = 'trajectory_monocle3',
               box(
-                title = "Monocle3", status = "primary", solidHeader = TRUE,
+                title = "Feature Selection", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
@@ -1096,9 +1096,21 @@ ui <- dashboardPage(
                 plotlyOutput("trajectory_monocle3Component", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
+                title = "Monocle UMAP", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_monocle3Umap", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              
+              
+              box(
                 title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "Monocle Psedutime2", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_monocle3Psedutime2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
 
       ),
@@ -3594,8 +3606,6 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle3OT <- renderPlot({
     
-    
-    #d <- deng_SCE[m3dGenes,]
     ## feature selection 
     deng <- counts(cdScFiltAnnot)
     
@@ -3608,27 +3618,118 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle3Component <- renderPlotly({
     
+    cds <- counts(cdScFiltAnnot)
+    counts <- as.matrix(cds)
     
+    pd <- data.frame(cells = colnames(counts), cellType = cellLabels)
+    rownames(pd) <- pd$cells
+    fd <- data.frame(gene_short_name = rownames(counts))
+    rownames(fd) <- fd$gene_short_name
+    cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
+                          featureData = new("AnnotatedDataFrame", data = fd))
+    cds <- estimateSizeFactors(cds)
+    cds <- reduceDimension(cds, max_components = 2)
+    cds <- orderCells(cds)
+    cds <- orderCells(cds, root_state = 14)
+    plot_cell_trajectory(cds)
     
     
   })
   
-  output$trajectory_monocle3Psedutime <- renderPlotly({
+  
+  output$trajectory_monocle3Umap <- renderPlotly({
     
+    cds <- counts(cdScFiltAnnot)
+    counts <- as.matrix(cds)
     
+    pd <- data.frame(cells = colnames(counts), cellType = cellLabels)
+    rownames(pd) <- pd$cells
+    fd <- data.frame(gene_short_name = rownames(counts))
+    rownames(fd) <- fd$gene_short_name
+    cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
+                          featureData = new("AnnotatedDataFrame", data = fd))
+    cds <- estimateSizeFactors(cds)
     
-    pdata_cds <- pData(cds)
-    pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
+    cds <- new_cell_data_set(counts, cell_metadata = pd,
+                             gene_metadata = data.frame(gene_short_name = rownames(counts),
+                                                        row.names = rownames(counts)))
+    # Run PCA then UMAP on the data
+    cds <- preprocess_cds(cds, method = "PCA")
+    cds <- reduce_dimension(cds, preprocess_method = "PCA",
+                            reduction_method = "UMAP")
     
-    ggplot(as.data.frame(pdata_cds), 
-           aes(x = pseudotime_monocle3, 
-               y = cellType, colour = cellType)) +
-      geom_quasirandom(groupOnX = FALSE) +
-      scale_color_manual(values = my_color) + theme_classic() +
-      xlab("monocle3 pseudotime") + ylab("Timepoint") +
-      ggtitle("Cells ordered by monocle3 pseudotime")
+    # First display, coloring by the cell types from Paul et al
+    plot_cells(cds, label_groups_by_cluster = FALSE, cell_size = 1,
+               color_cells_by = "cellType")
     
   })
+  
+  output$trajectory_monocle3Psedutime <- renderPlotly({
+    cds <- counts(cdScFiltAnnot)
+    counts <- as.matrix(cds)
+    cds <- learn_graph(cds, use_partition = FALSE)
+    
+    # We find all the cells that are close to the starting point
+    cell_ids <- colnames(cds)[pd$cellType ==  "Multipotent progenitors"]
+    closest_vertex <- cds@principal_graph_aux[["UMAP"]]$pr_graph_cell_proj_closest_vertex
+    closest_vertex <- as.matrix(closest_vertex[colnames(cdScFiltAnnot), ])
+    closest_vertex <- closest_vertex[cell_ids, ]
+    closest_vertex <- as.numeric(names(which.max(table(closest_vertex))))
+    mst <- principal_graph(cds)$UMAP
+    root_pr_nodes <- igraph::V(mst)$name[closest_vertex]
+    
+    # We compute the trajectory
+   # cds <- order_cells(cds, root_pr_nodes = root_pr_nodes)
+    plot_cells(cds, color_cells_by = "pseudotime")
+    
+   
+    
+  })
+  
+  
+  
+  output$trajectory_monocle3Psedutime2 <- renderPlotly({
+  
+    cds <- counts(cdScFiltAnnot)
+    counts <- as.matrix(cds)
+    cds <- learn_graph(cds, use_partition = FALSE)
+    
+    # We find all the cells that are close to the starting point
+    cell_ids <- colnames(cds)[pd$cellType ==  "Multipotent progenitors"]
+    closest_vertex <- cds@principal_graph_aux[["UMAP"]]$pr_graph_cell_proj_closest_vertex
+    closest_vertex <- as.matrix(closest_vertex[colnames(cdScFiltAnnot), ])
+    closest_vertex <- closest_vertex[cell_ids, ]
+    closest_vertex <- as.numeric(names(which.max(table(closest_vertex))))
+    mst <- principal_graph(cds)$UMAP
+    root_pr_nodes <- igraph::V(mst)$name[closest_vertex]
+  cds <- order_cells(cds)
+  # a helper function to identify the root principal points:
+  get_earliest_principal_node <- function(cds, time_bin="130-170"){
+    cell_ids <- which(colData(cds)[, "CellType"] == time_bin)
+    
+    closest_vertex <-
+      cds@principal_graph_aux[["UMAP"]]$pr_graph_cell_proj_closest_vertex
+    closest_vertex <- as.matrix(closest_vertex[colnames(cds), ])
+    root_pr_nodes <-
+      igraph::V(principal_graph(cds)[["UMAP"]])$name[as.numeric(names
+                                                                (which.max(table(closest_vertex[cell_ids,]))))]
+    
+    root_pr_nodes
+  }
+  
+  pdata_cds <- pData(cds)
+  pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
+  
+  ggplot(as.data.frame(pdata_cds), 
+         aes(x = pseudotime_monocle3, 
+             y = cellType, colour = cellType)) +
+    geom_quasirandom(groupOnX = FALSE) +
+    scale_color_manual(values = my_color) + theme_classic() +
+    xlab("monocle3 pseudotime") + ylab("Timepoint") +
+    ggtitle("Cells ordered by monocle3 pseudotime")
+  
+  })
+  
   
   output$trajectory_DiffusionMap_1 <- renderPlotly({
     
