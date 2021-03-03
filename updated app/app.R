@@ -64,7 +64,7 @@ names(my_color) <- unique(as.character(cdScFiltAnnot$cellType))
 cdScFiltAnnot$PC1 <- pca[, 1]
 cdScFiltAnnot$PC2 <- pca[, 2]
 
-
+dengg <- as.matrix(logcounts(cdScFiltAnnot))
 c30 <- c("dodgerblue2",#1
          "#E31A1C", #2 red
          "green4", #3
@@ -3609,76 +3609,50 @@ server <- function(input, output, session) {
   output$trajectory_monocle3Component <- renderPlotly({
     
     
-    d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
-    d <- d[!duplicated(rownames(d)), ]
+    # d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
+    # d <- d[!duplicated(rownames(d)), ]
+    # 
+    # colnames(d) <- 1:ncol(d)
+    # geneNames <- rownames(d)
+    # rownames(d) <- 1:nrow(d)
+    # pd <- data.frame(timepoint = cellLabels)
+    # pd <- new("AnnotatedDataFrame", data=pd)
+    # fd <- data.frame(gene_short_name = geneNames)
+    # fd <- new("AnnotatedDataFrame", data=fd)
+    # 
+    # dCellData <- newCellDataSet(counts(d), phenoData = pd, featureData = fd)
+    # #
+    # dCellData <- setOrderingFilter(dCellData, which(geneNames %in% m3dGenes))
+    # dCellData <- estimateSizeFactors(dCellData)
+    # dCellDataSet <- reduceDimension(dCellData,reduction_method = "DDRTree", pseudo_expr = 1)
+    # dCellDataSet <- orderCells(dCellDataSet, reverse = FALSE)
+    # plot_cell_trajectory(dCellDataSet)
     
-    colnames(d) <- 1:ncol(d)
-    geneNames <- rownames(d)
-    rownames(d) <- 1:nrow(d)
-    pd <- data.frame(timepoint = cellLabels)
-    pd <- new("AnnotatedDataFrame", data=pd)
-    fd <- data.frame(gene_short_name = geneNames)
-    fd <- new("AnnotatedDataFrame", data=fd)
     
-    dCellData <- newCellDataSet(counts(d), phenoData = pd, featureData = fd)
-    #
-    dCellData <- setOrderingFilter(dCellData, which(geneNames %in% m3dGenes))
-    dCellData <- estimateSizeFactors(dCellData)
-    dCellDataSet <- reduceDimension(dCellData,reduction_method = "DDRTree", pseudo_expr = 1)
-    dCellDataSet <- orderCells(dCellDataSet, reverse = FALSE)
-    plot_cell_trajectory(dCellDataSet)
     
   })
   
   output$trajectory_monocle3Psedutime <- renderPlotly({
     
-    d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
-    d <- d[!duplicated(rownames(d)), ]
-    
-    colnames(d) <- 1:ncol(d)
-    geneNames <- rownames(d)
-    rownames(d) <- 1:nrow(d)
-    pd <- data.frame(timepoint = cellLabels)
-    pd <- new("AnnotatedDataFrame", data=pd)
-    fd <- data.frame(gene_short_name = geneNames)
-    fd <- new("AnnotatedDataFrame", data=fd)
     
     
-    dCellData <- newCellDataSet(counts(d), phenoData = pd, featureData = fd)
-    #
-    dCellData <- setOrderingFilter(dCellData, which(geneNames %in% m3dGenes))
-    dCellData <- estimateSizeFactors(dCellData)
-    dCellDataSet <- reduceDimension(dCellData,reduction_method = "DDRTree", pseudo_expr = 1)
-    dCellDataSet <- orderCells(dCellDataSet, reverse = FALSE)
+    pdata_cds <- pData(cds)
+    pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
     
-    # Store the ordering
-    pseudotime_monocle2 <-
-      data.frame(
-        Timepoint = phenoData(dCellDataSet)$timepoint,
-        pseudotime = phenoData(dCellDataSet)$Pseudotime,
-        State = phenoData(dCellDataSet)$State
-      )
-    rownames(pseudotime_monocle2) <- 1:ncol(d)
-    pseudotime_order_monocle <-
-      rownames(pseudotime_monocle2[order(pseudotime_monocle2$pseudotime), ])
-
-    
-    cdScFiltAnnot$pseudotime_monocle2 <- pseudotime_monocle2$pseudotime
-    
-    ggplot(as.data.frame(colData(cdScFiltAnnot)), 
-           aes(x = pseudotime_monocle2, 
+    ggplot(as.data.frame(pdata_cds), 
+           aes(x = pseudotime_monocle3, 
                y = cellType, colour = cellType)) +
       geom_quasirandom(groupOnX = FALSE) +
-      scale_color_manual(values = ) + theme_classic() +
-      xlab("monocle2 pseudotime") + ylab("Timepoint") +
-      ggtitle("Cells ordered by monocle2 pseudotime")
+      scale_color_manual(values = my_color) + theme_classic() +
+      xlab("monocle3 pseudotime") + ylab("Timepoint") +
+      ggtitle("Cells ordered by monocle3 pseudotime")
     
   })
   
   output$trajectory_DiffusionMap_1 <- renderPlotly({
     
     
-    dengg <- as.matrix(logcounts(cdScFiltAnnot))
+   # dengg <- as.matrix(logcounts(cdScFiltAnnot))
     colnames(dengg) <- cellLabels                             
     dm <- DiffusionMap(t(dengg))
     
@@ -3697,7 +3671,7 @@ server <- function(input, output, session) {
   output$trajectory_DiffusionMap_Pseudotime <- renderPlotly({
     
     
-    dengg <- as.matrix(logcounts(cdScFiltAnnot))
+  #  dengg <- as.matrix(logcounts(cdScFiltAnnot))
     colnames(dengg) <- cellLabels                             
     dm <- DiffusionMap(t(dengg))
     
@@ -3759,7 +3733,7 @@ server <- function(input, output, session) {
   
   output$trajectory_slicerOT<- renderPlotly({
     
-    deng <- as.matrix(logcounts(cdScFiltAnnot))
+   # deng <- as.matrix(logcounts(cdScFiltAnnot))
     # colnames(deng) <- cellLabels
     # dm <- DiffusionMap(t(deng))
     
