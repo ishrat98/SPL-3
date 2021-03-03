@@ -3609,25 +3609,6 @@ server <- function(input, output, session) {
   output$trajectory_monocle3Component <- renderPlotly({
     
     
-    # d <- cdScFiltAnnot[which(rownames(cdScFiltAnnot) %in% m3dGenes), ]
-    # d <- d[!duplicated(rownames(d)), ]
-    # 
-    # colnames(d) <- 1:ncol(d)
-    # geneNames <- rownames(d)
-    # rownames(d) <- 1:nrow(d)
-    # pd <- data.frame(timepoint = cellLabels)
-    # pd <- new("AnnotatedDataFrame", data=pd)
-    # fd <- data.frame(gene_short_name = geneNames)
-    # fd <- new("AnnotatedDataFrame", data=fd)
-    # 
-    # dCellData <- newCellDataSet(counts(d), phenoData = pd, featureData = fd)
-    # #
-    # dCellData <- setOrderingFilter(dCellData, which(geneNames %in% m3dGenes))
-    # dCellData <- estimateSizeFactors(dCellData)
-    # dCellDataSet <- reduceDimension(dCellData,reduction_method = "DDRTree", pseudo_expr = 1)
-    # dCellDataSet <- orderCells(dCellDataSet, reverse = FALSE)
-    # plot_cell_trajectory(dCellDataSet)
-    
     
     
   })
