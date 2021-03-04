@@ -26,8 +26,10 @@ library(HDF5Array)
 library(formattable)
 library(DT)
 
+library(destiny)
 library(monocle)
 library(monocle3)
+library(SLICER)
 library(slingshot)
 library(RColorBrewer)
 library(TSCAN)
@@ -35,6 +37,11 @@ library(scales)
 library(viridis)
 library(Matrix)
 library(lle)
+library(biomaRt)
+library(BUSpaRse)
+library(tidyverse)
+library(ggsci)
+library(matrixStats)
 
 library(tradeSeq)
 library(ggthemes)
@@ -3589,6 +3596,7 @@ server <- function(input, output, session) {
   })
   
   output$trajectory_SecondSlingshot <- renderPlotly({
+    
   sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
   lines(SlingshotDataSet(sce), lwd=2)
   slingshot_df <- data.frame(colData(cdScFiltAnnot)) 

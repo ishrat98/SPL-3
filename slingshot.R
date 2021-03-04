@@ -19,7 +19,7 @@ library(SingleCellExperiment)
 library(slingshot)
 
 # For reproducibility
-RNGversion("3.5.0")
+#RNGversion("3.5.0")
 palette(brewer.pal(8, "Dark2"))
 data(countMatrix, package = "tradeSeq")
 counts <- as.matrix(countMatrix)
@@ -40,7 +40,7 @@ sce <- fitGAM(counts = counts, pseudotime = pseudotime, cellWeights = cellWeight
 assoRes <- associationTest(sce)
 head(assoRes)
 
-
+#Discovering progenitor marker genes
 
 startRes <- startVsEndTest(sce)
 #We can visualize the estimated smoothers for the third most significant gene.
