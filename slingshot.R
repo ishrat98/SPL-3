@@ -17,7 +17,7 @@ library(tradeSeq)
 library(RColorBrewer)
 library(SingleCellExperiment)
 library(slingshot)
-
+library(HDF5Array)
 # For reproducibility
 #RNGversion("3.5.0")
 palette(brewer.pal(8, "Dark2"))
@@ -86,3 +86,79 @@ for (xx in cUniq[1:4]) {
   print(p)
 }
 
+
+
+
+
+
+
+
+##########for cds
+
+palette(brewer.pal(8, "Dark2"))
+cdSk <- loadHDF5SummarizedExperiment(dir="updated app/cdScFiltAnnotHDF5", prefix="")
+#cdSk <- loadHDF5SummarizedExperiment(dir="F:/SPL-3/updated app/updated app/cdScFiltAnnotHDF5", prefix="")
+#View(cdSk)
+
+cdScFiltAnnot <-  as(cdSk, "SingleCellExperiment")
+cellLabels <- cdScFiltAnnot$cellType
+cds <- counts(cdScFiltAnnot)
+countsMatrix <- as.matrix(cds)
+
+
+
+data(countMatrix, package = "tradeSeq")
+counts <- as.matrix(countMatrix)
+rm(countMatrix)
+data(crv, package = "tradeSeq")
+
+
+set.seed(5)
+icMat <- evaluateK(counts = counts, sds =crv , k = 3:10, 
+                   nGenes = 200, verbose = T)
+pseudotime <- slingPseudotime(crv, na = FALSE)
+cellWeights <- slingCurveWeights(crv)
+sce <- fitGAM(counts = counts, pseudotime = pseudotime, cellWeights = cellWeights,
+              nknots = 6, verbose = FALSE)
+
+startRes <- startVsEndTest(sce)
+#We can visualize the estimated smoothers for the third most significant gene.
+
+oStart <- order(startRes$waldStat, decreasing = TRUE)
+sigGeneStart <- names(sce)[oStart[3]]
+plotSmoothers(sce, counts, gene = sigGeneStart)
+
+plotGeneCount(crv, counts, gene = sigGeneStart)
+
+library(clusterExperiment)
+nPointsClus <- 20
+clusPat <- clusterExpressionPatterns(sce, nPoints = nPointsClus,
+                                     genes = rownames(counts)[1:100])
+clusterLabels <- primaryCluster(clusPat$rsec)
+
+cUniq <- unique(clusterLabels)
+cUniq <- cUniq[!cUniq == -1] # remove unclustered genes
+
+for (xx in cUniq[1:4]) {
+  cId <- which(clusterLabels == xx)
+  p <- ggplot(data = data.frame(x = 1:nPointsClus,
+                                y = rep(range(clusPat$yhatScaled[cId, ]),
+                                        nPointsClus / 2)),
+              aes(x = x, y = y)) +
+    geom_point(alpha = 0) +
+    labs(title = paste0("Cluster ", xx),  x = "Pseudotime", y = "Normalized expression") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  for (ii in 1:length(cId)) {
+    geneId <- rownames(clusPat$yhatScaled)[cId[ii]]
+    p <- p +
+      geom_line(data = data.frame(x = rep(1:nPointsClus, 2),
+                                  y = clusPat$yhatScaled[geneId, ],
+                                  lineage = rep(0:1, each = nPointsClus)),
+                aes(col = as.character(lineage), group = lineage), lwd = 1.5)
+  }
+  p <- p + guides(color = FALSE) +
+    scale_color_manual(values = c("orange", "darkseagreen3"),
+                       breaks = c("0", "1"))  
+  print(p)
+}
