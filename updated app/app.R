@@ -40,7 +40,7 @@ library(lle)
 library(biomaRt)
 library(BUSpaRse)
 library(tidyverse)
-library(ggsci)
+#library(ggsci)
 library(matrixStats)
 
 library(tradeSeq)
