@@ -206,7 +206,11 @@ ui <- dashboardPage(
       # menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
       menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
       menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
-      
+      menuItem('Downstream', tabName = 'Downstream', icon = icon('route'),
+               menuSubItem('Fit negative binomial model', tabName = 'Downstream_model'),
+               menuSubItem('progenitor marker genes', tabName = 'Downstream_markerGenes'),
+               menuSubItem('Differential expression', tabName = 'Downstream_DE'),
+            
       menuItem('Analysis Info', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
@@ -2045,10 +2049,11 @@ server <- function(input, output, session) {
   
   tableRenderingmarkerTableSample <- function(){
     
-    
+    sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')
+    #df <- cdScFiltAnnot$slingPseudotime_1
     sampleID <- as.character(input$markerChooseSample)
     dfColName <- paste0('PercentSample',sampleID)
-    df <- data.frame("Sample"=sampleID,
+    df <- data.frame("Sample"=cdScFiltAnnot$slingPseudotime_1,
                      "Gene"= rownames(cdScFiltAnnot),
                      "FDR" = metadata(cdScFiltAnnot)[['Sample']][[1]][[sampleID]][rownames(cdScFiltAnnot),'FDR'],
                      "PercentInClust" = rowData(cdScFiltAnnot)[,dfColName]/100)
