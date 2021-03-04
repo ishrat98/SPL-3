@@ -197,7 +197,7 @@ ui <- dashboardPage(
                menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap'),
-               menuSubItem('Slicer', tabName = 'trajectory_slicer'),
+              # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
               menuSubItem('Monocle3', tabName = 'trajectory_monocle3')),
       menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
       # menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
@@ -432,6 +432,12 @@ ui <- dashboardPage(
                     
                     #downloadButton("exportTsne", label = "Download t-SNE"),
                     #downloadButton("exportUmap", label = "Download UMAP")
+                ),
+                box(
+                  title = "SL marker genes", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 12,
+                  DT::dataTableOutput("markerTableSlingshot") %>% withSpinner(type = getOption("spinner.type", default = 8))
+                 # plotlyOutput("trajectory_TSCAN_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
                 ),
                 
                 box(
@@ -2009,8 +2015,33 @@ server <- function(input, output, session) {
   #
   ####################################
   
+    tableRenderingENTableSlingshot <- function(){
+      
+      sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')
+      df <- cdScFiltAnnot$slingPseudotime_1 
+      df <- df[order(df$FDR, decreasing = FALSE),]
+      df$FDR <- formatC(df$FDR, format = "E", digits = 2)
+      
+      #df <- df[1:100,]
+      #rownames(df) <- NULL
+      df %>%
+        datatable(colnames = c('% cells in this sample' = 'PercentInClust'), 
+                  rownames = FALSE,
+                  caption = 'Table : Marker genes for slingshot pseudotime.') %>%
+        #formatRound(columns = 'FDR', digits = 3) %>%
+        formatRound(columns=c(colnames(df)[grep('logFC',colnames(df))]), digits=3) %>%
+        formatPercentage(columns = '% cells in this sample') %>% 
+        formatStyle(names(df[,5:dim(df)[2]]),
+                    background = styleColorBar(range(df[,5:dim(df)[2]]), 'lightblue'),
+                    backgroundSize = '98% 58%',
+                    backgroundRepeat = 'no-repeat',
+                    backgroundPosition = 'center')
+    }
   
-  
+  output$markerTableSlingshot = DT::renderDataTable(tableRenderingENTableSlingshot(), server = FALSE, extensions = 'Buttons', 
+                                              options = list(dom = 'lBfrtip',
+                                                             buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), 
+                                                             pageLength = 5, autoWidth = TRUE))
   
   tableRenderingmarkerTableSample <- function(){
     
