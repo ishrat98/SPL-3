@@ -5,10 +5,12 @@ library(shinyWidgets)
 library(shinyjs)
 library(shinycssloaders)
 
+library(HDF5Array)
 library(SingleCellExperiment)
 library(SummarizedExperiment)
-library(HDF5Array)
+
 library(scater)
+library(ggplot2)
 library(plotly)
 library(reshape2)
 library(circlize)
@@ -22,32 +24,32 @@ library(cluster)
 library(dplyr)
 library(tidyverse)
 library(viridisLite)
-library(HDF5Array)
 library(formattable)
 library(DT)
 
+library(slingshot)
+library(TSCAN)
 library(destiny)
+library(M3Drop)
 library(monocle)
 library(monocle3)
-library(SLICER)
-library(slingshot)
+
 library(RColorBrewer)
-library(TSCAN)
+
 library(scales)
 library(viridis)
 library(Matrix)
-library(lle)
+library(matrixStats)
 library(biomaRt)
 library(BUSpaRse)
 library(tidyverse)
-#library(ggsci)
-library(matrixStats)
-
-library(tradeSeq)
 library(ggthemes)
 library(ggbeeswarm)
 library(corrplot)
 library(Polychrome)
+
+
+library(tradeSeq)
 library(clusterExperiment)
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
@@ -3731,7 +3733,7 @@ server <- function(input, output, session) {
                           featureData = new("AnnotatedDataFrame", data = fd))
     cds <- estimateSizeFactors(cds)
     
-    cds <- new_cell_data_set(counts, cell_metadata = pd,
+    cds <- new cell_data_set (counts, cell_metadata = pd,
                              gene_metadata = data.frame(gene_short_name = rownames(counts),
                                                         row.names = rownames(counts)))
     # Run PCA then UMAP on the data
