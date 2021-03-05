@@ -48,6 +48,7 @@ library(ggthemes)
 library(ggbeeswarm)
 library(corrplot)
 library(Polychrome)
+library(clusterExperiment)
 Sys.setenv(R_MAX_VSIZE = 16e9)
 
 
@@ -200,20 +201,20 @@ ui <- dashboardPage(
               # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
               menuSubItem('Monocle3', tabName = 'trajectory_monocle3')),
       menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
-      # menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
-      #          menuSubItem('Single gene expression', tabName = "Gene_expression"),
-      #          menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
-      # menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
+      menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
+               menuSubItem('Single gene expression', tabName = "Gene_expression"),
+               menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
+      menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
       menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
       menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
       menuItem('Downstream', tabName = 'Downstream', icon = icon('route'),
                menuSubItem('Fit negative binomial model', tabName = 'Downstream_model'),
                menuSubItem('progenitor marker genes', tabName = 'Downstream_markerGenes'),
-               menuSubItem('Differential expression', tabName = 'Downstream_DE'),
-            
+               menuSubItem('Differential expression', tabName = 'Downstream_DE')),
       menuItem('Analysis Info', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
+  
   dashboardBody(
     tags$head(tags$style(HTML('
         /* logo */
@@ -1169,6 +1170,38 @@ ui <- dashboardPage(
               
       ),
       
+      tabItem(tabName = 'Downstream_model',
+              box(
+                title = "Fit Model", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("DModel", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
+      ),
+      
+      tabItem(tabName = 'Downstream_markerGenes',
+              box(
+                title = "progenitor marker genes", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("markerGenes1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "UMAP space with gene’s expression.", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("markerGenes2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
+      ),
+      
+      tabItem(tabName = 'Downstream_DE',
+              box(
+                title = "Differential expression", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("Differential_expression", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
+      ),
+      
       tabItem(tabName = 'analysisInfo',
               h2('CISTRON'),
               h4('A TRAJECTORY BASED SINGLE CELL ANALYSIS'),
@@ -1185,6 +1218,7 @@ ui <- dashboardPage(
     )
   )
 )
+
 
 server <- function(input, output, session) { 
   
@@ -3923,6 +3957,95 @@ server <- function(input, output, session) {
 
     
   })
+  
+  
+  cds <- counts(cdScFiltAnnot)
+  countsMatrix <- as.matrix(cds)
+  
+  
+  
+  data(countMatrix, package = "tradeSeq")
+  counts <- as.matrix(countMatrix)
+  rm(countMatrix)
+  data(crv, package = "tradeSeq")
+  
+  output$DModel <- renderPlot({
+
+    
+    
+    set.seed(5)
+    icMat <- evaluateK(counts = counts, sds =crv , k = 3:10, 
+                       nGenes = 200, verbose = T)
+    
+    
+  })
+  
+  pseudotime <- slingPseudotime(crv, na = FALSE)
+  cellWeights <- slingCurveWeights(crv)
+  sce <- fitGAM(counts = counts, pseudotime = pseudotime, cellWeights = cellWeights,
+                nknots = 6, verbose = FALSE)
+  
+  startRes <- startVsEndTest(sce)
+  #We can visualize the estimated smoothers for the third most significant gene.
+  
+  oStart <- order(startRes$waldStat, decreasing = TRUE)
+  sigGeneStart <- names(sce)[oStart[3]]
+  
+  output$markerGenes1 <- renderPlotly({
+    
+    
+    plotSmoothers(sce, counts, gene = sigGeneStart)
+    
+    
+  })
+  
+  output$markerGenes2 <- renderPlotly({
+    
+    
+    plotGeneCount(crv, counts, gene = sigGeneStart)
+    
+    
+  })
+  
+  output$Differential_expression <- renderPlotly({
+    
+    
+    nPointsClus <- 20
+    clusPat <- clusterExpressionPatterns(sce, nPoints = nPointsClus,
+                                         genes = rownames(counts)[1:100])
+    clusterLabels <- primaryCluster(clusPat$rsec)
+    
+    cUniq <- unique(clusterLabels)
+    cUniq <- cUniq[!cUniq == -1] # remove unclustered genes
+    
+    for (xx in cUniq[1:4]) {
+      cId <- which(clusterLabels == xx)
+      p <- ggplot(data = data.frame(x = 1:nPointsClus,
+                                    y = rep(range(clusPat$yhatScaled[cId, ]),
+                                            nPointsClus / 2)),
+                  aes(x = x, y = y)) +
+        geom_point(alpha = 0) +
+        labs(title = paste0("Cluster ", xx),  x = "Pseudotime", y = "Normalized expression") +
+        theme_classic() +
+        theme(plot.title = element_text(hjust = 0.5))
+      for (ii in 1:length(cId)) {
+        geneId <- rownames(clusPat$yhatScaled)[cId[ii]]
+        p <- p +
+          geom_line(data = data.frame(x = rep(1:nPointsClus, 2),
+                                      y = clusPat$yhatScaled[geneId, ],
+                                      lineage = rep(0:1, each = nPointsClus)),
+                    aes(col = as.character(lineage), group = lineage), lwd = 1.5)
+      }
+      p <- p + guides(color = FALSE) +
+        scale_color_manual(values = c("orange", "darkseagreen3"),
+                           breaks = c("0", "1"))  
+      print(p)
+    }
+    
+    
+  })
+  
+  
   
   output$sessionInfo <- renderPrint({
     capture.output(sessionInfo())
