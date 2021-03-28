@@ -47,10 +47,10 @@ rownames(fd) <- fd$gene_short_name
 cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
                       featureData = new("AnnotatedDataFrame", data = fd))
 cds <- estimateSizeFactors(cds)
-cds <- reduceDimension(cds, max_components = 2)
-cds <- orderCells(cds)
-cds <- orderCells(cds, root_state = 14)
-plot_cell_trajectory(cds)
+#cds <- reduceDimension(cds, max_components = 2)
+# cds <- orderCells(cds)
+# cds <- orderCells(cds, root_state = 14)
+# plot_cell_trajectory(cds)
 
 
 # info <- extract_monocle_info(cds)
@@ -59,7 +59,7 @@ plot_cell_trajectory(cds)
 #               pseudotime = info$pseudotime)
 
 
-sce <- fitGAM(cds, verbose = TRUE)
+#sce <- fitGAM(cds, verbose = TRUE)
 
 
 set.seed(22)
@@ -240,16 +240,18 @@ get_earliest_principal_node <- function(cds, time_bin="130-170"){
 pdata_cds <- pData(cds)
 pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
 
-
 metadata(cdScFiltAnnot)[['pseudotime.monocle3']] <- pdata_cds$pseudotime_monocle3
-
+#metadata(cdScFiltAnnot)[['pseudotime.monocle3']] <- list(pseudotime.monocle3)
 saveHDF5SummarizedExperiment(cdScFiltAnnot, dir="cdScFiltAnnotHDF5", prefix="", replace = TRUE,
                              chunkdim=NULL, level=NULL, verbose=FALSE)
 
 
+pseudotime_monocle3 <- metadata(cdScFiltAnnot)[['pseudotime.monocle3']]
+  #cdScFiltAnnot@metadata[["pseudotime.monocle3"]]
+
 
 ggplot(as.data.frame(pdata_cds), 
-       aes(x = pseudotime_monocle3, 
+       aes(x =pseudotime_monocle3, 
            y = cellType, colour = cellType)) +
   geom_quasirandom(groupOnX = FALSE) +
   scale_color_manual(values = my_color) + theme_classic() +
