@@ -21,7 +21,7 @@ library(SLICER)
 library(monocle3)
 library(matrixStats)
 library(Matrix)
-
+#library(dyno)
 # For reproducibility
 palette(brewer.pal(8, "Dark2"))
 cdSk <- loadHDF5SummarizedExperiment(dir="updated app/cdScFiltAnnotHDF5", prefix="")
@@ -47,9 +47,9 @@ rownames(fd) <- fd$gene_short_name
 cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
                       featureData = new("AnnotatedDataFrame", data = fd))
 cds <- estimateSizeFactors(cds)
-#cds <- reduceDimension(cds, max_components = 3)
+cds <- reduceDimension(cds, max_components = 2)
 cds <- orderCells(cds)
-cds <- orderCells(cds, root_state = 5)
+cds <- orderCells(cds, root_state = 14)
 plot_cell_trajectory(cds)
 
 
@@ -89,7 +89,7 @@ cds <- learn_graph(cds, use_partition = FALSE)
 # We find all the cells that are close to the starting point
 cell_ids <- colnames(cds)[pd$cellType ==  "Multipotent progenitors"]
 closest_vertex <- cds@principal_graph_aux[["UMAP"]]$pr_graph_cell_proj_closest_vertex
-closest_vertex <- as.matrix(closest_vertex[colnames(cds), ])
+closest_vertex <- as.matrix(closest_vertex[colnames(cdScFiltAnnot), ])
 closest_vertex <- closest_vertex[cell_ids, ]
 closest_vertex <- as.numeric(names(which.max(table(closest_vertex))))
 mst <- principal_graph(cds)$UMAP
@@ -128,12 +128,38 @@ cellWeights <- lapply(endpoints, function(endpoint) {
   return(df)
 }) %>% do.call(what = 'cbind', args = .) %>%
   as.matrix()
-rownames(cellWeights) <- colnames(cds)
-pseudotime <- matrix(pseudotime(cds), ncol = ncol(cellWeights),
-                     nrow = ncol(cds), byrow = FALSE)
+rownames(cellWeights) <- colnames(cdScFiltAnnot)
+
+
+pseudotime <- matrix(pseudotime(cdScFiltAnnot), ncol = ncol(cellWeights),
+                     nrow = ncol(cdScFiltAnnot), byrow = FALSE)
 sce <- fitGAM(counts = counts,
               pseudotime = pseudotime,
               cellWeights = cellWeights)
+
+
+
+
+
+
+# For each endpoint
+cellWeights <- lapply(endpoints, function(endpoint) {
+  # We find the path between the endpoint and the root
+  path <- igraph::shortest_paths(mst, root, endpoint)$vpath[[1]]
+  path <- as.character(path)
+  # We find the cells that map along that path
+  df <- y_to_cells[y_to_cells$Y %in% path, ]
+  df <- data.frame(weights = as.numeric(colnames(cds) %in% df$cells))
+  colnames(df) <- endpoint
+  return(df)
+}) %>% do.call(what = 'cbind', args = .) %>%
+  as.matrix()
+rownames(cellWeights) <- colnames(cds)
+pseudotime <- matrix(pseudotime(cds), ncol = ncol(cellWeights),
+                     nrow = ncol(cds), byrow = FALSE)
+
+
+
 
 
 gene_meta <- rowData(cds)
@@ -162,7 +188,7 @@ cds <- learn_graph(cds,use_partition = TRUE)
 
 ## Step 6: Order cells
 #cds <- order_cells(cds, root_cells = cds )
-cds <- order_cells(cds, root_cells = c("NPCs","NPCs.1","NPCs.2","NPCs.3") )
+cds <- order_cells(cds, root_cells = c("Adipocytes","NPCs","Neuron","Fibroblasts") )
 plot_cells(cds, color_cells_by="cellType", graph_label_size = 4, cell_size = 2,
            group_label_size = 6)+ scale_color_manual(values = my_color)
 
@@ -181,18 +207,18 @@ plot_cells(cds,
            label_leaves=FALSE,
            label_branch_points=FALSE)
 
-plot_cells(cds,
-           color_cells_by = "embryo.time.bin",
-           label_cell_groups=FALSE,
-           label_leaves=TRUE,
-           label_branch_points=TRUE,
-           graph_label_size=1.5)
+# plot_cells(cds,
+#            color_cells_by = "pseudotime",
+#            label_cell_groups=FALSE,
+#            label_leaves=TRUE,
+#            label_branch_points=TRUE,
+#            graph_label_size=1.5)
 
 
 cds <- order_cells(cds)
 # a helper function to identify the root principal points:
 get_earliest_principal_node <- function(cds, time_bin="130-170"){
-  cell_ids <- which(colData(cds)[, "embryo.time.bin"] == time_bin)
+  cell_ids <- which(colData(cds)[, "CellType"] == time_bin)
   
   closest_vertex <-
     cds@principal_graph_aux[["UMAP"]]$pr_graph_cell_proj_closest_vertex
@@ -203,7 +229,7 @@ get_earliest_principal_node <- function(cds, time_bin="130-170"){
   
   root_pr_nodes
 }
-cds <- order_cells(cds, root_pr_nodes=get_earliest_principal_node(cds))
+#cds <- order_cells(cds, root_pr_nodes=get_earliest_principal_node(cds))
 
 
 
@@ -213,6 +239,14 @@ cds <- order_cells(cds, root_pr_nodes=get_earliest_principal_node(cds))
 
 pdata_cds <- pData(cds)
 pdata_cds$pseudotime_monocle3 <- monocle3::pseudotime(cds)
+
+
+metadata(cdScFiltAnnot)[['pseudotime.monocle3']] <- pdata_cds$pseudotime_monocle3
+
+saveHDF5SummarizedExperiment(cdScFiltAnnot, dir="cdScFiltAnnotHDF5", prefix="", replace = TRUE,
+                             chunkdim=NULL, level=NULL, verbose=FALSE)
+
+
 
 ggplot(as.data.frame(pdata_cds), 
        aes(x = pseudotime_monocle3, 
@@ -230,7 +264,7 @@ plot_pc_variance_explained(cds)
 plot_cells(cds, reduction_method = "PCA",
            color_cells_by = "cellType", group_label_size = 3.5,
            label_groups_by_cluster = FALSE) +
-  scale_color_d3(palette = "category20b")
+  scale_color_d3(palette = "my_color")
 
 
 # Seed for random initiation of UMAP
@@ -238,7 +272,7 @@ set.seed(4837)
 cds <- reduce_dimension(cds, reduction_method = "UMAP", preprocess_method = "PCA", init = "random")
 plot_cells(cds, color_cells_by = "cellType", group_label_size = 3.5,
            label_groups_by_cluster = FALSE) +
-  scale_color_d3(palette = "category20b")
+  scale_color_d3(palette = "my_color")
 
 set.seed(723451) # for reproducibility
 my_color <- createPalette(14, c("#010101", "#ff0000"), M=1000)
@@ -267,7 +301,7 @@ dm <- DiffusionMap(t(dengg))
 
 tmp <- data.frame(DC1 = eigenvectors(dm)[,1],
                   DC2 = eigenvectors(dm)[,2],
-                  Timepoint = cds$cellType)
+                  Timepoint = cdScFiltAnnot$cellType)
 ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
   geom_point() +  scale_color_manual(values = my_color) +
   xlab("Diffusion component 1") + 
@@ -275,9 +309,9 @@ ggplot(tmp, aes(x = DC1, y = DC2, colour = Timepoint)) +
   theme_classic()
 
 
-cds$pseudotime_diffusionmap <- rank(eigenvectors(dm)[,1])
+cdScFiltAnnot$pseudotime_diffusionmap <- rank(eigenvectors(dm)[,1])
 
-ggplot(as.data.frame(colData(cds)), 
+ggplot(as.data.frame(colData(cdScFiltAnnot)), 
        aes(x = pseudotime_diffusionmap, 
            y = cellType, colour = cellType)) +
   geom_quasirandom(groupOnX = FALSE) +
@@ -285,9 +319,11 @@ ggplot(as.data.frame(colData(cds)),
   xlab("Diffusion map pseudotime (first diffusion map component)") +
   ylab("Timepoint") +
   ggtitle("Cells ordered by diffusion map pseudotime")
+library(corrplot)
 
-
-
+plotExpression(cdScFiltAnnot,"aNSCs" ,x = "pseudotime_diffusionmap", 
+               colour_by = "cellType", show_violin = FALSE,
+               show_smooth = TRUE)
 
 
 ##slicer

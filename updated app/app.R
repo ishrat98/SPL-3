@@ -3733,7 +3733,7 @@ server <- function(input, output, session) {
                           featureData = new("AnnotatedDataFrame", data = fd))
     cds <- estimateSizeFactors(cds)
     
-    cds <- new cell_data_set (counts, cell_metadata = pd,
+    cds <- new_cell_data_set (counts, cell_metadata = pd,
                              gene_metadata = data.frame(gene_short_name = rownames(counts),
                                                         row.names = rownames(counts)))
     # Run PCA then UMAP on the data
