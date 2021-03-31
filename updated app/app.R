@@ -3773,7 +3773,7 @@ server <- function(input, output, session) {
     load("pd")
     #   load("exp")
     
-    new_cds <- new_cell_data_set(counts, gene_metadata = fd, cell_metadata = pd)
+    cds <- new_cell_data_set(counts, gene_metadata = fd, cell_metadata = pd)
     # cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
     #                       featureData = new("AnnotatedDataFrame", data = fd))
    # cds <- estimateSizeFactors(cds)
@@ -3788,9 +3788,9 @@ server <- function(input, output, session) {
     cds <- reduce_dimension(cds, preprocess_method = "PCA",
                             reduction_method = "UMAP")
     
-    cds <- order_cells(cds)
+   # cds <- order_cells(cds)
     
-    #img(src = "monocle3.png", height = 72, width = 72)
+   img(src = "monocle3.png", height = 72, width = 72)
     
     # cds <- new_cell_data_set (counts, cell_metadata = pd,
     #                           gene_metadata = data.frame(gene_short_name = rownames(counts),
