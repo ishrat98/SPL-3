@@ -1112,17 +1112,17 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
-              # box(
-              #   title = "Monocle UMAP", status = "primary", solidHeader = TRUE,
-              #   collapsible = TRUE, width = 12,
-              #   plotlyOutput("trajectory_monocle3Umap", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              # ),
+              box(
+                title = "Monocle UMAP", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_monocle3Umap", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
 # 
-#               box(
-#                 title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
-#                 collapsible = TRUE, width = 12,
-#                 plotlyOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-#               ),
+              box(
+                title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
               box(
                 title = "Monocle Psedutime2", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -3762,7 +3762,7 @@ server <- function(input, output, session) {
                           featureData = new("AnnotatedDataFrame", data = fd))
     cds <- estimateSizeFactors(cds)
     
-    set.seed(22)
+    
     
    # cds <- new_cell_data_set (counts, cell_metadata = pd,
     #                          gene_metadata = data.frame(gene_short_name = rownames(counts),
@@ -3772,6 +3772,8 @@ server <- function(input, output, session) {
     cds <- preprocess_cds(cds, method = "PCA")
     cds <- reduce_dimension(cds, preprocess_method = "PCA",
                             reduction_method = "UMAP")
+    
+    cds <- order_cells(cds)
     
     # cds <- new_cell_data_set (counts, cell_metadata = pd,
     #                           gene_metadata = data.frame(gene_short_name = rownames(counts),
@@ -3796,17 +3798,17 @@ server <- function(input, output, session) {
    # cds <- order_cells(cds, root_pr_nodes = root_pr_nodes)
     #plot_cells(cds, color_cells_by = "pseudotime")
     
-    pseudotime_monocle3 <- metadata(cdScFiltAnnot)[['pseudotime.monocle3']]
-    #cdScFiltAnnot@metadata[["pseudotime.monocle3"]]
-    
-    
-    ggplot(as.data.frame(pdata_cds), 
-           aes(x =pseudotime_monocle3, 
-               y = cellType, colour = cellType)) +
-      geom_quasirandom(groupOnX = FALSE) +
-      scale_color_manual(values = my_color) + theme_classic() +
-      xlab("monocle3 pseudotime") + ylab("Timepoint") +
-      ggtitle("Cells ordered by monocle3 pseudotime")
+    # pseudotime_monocle3 <- metadata(cdScFiltAnnot)[['pseudotime.monocle3']]
+    # #cdScFiltAnnot@metadata[["pseudotime.monocle3"]]
+    # 
+    # 
+    # ggplot(as.data.frame(pdata_cds), 
+    #        aes(x =pseudotime_monocle3, 
+    #            y = cellType, colour = cellType)) +
+    #   geom_quasirandom(groupOnX = FALSE) +
+    #   scale_color_manual(values = my_color) + theme_classic() +
+    #   xlab("monocle3 pseudotime") + ylab("Timepoint") +
+    #   ggtitle("Cells ordered by monocle3 pseudotime")
     
    
     
@@ -3816,9 +3818,9 @@ server <- function(input, output, session) {
   
   output$trajectory_monocle3Psedutime2 <- renderPlotly({
   
-    cds <- counts(cdScFiltAnnot)
-    counts <- as.matrix(cds)
-    cds <- learn_graph(cds, use_partition = FALSE)
+    # cds <- counts(cdScFiltAnnot)
+    # counts <- as.matrix(cds)
+    # cds <- learn_graph(cds, use_partition = FALSE)
     
   #   # We find all the cells that are close to the starting point
   #   cell_ids <- colnames(cds)[pd$cellType ==  "Multipotent progenitors"]
@@ -3843,7 +3845,40 @@ server <- function(input, output, session) {
   #   root_pr_nodes
   # }
   # 
+    cellLabels <- cdScFiltAnnot$cellType
+    cds <- counts(cdScFiltAnnot)
+    counts <- as.matrix(cds)
+    
+    set.seed(200)
+    pd <- data.frame(cells = colnames(counts), cellType = cellLabels)
+    rownames(pd) <- pd$cells
+    fd <- data.frame(gene_short_name = rownames(counts))
+    rownames(fd) <- fd$gene_short_name
+    cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
+                          featureData = new("AnnotatedDataFrame", data = fd))
+    cds <- estimateSizeFactors(cds)
+    
+    cds <- preprocess_cds(cds, method = "PCA")
+    cds <- reduce_dimension(cds, preprocess_method = "PCA",
+                            reduction_method = "UMAP")
+    
+    
+    cds <- cluster_cells(cds)
+    cds <- learn_graph(cds)
+    get_earliest_principal_node <- function(cds, time_bin="130-170"){
+      cell_ids <- which(colData(cds)[, "CellType"] == time_bin)
+      
+      closest_vertex <-
+        cds@principal_graph_aux[["UMAP"]]$pr_graph_cell_proj_closest_vertex
+      closest_vertex <- as.matrix(closest_vertex[colnames(cds), ])
+      root_pr_nodes <-
+        igraph::V(principal_graph(cds)[["UMAP"]])$name[as.numeric(names
+                                                                  (which.max(table(closest_vertex[cell_ids,]))))]
+      
+      root_pr_nodes
+    }
   pdata_cds <- pData(cds)
+  
   
   pseudotime_monocle3 <- metadata(cdScFiltAnnot)[['pseudotime.monocle3']]
   #cdScFiltAnnot@metadata[["pseudotime.monocle3"]]
