@@ -1121,12 +1121,12 @@ ui <- dashboardPage(
               box(
                 title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
                 title = "Monocle Psedutime2", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                plotlyOutput("trajectory_monocle3Psedutime2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                plotOutput("trajectory_monocle3Psedutime2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
 
       ),
@@ -3750,7 +3750,7 @@ server <- function(input, output, session) {
     
   })
   
-  output$trajectory_monocle3Psedutime <- renderPlotly({
+  output$trajectory_monocle3Psedutime <- renderPlot({
     cds <- counts(cdScFiltAnnot)
     counts <- as.matrix(cds)
     
@@ -3776,7 +3776,7 @@ server <- function(input, output, session) {
     new_cds <- new_cell_data_set(counts, gene_metadata = fd, cell_metadata = pd)
     # cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
     #                       featureData = new("AnnotatedDataFrame", data = fd))
-    cds <- estimateSizeFactors(cds)
+   # cds <- estimateSizeFactors(cds)
 
     
    # cds <- new_cell_data_set (counts, cell_metadata = pd,
@@ -3789,6 +3789,8 @@ server <- function(input, output, session) {
                             reduction_method = "UMAP")
     
     cds <- order_cells(cds)
+    
+    #img(src = "monocle3.png", height = 72, width = 72)
     
     # cds <- new_cell_data_set (counts, cell_metadata = pd,
     #                           gene_metadata = data.frame(gene_short_name = rownames(counts),
@@ -3831,7 +3833,7 @@ server <- function(input, output, session) {
   
   
   
-  output$trajectory_monocle3Psedutime2 <- renderPlotly({
+  output$trajectory_monocle3Psedutime2 <- renderPlot({
   
     # cds <- counts(cdScFiltAnnot)
     # counts <- as.matrix(cds)
