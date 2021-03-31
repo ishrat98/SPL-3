@@ -3758,11 +3758,26 @@ server <- function(input, output, session) {
     rownames(pd) <- pd$cells
     fd <- data.frame(gene_short_name = rownames(counts))
     rownames(fd) <- fd$gene_short_name
-    cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
-                          featureData = new("AnnotatedDataFrame", data = fd))
+    
+    
+    # fd <- fData(cds)
+    # pd <- pData(cds)
+    # exp <- exprs(cds)
+    save(fd, file="fd")
+    save(pd, file="pd")
+    #  save(exp, file="exp")
+    
+    # Reload R
+    library(monocle3)
+    load("fd")
+    load("pd")
+    #   load("exp")
+    
+    new_cds <- new_cell_data_set(counts, gene_metadata = fd, cell_metadata = pd)
+    # cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
+    #                       featureData = new("AnnotatedDataFrame", data = fd))
     cds <- estimateSizeFactors(cds)
-    
-    
+
     
    # cds <- new_cell_data_set (counts, cell_metadata = pd,
     #                          gene_metadata = data.frame(gene_short_name = rownames(counts),
