@@ -1122,15 +1122,16 @@ ui <- dashboardPage(
                 title = "Monocle UMAP", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 
-                  mainPanel(
-                    img(src = "MONOCLE.png", height = 140, width = 400)
-                  )
-               # plotlyOutput("trajectory_monocle3Umap", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+
+                plotlyOutput("trajectory_monocle3Umap", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
 
               box(
                 title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
+                # mainPanel(
+                #   img(src = "MONOCLE.png", height = 140, width = 400)
+                # )
                 plotOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
@@ -3869,7 +3870,7 @@ server <- function(input, output, session) {
     #   xlab("monocle3 pseudotime") + ylab("Timepoint") +
     #   ggtitle("Cells ordered by monocle3 pseudotime")
     
-    filename <- normalizePath(file.path('F:/SPL-3/MONOCLE.png',
+    filename <- normalizePath(file.path('F:/SPL-3',
                                         paste('MONOCLE', input$n, '.png', sep='')))
     
     # Return a list containing the filename
