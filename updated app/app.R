@@ -974,6 +974,7 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = 'trajectory_FirstLook',
+              fluidRow(
               box(
                 title = "PC1", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -984,10 +985,12 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("FirstPrincipalComponent", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
+              )
               
       ),
       
       tabItem(tabName = 'trajectory_slingshot',
+              fluidRow(
               box(
                 title = "Slingshot", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -1003,6 +1006,7 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
+            )
               
       ),
               
@@ -1107,6 +1111,7 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = 'trajectory_monocle3',
+              fluidRow(
               box(
                 title = "Feature Selection", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -1128,10 +1133,12 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotOutput("trajectory_monocle3Psedutime2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
+            )
 
       ),
       
       tabItem(tabName = 'trajectory_DiffusionMap',
+              fluidRow(
               box(
                 title = "PCA Dimension 1", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -1142,9 +1149,10 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_DiffusionMap_Pseudotime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
-              
+            )
       ),
       tabItem(tabName = 'trajectory_TSCAN',
+              fluidRow(
               box(
                 title = "PCA Dimension 1", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -1155,11 +1163,13 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_TSCAN_Pseudotime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
+            )
               
       ),
       
       tabItem(tabName = 'trajectory_slicer',
-              box(
+              fluidRow(
+               box(
                 title = "Slicer", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_slicerOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
@@ -1169,14 +1179,17 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_slicer_pseudotime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
+              )
               
       ),
       
       tabItem(tabName = 'Downstream_model',
+              fluidRow(
               box(
                 title = "Fit Model", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotOutput("DModel", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
               )
               
       ),
@@ -3909,7 +3922,6 @@ server <- function(input, output, session) {
     scale_color_manual(values = my_color) + theme_classic() +
     xlab("monocle3 pseudotime") + ylab("Timepoint") +
     ggtitle("Cells ordered by monocle3 pseudotime")
-  
   
   })
   
