@@ -10,7 +10,8 @@ library(SingleCellExperiment)
 library(SummarizedExperiment)
 
 library(scater)
-library(ggplot2)
+library(reprex)
+#library(ggplotly)
 library(plotly)
 library(reshape2)
 library(circlize)
@@ -1122,12 +1123,12 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_monocle3Umap", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
-# 
-              # box(
-              #   title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
-              #   collapsible = TRUE, width = 12,
-              #   plotOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              # ),
+
+              box(
+                title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
               box(
                 title = "Monocle Psedutime2", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
@@ -3763,47 +3764,71 @@ server <- function(input, output, session) {
     
   })
   
-  output$trajectory_monocle3Psedutime <- renderPlot({
-    cds <- counts(cdScFiltAnnot)
-    counts <- as.matrix(cds)
-    
-    pd <- data.frame(cells = colnames(counts), cellType = cellLabels)
-    rownames(pd) <- pd$cells
-    fd <- data.frame(gene_short_name = rownames(counts))
-    rownames(fd) <- fd$gene_short_name
-    
-    
-    # fd <- fData(cds)
-    # pd <- pData(cds)
-    # exp <- exprs(cds)
-    save(fd, file="fd")
-    save(pd, file="pd")
-    #  save(exp, file="exp")
-    
-    # Reload R
-    library(monocle3)
-    load("fd")
-    load("pd")
-    #   load("exp")
-    
-    cds <- new_cell_data_set(counts, gene_metadata = fd, cell_metadata = pd)
-    # cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
-    #                       featureData = new("AnnotatedDataFrame", data = fd))
-   # cds <- estimateSizeFactors(cds)
-
-    
-   # cds <- new_cell_data_set (counts, cell_metadata = pd,
-    #                          gene_metadata = data.frame(gene_short_name = rownames(counts),
-    #                                                     row.names = rownames(counts)))
-    
-    # Run PCA then UMAP on the data
-    cds <- preprocess_cds(cds, method = "PCA")
-    cds <- reduce_dimension(cds, preprocess_method = "PCA",
-                            reduction_method = "UMAP")
-    
+  output$trajectory_monocle3Psedutime <- renderImage({
+   #  cds <- counts(cdScFiltAnnot)
+   #  counts <- as.matrix(cds)
+   #  
+   #  pd <- data.frame(cells = colnames(counts), cellType = cellLabels)
+   #  rownames(pd) <- pd$cells
+   #  fd <- data.frame(gene_short_name = rownames(counts))
+   #  rownames(fd) <- fd$gene_short_name
+   #  
+   #  
+   #  # fd <- fData(cds)
+   #  # pd <- pData(cds)
+   #  # exp <- exprs(cds)
+   #  save(fd, file="fd")
+   #  save(pd, file="pd")
+   #  #  save(exp, file="exp")
+   #  
+   #  # Reload R
+   #  library(monocle3)
+   #  load("fd")
+   #  load("pd")
+   #  #   load("exp")
+   #  
+   #  cds <- new_cell_data_set(counts, gene_metadata = fd, cell_metadata = pd)
+   #  # cds <- newCellDataSet(counts, phenoData = new("AnnotatedDataFrame", data = pd),
+   #  #                       featureData = new("AnnotatedDataFrame", data = fd))
+   # # cds <- estimateSizeFactors(cds)
+   # 
+   #  
+   # # cds <- new_cell_data_set (counts, cell_metadata = pd,
+   #  #                          gene_metadata = data.frame(gene_short_name = rownames(counts),
+   #  #                                                     row.names = rownames(counts)))
+   #  
+   #  # Run PCA then UMAP on the data
+   #  cds <- preprocess_cds(cds, method = "PCA")
+   #  cds <- reduce_dimension(cds, preprocess_method = "PCA",
+   #                          reduction_method = "UMAP")
+   #  
    # cds <- order_cells(cds)
+    # mainPanel(
+    #   img(src='monocle3.png'),
+    #   ### the rest of your code
+    # )
     
-   img(src = "monocle3.png", height = 72, width = 72)
+    # Read plot2's width and height. These are reactive values, so this
+    # expression will re-run whenever these values change.
+  #   width  <- session$clientData$output_trajectory_monocle3Psedutime_width
+  #   height <- session$clientData$output_trajectory_monocle3Psedutime_height
+  #   
+  #   # A temp file to save the output.
+  #   outfile <- tempfile(fileext='monocle3.png')
+  #   
+  #   png(outfile, width=width, height=height)
+  #   hist(rnorm(input$n))
+  #   dev.off()
+  #   
+  #   # Return a list containing the filename
+  #   list(src = outfile,
+  #        width = width,
+  #        height = height,
+  #        alt = "This is alternate text")
+  # }, deleteFile = FALSE)
+  
+    
+  # img(src = "monocle3.png", height = 72, width = 72)
     
     # cds <- new_cell_data_set (counts, cell_metadata = pd,
     #                           gene_metadata = data.frame(gene_short_name = rownames(counts),
@@ -3840,9 +3865,15 @@ server <- function(input, output, session) {
     #   xlab("monocle3 pseudotime") + ylab("Timepoint") +
     #   ggtitle("Cells ordered by monocle3 pseudotime")
     
-   
+    filename <- normalizePath(file.path('./',
+                                        paste('MONOCLE', input$n, '.png', sep='')))
     
-  })
+    # Return a list containing the filename
+    list(src = filename)
+  }, deleteFile = FALSE)
+
+    
+ # })
   
   
   
