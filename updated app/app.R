@@ -32,7 +32,7 @@ library(slingshot)
 library(TSCAN)
 library(destiny)
 library(M3Drop)
-#library(monocle)
+library(monocle)
 library(monocle3)
 
 library(RColorBrewer)
@@ -4011,7 +4011,7 @@ server <- function(input, output, session) {
     
     #procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
     
-    #colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+   # colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
     
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
     
