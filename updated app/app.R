@@ -205,9 +205,7 @@ ui <- dashboardPage(
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3')),
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap'),
               # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
-      menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
-               menuSubItem('Single gene expression', tabName = "Gene_expression"),
-               menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
+      menuItem("Gene expression", tabName = "Gene_expression", icon = icon("dna")),
       menuItem("Highly expressed genes", tabName = "HEG", icon = icon("filter")),
       menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
       menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
@@ -450,11 +448,6 @@ ui <- dashboardPage(
                   collapsible = TRUE, width = 12,
                   plotOutput("violinPlot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
                 ),
-                box(
-                  title = "Violin plot cluster", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("violinPlotClusterOrig", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
             )
 
       ),
@@ -818,25 +811,6 @@ server <- function(input, output, session) {
     
   })
   
-  
-  output$violinPlotClusterOrig <- renderPlot({
-    
-    geneListToTest <- input$geneName
-    
-    
-    dfViolin <- data.frame(Cluster=colData(cdScFiltAnnot)$Clusters, logCounts=logcounts(cdScFiltAnnot)[geneListToTest,], title=geneListToTest)
-    p <- ggplot(dfViolin, aes(factor(Cluster), logCounts)) +
-      geom_violin(aes(fill=factor(Cluster)), scale="width", trim=TRUE) +
-      xlab('Cluster') +
-      ylab('Expression (logcounts)') +
-      scale_fill_manual(values = c_clust_col) +
-      #      scale_fill_manual(values = c("#F8766D", "#DB8E00", "#AEA200", "#64B200", "#00BD5C", "#00C1A7", "#00BADE", "#00A6FF"))+
-      theme_classic(base_size=14) +
-      guides(fill=guide_legend(title="Clusters")) + 
-      facet_grid(. ~ title)
-    p
-    
-  })
   
   
   plot_tsnePlotCluster <- function(){ 	
