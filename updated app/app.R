@@ -351,7 +351,7 @@ ui <- dashboardPage(
                   )),
                 
                   box(
-                  title = "Violin plot sample", status = "primary", solidHeader = TRUE,
+                  title = "Projection", status = "primary", solidHeader = TRUE,
                   collapsible = TRUE, width = 8,
                   plotlyOutput("tsnePlotCluster", width = "100%") %>% withSpinner(type = getOption("spinner.type", default = 8))
                 )
@@ -390,14 +390,14 @@ ui <- dashboardPage(
                 box(
                   title = "Gene expression", status = "primary", solidHeader = TRUE,
                   collapsible = TRUE, width = 4,
-                  column(width=6,selectInput("geneName", "Gene Name", selected = GeneNameSorted[1], 
+                  selectInput("geneName", "Gene Name", selected = GeneNameSorted[1], 
                                              choices = GeneNameSorted,
                                              multiple = FALSE,
-                                             selectize = FALSE)),
+                                             selectize = FALSE),
                   selectInput("geneExprProjection", "Projection",
                                               choices = c('tSNE','UMAP'),
                                               multiple = FALSE,
-                                              selectize = FALSE)),
+                                              selectize = FALSE),
                   sliderInput("geneExpressionplotOverviewDotSize", "Dot size:", 0, 10, 0.5, 0.5),
                   sliderInput("geneExpressionplotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1),
                   colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "firebrick1"),
@@ -438,7 +438,7 @@ ui <- dashboardPage(
                       `selected-text-format` = "count > 20"
                     ), 
                     multiple = TRUE
-                ),
+                )),
   
                 box(
                   title = "Violin plot sample", status = "primary", solidHeader = TRUE,
