@@ -264,21 +264,15 @@ ui <- dashboardPage(
               
               fluidRow(
                 column(12,tags$h1('CISTRON')),
-                column(12,
-                       h3('A Trajectory Based Single Cell Analysis Tool A trajectory based single cell analysis tool is a standalone application.
-                       This tool will take a normalised biological dataset as input.
-
-                      It will show different trajectory interfaces with some common features of single cell technology Being a standalone application ,
-                      all operating system  users can use Cistron without any additional process. Users can export the plot into PNG format for their further use.')),
                 
                 br(),br(),br(),br(),br(),br(),br(),
-                column(4, align="center",
+                column(6, align="center",
                        box(
-                         title = tags$p(style = "font-size: 200%;font-weight: 900;", dim(cdScFiltAnnot)[2]), width=20,  status = "info", "cells"
+                         title = tags$p(style = "font-size: 300%;font-weight: 1200;", dim(cdScFiltAnnot)[2]), width=30,  status = "info", "cells"
                        )),
-                column(4,align="center",
+                column(6,align="center",
                        box(
-                         title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Sample))), width=20,  status = "info","samples"
+                         title = tags$p(style = "font-size: 300%;font-weight: 1200;", nlevels(as.factor(cdScFiltAnnot$Sample))), width=30,  status = "info","samples"
                          
                        ))
 
