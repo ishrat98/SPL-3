@@ -210,7 +210,7 @@ ui <- dashboardPage(
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap')),
               # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
       menuItem("Marker genes", tabName = "Downstream_markerGenes", icon = icon("hornbill")),
-      menuItem("patternTest with diffEndTest results", tabName = "combining_test", icon = icon("hubspot")),
+      menuItem("patternTest with diffEndTest", tabName = "combining_test", icon = icon("hubspot")),
       # menuItem('Downstream', tabName = 'Downstream', icon = icon('route'),
       #          menuSubItem('Fit negative binomial model', tabName = 'Downstream_model'),
       #          menuSubItem('progenitor marker genes', tabName = 'Downstream_markerGenes'),
@@ -3693,23 +3693,22 @@ server <- function(input, output, session) {
   })
   
   endRes <- diffEndTest(sce)
-  output$combining_test1<- renderPlotly({
+  patternRes$Gene <- rownames(patternRes)
+  patternRes$pattern <- patternRes$waldStat
+  patternRes <- patternRes[, c("Gene", "pattern")]
+  
+  endRes$Gene <- rownames(endRes)
+  endRes$end <- endRes$waldStat
+  endRes <- endRes[, c("Gene", "end")]
+  
+  compare <- merge(patternRes, endRes, by = "Gene", all = FALSE)
+  compare$transientScore <- 
+    rank(-compare$end, ties.method = "min")^2 + rank(compare$pattern, ties.method = "random")^2
+
+  
+   output$combining_test1<- renderPlotly({
     
-    patternRes <- patternTest(sce)
-    oPat <- order(patternRes$waldStat, decreasing = TRUE)
-    head(rownames(patternRes)[oPat])
     
-    patternRes$Gene <- rownames(patternRes)
-    patternRes$pattern <- patternRes$waldStat
-    patternRes <- patternRes[, c("Gene", "pattern")]
-    
-    endRes$Gene <- rownames(endRes)
-    endRes$end <- endRes$waldStat
-    endRes <- endRes[, c("Gene", "end")]
-    
-    compare <- merge(patternRes, endRes, by = "Gene", all = FALSE)
-    compare$transientScore <- 
-      rank(-compare$end, ties.method = "min")^2 + rank(compare$pattern, ties.method = "random")^2
     
     ggplot(compare, aes(x = log(pattern), y = log(end))) +
       geom_point(aes(col = transientScore)) +
