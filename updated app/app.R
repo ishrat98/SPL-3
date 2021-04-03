@@ -452,70 +452,70 @@ ui <- dashboardPage(
                 )
               )
       ),
-      tabItem(tabName = 'Gene_expressionMultiple',
-              fluidRow(
-                box(
-                  title = "Multiple gene expression", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 4,
-                  selectizeInput("geneNameMultiple", "List of genes", 
-                                 selected = '', 
-                                 choices = GeneNameSorted,
-                                 multiple = TRUE),
-                  selectInput("geneExprProjectionMultiple", "Projection",
-                              choices = c('tSNE','UMAP'),
-                              multiple = FALSE,
-                              selectize = FALSE),
-                  sliderInput("geneExpressionplotOverviewDotSizeMultiple", "Dot size:", 0, 10, 0.5, 0.5),
-                  sliderInput("geneExpressionplotOverviewDotOpacityMultiple", "Dot opacity:", 0, 1, 1, 0.1),
-                  colourpicker::colourInput("colmaxgeneExpMultiple", "Select colour for maximum value", "firebrick1"),
-                  colourpicker::colourInput("colmingeneExpMultiple", "Select colour for minimum", "gray88"),
-                  pickerInput(
-                    inputId = "checkboxGeneExpressionSampleMultiple", 
-                    label = "Select/deselect samples", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  pickerInput(
-                    inputId = "checkboxGeneExpressionClusterMultiple", 
-                    label = "Select/deselect clusters", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  pickerInput(
-                    inputId = "checkboxGeneExpressionCellTypeMultiple", 
-                    label = "Select/deselect celltype", 
-                    choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
-                    selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
-                    options = list(
-                      `actions-box` = TRUE, 
-                      size = 10,
-                      `selected-text-format` = "count > 20"
-                    ), 
-                    multiple = TRUE
-                  ),
-                  tags$form(
-                    actionButton("buttonForMultipleGeneExpresion", "Visualize gene expression", styleclass = "primary")
-                  )
-                ),
-                box(
-                  title = "Multiple gene panel", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 8,
-                  plotOutput("PlotGeneExprMultiple", width = "100%") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
+      # tabItem(tabName = 'Gene_expressionMultiple',
+      #         fluidRow(
+      #           box(
+      #             title = "Multiple gene expression", status = "primary", solidHeader = TRUE,
+      #             collapsible = TRUE, width = 4,
+      #             selectizeInput("geneNameMultiple", "List of genes", 
+      #                            selected = '', 
+      #                            choices = GeneNameSorted,
+      #                            multiple = TRUE),
+      #             selectInput("geneExprProjectionMultiple", "Projection",
+      #                         choices = c('tSNE','UMAP'),
+      #                         multiple = FALSE,
+      #                         selectize = FALSE),
+      #             sliderInput("geneExpressionplotOverviewDotSizeMultiple", "Dot size:", 0, 10, 0.5, 0.5),
+      #             sliderInput("geneExpressionplotOverviewDotOpacityMultiple", "Dot opacity:", 0, 1, 1, 0.1),
+      #             colourpicker::colourInput("colmaxgeneExpMultiple", "Select colour for maximum value", "firebrick1"),
+      #             colourpicker::colourInput("colmingeneExpMultiple", "Select colour for minimum", "gray88"),
+      #             pickerInput(
+      #               inputId = "checkboxGeneExpressionSampleMultiple", 
+      #               label = "Select/deselect samples", 
+      #               choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+      #               selected = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
+      #               options = list(
+      #                 `actions-box` = TRUE, 
+      #                 size = 10,
+      #                 `selected-text-format` = "count > 20"
+      #               ), 
+      #               multiple = TRUE
+      #             ),
+      #             pickerInput(
+      #               inputId = "checkboxGeneExpressionClusterMultiple", 
+      #               label = "Select/deselect clusters", 
+      #               choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
+      #               selected = unique(levels(as.factor(cdScFiltAnnot$Clusters))),
+      #               options = list(
+      #                 `actions-box` = TRUE, 
+      #                 size = 10,
+      #                 `selected-text-format` = "count > 20"
+      #               ), 
+      #               multiple = TRUE
+      #             ),
+      #             pickerInput(
+      #               inputId = "checkboxGeneExpressionCellTypeMultiple", 
+      #               label = "Select/deselect celltype", 
+      #               choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
+      #               selected = unique(levels(as.factor(cdScFiltAnnot$cellType))),
+      #               options = list(
+      #                 `actions-box` = TRUE, 
+      #                 size = 10,
+      #                 `selected-text-format` = "count > 20"
+      #               ), 
+      #               multiple = TRUE
+      #             ),
+      #             tags$form(
+      #               actionButton("buttonForMultipleGeneExpresion", "Visualize gene expression", styleclass = "primary")
+      #             )
+      #           ),
+      #           box(
+      #             title = "Multiple gene panel", status = "primary", solidHeader = TRUE,
+      #             collapsible = TRUE, width = 8,
+      #             plotOutput("PlotGeneExprMultiple", width = "100%") %>% withSpinner(type = getOption("spinner.type", default = 8))
+      #           )
+      #         )
+      # ),
 
       
       tabItem(tabName = 'trajectory_FirstLook',
@@ -673,16 +673,14 @@ ui <- dashboardPage(
               box(
                 title = "Monocle Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
-                # mainPanel(
-                #   img(src = "MONOCLE.png", height = 140, width = 400)
-                # )
+
                 plotOutput("trajectory_monocle3Psedutime", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
-              box(
-                title = "Monocle Psedutime2", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_monocle3Psedutime2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              )
+              # box(
+              #   title = "Monocle Psedutime2", status = "primary", solidHeader = TRUE,
+              #   collapsible = TRUE, width = 12,
+              #   plotOutput("trajectory_monocle3Psedutime2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              # )
             )
 
       ),
