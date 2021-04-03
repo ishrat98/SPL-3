@@ -733,7 +733,8 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = 'Downstream_markerGenes',
-              box(
+              fluidRow(
+                box(
                 title = "progenitor marker genes", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("markerGenes1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
@@ -743,11 +744,12 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("markerGenes2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
-              
+            )
       ),
       
       tabItem(tabName = 'combining_test',
-              box(
+              fluidRow(
+                box(
                 title = " Combining patternTest with diffEndTest", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("combining_test1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
@@ -757,7 +759,7 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("combining_test2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
-              
+            )
       ),
       
       
@@ -3691,6 +3693,10 @@ server <- function(input, output, session) {
     
     
   })
+  
+  patternRes <- patternTest(sce)
+  oPat <- order(patternRes$waldStat, decreasing = TRUE)
+  head(rownames(patternRes)[oPat])
   
   endRes <- diffEndTest(sce)
   patternRes$Gene <- rownames(patternRes)
