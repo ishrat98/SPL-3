@@ -263,11 +263,13 @@ ui <- dashboardPage(
       tabItem(tabName = 'overview',
               
               fluidRow(
-                column(12,tags$h1('Load data')),
+                column(12,tags$h1('CISTRON')),
                 column(12,
-                       fileInput('fileInput', 'HDF5 file location', multiple = FALSE, accept = c(".rds",".crb",".cerebro","h5"),
-                                 width = NULL, buttonLabel = "Browse...",
-                                 placeholder = "No file selected")),
+                       h3('A Trajectory Based Single Cell Analysis Tool A trajectory based single cell analysis tool is a standalone application.
+                       This tool will take a normalised biological dataset as input.
+
+                      It will show different trajectory interfaces with some common features of single cell technology Being a standalone application ,
+                      all operating system  users can use Cistron without any additional process. Users can export the plot into PNG format for their further use.')),
                 
                 br(),br(),br(),br(),br(),br(),br(),
                 column(4, align="center",
@@ -278,12 +280,8 @@ ui <- dashboardPage(
                        box(
                          title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Sample))), width=20,  status = "info","samples"
                          
-                       )),
-                column(4, align="center",
-                       box(
-                         title = tags$p(style = "font-size: 200%;font-weight: 900;", nlevels(as.factor(cdScFiltAnnot$Clusters))), width=20,status = "info", "clusters"
-                         
                        ))
+
                 
                 #downloadButton("exportTsne", label = "Download t-SNE"),
                 #downloadButton("exportUmap", label = "Download UMAP")
@@ -537,13 +535,13 @@ ui <- dashboardPage(
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_slingshotOT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
+              # box(
+              #   title = "Slingshot ", status = "primary", solidHeader = TRUE,
+              #   collapsible = TRUE, width = 12,
+              #   plotOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              # ),
               box(
-                title = "First Slingshot Psedutime", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_FirstSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
-              box(
-                title = "Second Slingshot Psedutime", status = "primary", solidHeader = TRUE,
+                title = " Slingshot Psedutime", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("trajectory_SecondSlingshot", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
@@ -3176,6 +3174,7 @@ server <- function(input, output, session) {
   output$trajectory_SecondSlingshot <- renderPlotly({
     
   sce <- slingshot(cdScFiltAnnot, reducedDim = 'PCA')  # no clusters
+  colors <- rainbow(50, alpha = 1)
   lines(SlingshotDataSet(sce), lwd=2)
   slingshot_df <- data.frame(colData(cdScFiltAnnot)) 
   ggplot(as.data.frame(colData(cdScFiltAnnot)), aes(x = sce$slingPseudotime_1, y = cellType, 
