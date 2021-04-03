@@ -441,7 +441,7 @@ ui <- dashboardPage(
                 )),
   
                 box(
-                  title = "Violin plot sample", status = "primary", solidHeader = TRUE,
+                  title = "Gene Expression", status = "primary", solidHeader = TRUE,
                   collapsible = TRUE, width = 8,
                   plotOutput("PlotGeneExpr", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8)),
                 ),
