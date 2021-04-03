@@ -748,7 +748,7 @@ ui <- dashboardPage(
       
       tabItem(tabName = 'combining_test',
               box(
-                title = " Combining patternTest with diffEndTest results", status = "primary", solidHeader = TRUE,
+                title = " Combining patternTest with diffEndTest", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("combining_test1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
@@ -3692,9 +3692,12 @@ server <- function(input, output, session) {
     
   })
   
-  
+  endRes <- diffEndTest(sce)
   output$combining_test1<- renderPlotly({
     
+    patternRes <- patternTest(sce)
+    oPat <- order(patternRes$waldStat, decreasing = TRUE)
+    head(rownames(patternRes)[oPat])
     
     patternRes$Gene <- rownames(patternRes)
     patternRes$pattern <- patternRes$waldStat
