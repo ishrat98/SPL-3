@@ -3718,6 +3718,18 @@ server <- function(input, output, session) {
     
   })
   
+  
+  
+  output$combining_test2<- renderPlotly({
+    
+    
+    topTransient <- compare[which.max(compare$transientScore), "Gene"]
+    plotSmoothers(sce, counts, gene = topTransient)
+    
+    
+  })
+  
+  
   output$sessionInfo <- renderPrint({
     capture.output(sessionInfo())
   })
