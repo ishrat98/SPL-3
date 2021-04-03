@@ -301,19 +301,20 @@ ui <- dashboardPage(
                             actionButton("projectionInfo", "help", 
                                          class = "btn-xs", title = "Additional information for this panel")
                   ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  column(width=6, selectInput("projection", "Projection",
+                  collapsible = TRUE, width = 4,
+                  selectInput("projection", "Projection",
                                               choices = c('tSNE','UMAP'),
                                               multiple = FALSE,
-                                              selectize = FALSE)),
-                  column(width = 6, selectInput("colorCellsBy", "Color cells by",
+                                              selectize = FALSE),
+                  
+                  selectInput("colorCellsBy", "Color cells by",
                                                 choices = c('Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
                                                 multiple = FALSE,
-                                                selectize = FALSE)),
-                  column(width = 6, sliderInput("plotOverviewDotSize", "Dot size:", 0, 10, 3.5, 0.5)),
-                  column(width = 6, sliderInput("plotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1)),
-                  column(width=12,plotlyOutput("tsnePlotCluster", width = "100%") %>% withSpinner(type = getOption("spinner.type", default = 8))),
-                  column(width = 4, pickerInput(
+                                                selectize = FALSE),
+                  sliderInput("plotOverviewDotSize", "Dot size:", 0, 10, 3.5, 0.5),
+                  sliderInput("plotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1),
+                 
+                 pickerInput(
                     inputId = "checkboxProjectionSample", 
                     label = "Select/deselect samples", 
                     choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
@@ -324,8 +325,8 @@ ui <- dashboardPage(
                       `selected-text-format` = "count > 20"
                     ), 
                     multiple = TRUE
-                  )),
-                  column(width = 4, pickerInput(
+                  ),
+                  pickerInput(
                     inputId = "checkboxProjectionCluster", 
                     label = "Select/deselect clusters", 
                     choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
@@ -336,8 +337,8 @@ ui <- dashboardPage(
                       `selected-text-format` = "count > 20"
                     ), 
                     multiple = TRUE
-                  )),
-                  column(width = 4, pickerInput(
+                  ),
+                  pickerInput(
                     inputId = "checkboxProjectionCellType", 
                     label = "Select/deselect celltype", 
                     choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
@@ -348,9 +349,15 @@ ui <- dashboardPage(
                       `selected-text-format` = "count > 20"
                     ), 
                     multiple = TRUE
-                  ))
+                  )),
+                
+                  box(
+                  title = "Violin plot sample", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 12,
+                  plotlyOutput("tsnePlotCluster", width = "100%") %>% withSpinner(type = getOption("spinner.type", default = 8))
                 )
               )
+              
       ),
       tabItem(tabName = 'Summary',
               fluidRow(
@@ -4118,19 +4125,19 @@ server <- function(input, output, session) {
   
   data(countMatrix, package = "tradeSeq")
   counts <- as.matrix(countMatrix)
-  rm(countMatrix)
+ # rm(countMatrix)
   data(crv, package = "tradeSeq")
   
-  output$DModel <- renderPlot({
-
-    
-    
-    set.seed(5)
-    icMat <- evaluateK(counts = counts, sds =crv , k = 3:10, 
-                       nGenes = 200, verbose = T)
-    
-    
-  })
+  # output$DModel <- renderPlot({
+  # 
+  #   
+  #   
+  #   set.seed(5)
+  #   icMat <- evaluateK(counts = counts, sds =crv , k = 3:10, 
+  #                      nGenes = 200, verbose = T)
+  #   
+  #   
+  # })
   
   pseudotime <- slingPseudotime(crv, na = FALSE)
   cellWeights <- slingCurveWeights(crv)
