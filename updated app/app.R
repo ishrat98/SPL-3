@@ -186,12 +186,12 @@ scatter_plot_percentage_cells_to_show <- list(
 
 
 ui <- dashboardPage(
-  #skin = "purple",
+  
   dashboardHeader(
     title = "CISTRON"
   ),
   
-  # Sidebar #############################
+  ############################## Sidebar UI #############################
   dashboardSidebar(
     width = 230,
     
@@ -200,11 +200,11 @@ ui <- dashboardPage(
       menuItem("Projection", tabName = "projection", icon = icon("th")),
       menuItem('Trajectory', tabName = 'trajectory', icon = icon('route'),
                menuSubItem('FirstLook', tabName = 'trajectory_FirstLook'),
-               menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
                menuSubItem('TSCAN', tabName = 'trajectory_TSCAN'),
+               menuSubItem('Slingshot', tabName = 'trajectory_slingshot'),
+               menuSubItem('Monocle3', tabName = 'trajectory_monocle3')),
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap'),
               # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
-              menuSubItem('Monocle3', tabName = 'trajectory_monocle3')),
       menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
                menuSubItem('Single gene expression', tabName = "Gene_expression"),
                menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
@@ -384,73 +384,7 @@ ui <- dashboardPage(
                 )
               )
       ),
-      tabItem(tabName = 'MarkerGenes',
-              fluidRow(
-                box(title='Marker genes for samples', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
-                    selectInput('markerChooseSample', 'Sample', 
-                                choices = levels(as.factor(cdScFiltAnnot$Sample)), 
-                                selected = '', multiple = FALSE,
-                                selectize = FALSE),
-                    DT::dataTableOutput("markerTableSample") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                box(
-                  title = "SL marker genes", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  DT::dataTableOutput("markerTableSlingshot") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                 # plotlyOutput("trajectory_TSCAN_1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                
-                box(
-                  title = "Marker genes for clusters", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  selectInput('markerChooseCluster', 'Cluster', 
-                              choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                              selected = '', multiple = FALSE,
-                              selectize = FALSE),
-                  DT::dataTableOutput("markerTableCluster") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-      ),
-      tabItem(tabName = 'Enriched_pathway',
-              fluidRow(
-                box(title='Pathway enrichment for samples', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
-                    column(width=6, selectInput('ENChooseSample', 'Sample', 
-                                                choices = levels(as.factor(cdScFiltAnnot$Sample)), 
-                                                selected = '', multiple = FALSE,
-                                                selectize = FALSE)),
-                    column(width=6,selectInput('ENChooseSampleGO', 'Sample', 
-                                               choices = levels(as.factor(cdScFiltAnnot$Sample)), 
-                                               selected = '', multiple = FALSE,
-                                               selectize = FALSE)),
-                    column(width=12,DT::dataTableOutput("ENTableSample") %>% withSpinner(type = getOption("spinner.type", default = 8)))
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
-                ),
-                
-                box(
-                  title = "Pathway enrichment for clusters", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  column(width=6,selectInput('ENChooseCluster', 'Cluster', 
-                                             choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                                             multiple = FALSE,
-                                             selectize = FALSE)),
-                  # column(width=6, selectInput('ENChooseCluster', 'Cluster', 
-                  #                             choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                  #                             selected = '', multiple = FALSE,
-                  #                             selectize = FALSE)),
-                  column(width = 6, selectInput('ENChooseClusterGO', 'Cluster', 
-                                                choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                                                selected = '', multiple = FALSE,
-                                                selectize = FALSE)),
-                  column(width=12,DT::dataTableOutput("ENTableCluster") %>% withSpinner(type = getOption("spinner.type", default = 8)))
-                )
-              )
-      ),
+
       tabItem(tabName = 'Gene_expression',
               fluidRow(
                 box(
