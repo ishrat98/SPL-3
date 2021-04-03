@@ -207,8 +207,8 @@ ui <- dashboardPage(
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap')),
               # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
-      menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
-      menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
+      # menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
+      # menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
       menuItem('Downstream', tabName = 'Downstream', icon = icon('route'),
                menuSubItem('Fit negative binomial model', tabName = 'Downstream_model'),
                menuSubItem('progenitor marker genes', tabName = 'Downstream_markerGenes'),
@@ -441,7 +441,7 @@ ui <- dashboardPage(
                 box(
                   title = "Gene Expression", status = "primary", solidHeader = TRUE,
                   collapsible = TRUE, width = 8,
-                  plotOutput("PlotGeneExpr", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8)),
+                  plotlyOutput("PlotGeneExpr", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8)),
                 ),
                 box(
                   title = "Violin plot sample", status = "primary", solidHeader = TRUE,
@@ -1068,7 +1068,7 @@ server <- function(input, output, session) {
   }
   
   
-  output$PlotGeneExpr <- renderPlot({
+  output$PlotGeneExpr <- renderPlotly({
     if(input$geneExprProjection == 'tSNE')
       plot_tsnePlotGene()
     else if(input$geneExprProjection == 'UMAP')
