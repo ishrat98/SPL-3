@@ -745,7 +745,21 @@ ui <- dashboardPage(
               )
               
       ),
-      combining_test
+      
+      tabItem(tabName = 'combining_test',
+              box(
+                title = " Combining patternTest with diffEndTest results", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("combining_test1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              ),
+              box(
+                title = "UMAP space with gene’s expression.", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE, width = 12,
+                plotlyOutput("combining_test2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              )
+              
+      ),
+      
       
       tabItem(tabName = 'Downstream_DE',
               box(
@@ -3679,6 +3693,30 @@ server <- function(input, output, session) {
   })
   
   
+  output$combining_test1<- renderPlotly({
+    
+    
+    patternRes$Gene <- rownames(patternRes)
+    patternRes$pattern <- patternRes$waldStat
+    patternRes <- patternRes[, c("Gene", "pattern")]
+    
+    endRes$Gene <- rownames(endRes)
+    endRes$end <- endRes$waldStat
+    endRes <- endRes[, c("Gene", "end")]
+    
+    compare <- merge(patternRes, endRes, by = "Gene", all = FALSE)
+    compare$transientScore <- 
+      rank(-compare$end, ties.method = "min")^2 + rank(compare$pattern, ties.method = "random")^2
+    
+    ggplot(compare, aes(x = log(pattern), y = log(end))) +
+      geom_point(aes(col = transientScore)) +
+      labs(x = "patternTest Wald Statistic (log scale)",
+           y = "diffEndTest Wald Statistic (log scale)") +
+      scale_color_continuous(low = "yellow", high = "red") +
+      theme_classic()
+    
+    
+  })
   
   output$sessionInfo <- renderPrint({
     capture.output(sessionInfo())
