@@ -389,21 +389,21 @@ ui <- dashboardPage(
               fluidRow(
                 box(
                   title = "Gene expression", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
+                  collapsible = TRUE, width = 4,
                   column(width=6,selectInput("geneName", "Gene Name", selected = GeneNameSorted[1], 
                                              choices = GeneNameSorted,
                                              multiple = FALSE,
                                              selectize = FALSE)),
-                  column(width=6, selectInput("geneExprProjection", "Projection",
+                  selectInput("geneExprProjection", "Projection",
                                               choices = c('tSNE','UMAP'),
                                               multiple = FALSE,
                                               selectize = FALSE)),
-                  column(width=6, sliderInput("geneExpressionplotOverviewDotSize", "Dot size:", 0, 10, 0.5, 0.5)),
-                  column(width=6,sliderInput("geneExpressionplotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1)),
-                  column(width=6, colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "firebrick1")),
-                  column(width=6, colourpicker::colourInput("colmingeneExp", "Select colour for minimum", "gray88")),
-                  column(width=12,plotOutput("PlotGeneExpr", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))),
-                  column(width = 4, pickerInput(
+                  sliderInput("geneExpressionplotOverviewDotSize", "Dot size:", 0, 10, 0.5, 0.5),
+                  sliderInput("geneExpressionplotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1),
+                  colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "firebrick1"),
+                  colourpicker::colourInput("colmingeneExp", "Select colour for minimum", "gray88"),
+                  
+                  pickerInput(
                     inputId = "checkboxGeneExpressionSample", 
                     label = "Select/deselect samples", 
                     choices = unique(levels(as.factor(cdScFiltAnnot$Sample))), 
@@ -414,8 +414,8 @@ ui <- dashboardPage(
                       `selected-text-format` = "count > 20"
                     ), 
                     multiple = TRUE
-                  )),
-                  column(width = 4, pickerInput(
+                  ),
+                  pickerInput(
                     inputId = "checkboxGeneExpressionCluster", 
                     label = "Select/deselect clusters", 
                     choices = unique(levels(as.factor(cdScFiltAnnot$Clusters))), 
@@ -426,8 +426,8 @@ ui <- dashboardPage(
                       `selected-text-format` = "count > 20"
                     ), 
                     multiple = TRUE
-                  )),
-                  column(width = 4, pickerInput(
+                  ),
+                  pickerInput(
                     inputId = "checkboxGeneExpressionCellType", 
                     label = "Select/deselect celltype", 
                     choices = unique(levels(as.factor(cdScFiltAnnot$cellType))), 
@@ -438,7 +438,12 @@ ui <- dashboardPage(
                       `selected-text-format` = "count > 20"
                     ), 
                     multiple = TRUE
-                  ))
+                ),
+  
+                box(
+                  title = "Violin plot sample", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 8,
+                  plotOutput("PlotGeneExpr", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8)),
                 ),
                 box(
                   title = "Violin plot sample", status = "primary", solidHeader = TRUE,
@@ -450,7 +455,8 @@ ui <- dashboardPage(
                   collapsible = TRUE, width = 12,
                   plotOutput("violinPlotClusterOrig", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
                 )
-              )
+            )
+
       ),
       # tabItem(tabName = 'Gene_expressionMultiple',
       #         fluidRow(
