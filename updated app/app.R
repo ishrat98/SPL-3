@@ -205,7 +205,6 @@ ui <- dashboardPage(
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap'),
               # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
               menuSubItem('Monocle3', tabName = 'trajectory_monocle3')),
-      menuItem("Summary", tabName = "Summary", icon = icon("align-justify")),
       menuItem("Gene expression", tabName = "Gene_expressionAll", icon = icon("dna"),
                menuSubItem('Single gene expression', tabName = "Gene_expression"),
                menuSubItem('Multiple gene expression', tabName = "Gene_expressionMultiple")),
@@ -359,59 +358,7 @@ ui <- dashboardPage(
               )
               
       ),
-      tabItem(tabName = 'Summary',
-              fluidRow(
-                box(
-                  title = p(tags$span("Samples by clusters", style="padding-right:8px;"), 
-                            actionButton("sampleByclustersInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  DT::dataTableOutput("tableSampleClust") %>% withSpinner(type = getOption("spinner.type", default = 8)) %>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("Percent of clusters in sample", style="padding-right:8px;"), 
-                            actionButton("percentClusterInSampleInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("sampleClusterProp", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("UMI in sample", style="padding-right:8px;"), 
-                            actionButton("umiinSampleInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("samplenUMI", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("Number of genes expressed", style="padding-right:8px;"), 
-                            actionButton("numberOfGenesExpressedInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ),status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("samplenGene", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("UMI in clusters", style="padding-right:8px;"), 
-                            actionButton("umiInClustersInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("clusternUMI", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                ),
-                box(
-                  title = p(tags$span("Number of genes expressed in clusters", style="padding-right:8px;"), 
-                            actionButton("numberOfGenesExpressedInClustersInfo", "help", 
-                                         class = "btn-xs", title = "Additional information for this panel")
-                  ), status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  plotOutput("clusternGene", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
-              )
-              
-      ),
+      
       tabItem(tabName = 'HEG',
               fluidRow(
                 box(title='Highly expressed genes for samples', status = "primary", solidHeader = TRUE,
