@@ -209,12 +209,12 @@ ui <- dashboardPage(
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap')),
               # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
-      # menuItem("Marker genes", tabName = "MarkerGenes", icon = icon("hornbill")),
-      # menuItem("Enriched pathway", tabName = "Enriched_pathway", icon = icon("hubspot")),
-      menuItem('Downstream', tabName = 'Downstream', icon = icon('route'),
-               menuSubItem('Fit negative binomial model', tabName = 'Downstream_model'),
-               menuSubItem('progenitor marker genes', tabName = 'Downstream_markerGenes'),
-               menuSubItem('Differential expression', tabName = 'Downstream_DE')),
+      menuItem("Marker genes", tabName = "Downstream_markerGenes", icon = icon("hornbill")),
+      menuItem("patternTest with diffEndTest results", tabName = "combining_test", icon = icon("hubspot")),
+      # menuItem('Downstream', tabName = 'Downstream', icon = icon('route'),
+      #          menuSubItem('Fit negative binomial model', tabName = 'Downstream_model'),
+      #          menuSubItem('progenitor marker genes', tabName = 'Downstream_markerGenes'),
+      #          menuSubItem('Differential expression', tabName = 'Downstream_DE')),
       menuItem('Analysis Info', tabName = 'analysisInfo', icon = icon('info'))
     )
   ),
@@ -745,6 +745,7 @@ ui <- dashboardPage(
               )
               
       ),
+      combining_test
       
       tabItem(tabName = 'Downstream_DE',
               box(
