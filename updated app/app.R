@@ -10,6 +10,7 @@ library(SingleCellExperiment)
 library(SummarizedExperiment)
 
 library(scater)
+library(ggplot2)
 library(reprex)
 #library(ggplotly)
 library(plotly)
@@ -39,8 +40,7 @@ library(RColorBrewer)
 
 library(scales)
 library(viridis)
-library(Matrix)
-library(matrixStats)
+
 library(biomaRt)
 library(BUSpaRse)
 library(tidyverse)
@@ -48,6 +48,8 @@ library(ggthemes)
 library(ggbeeswarm)
 library(corrplot)
 library(Polychrome)
+library(Matrix)
+library(matrixStats)
 
 
 library(tradeSeq)
@@ -263,7 +265,7 @@ ui <- dashboardPage(
       tabItem(tabName = 'overview',
               
               fluidRow(
-                column(12,tags$h1('CISTRON')),
+                column(12,tags$h1('Data Info')),
                 
                 br(),br(),br(),br(),br(),br(),br(),
                 column(6, align="center",
@@ -755,7 +757,7 @@ ui <- dashboardPage(
       
       tabItem(tabName = 'analysisInfo',
               h2('CISTRON'),
-              h4('A TRAJECTORY BASED SINGLE CELL ANALYSIS'),
+              h4('A TRAJECTORY BASED SINGLE CELL ANALYSIS TOOL'),
               h2('Session Info'),
               htmlOutput("sessionInfo"),
              # includeMarkdown("../snRNA_seq_dataset_Hiseq127_JenniferScott/snRNA_seq_dataset_Hiseq127_JenniferScott.md")
