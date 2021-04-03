@@ -1728,32 +1728,6 @@ server <- function(input, output, session) {
   ################################################
   
   
-  #####################################
-  #
-  # Pathway enrichment
-  #
-  #####################################
-  
-  observe({
-    sampleID <- input$ENChooseSample
-    
-    # Can also set the label and select items
-    updateSelectInput(session, "ENChooseSampleGO",
-                      label = "Choose sample enrichr",
-                      choices = names(which(sapply(metadata(cdScFiltAnnot)[['enrichSample']][[1]][[sampleID]], NROW) != 0)),
-                      selected = names(which(sapply(metadata(cdScFiltAnnot)[['enrichSample']][[1]][[sampleID]], NROW) != 0))[1])
-    
-    
-    clusterID <- as.numeric(input$ENChooseCluster)
-    
-    # Can also set the label and select items
-    updateSelectInput(session, "ENChooseClusterGO",
-                      label = "Choose cluster enrichr",
-                      choices = names(which(sapply(metadata(cdScFiltAnnot)[['enrichCluster']][[1]][[clusterID]], NROW) != 0)),
-                      selected = names(which(sapply(metadata(cdScFiltAnnot)[['enrichCluster']][[1]][[clusterID]], NROW) != 0))[1])
-  })
-  
-  
   
   tableRenderingENTableSample <- function(){
     
