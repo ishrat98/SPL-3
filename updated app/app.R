@@ -398,8 +398,8 @@ ui <- dashboardPage(
                                               selectize = FALSE),
                   sliderInput("geneExpressionplotOverviewDotSize", "Dot size:", 0, 10, 0.5, 0.5),
                   sliderInput("geneExpressionplotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1),
-                  colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "firebrick1"),
-                  colourpicker::colourInput("colmingeneExp", "Select colour for minimum", "gray88"),
+                  colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "#D66565"),
+                  colourpicker::colourInput("colmingeneExp", "Select colour for minimum", "#9C7272"),
                   
                   pickerInput(
                     inputId = "checkboxGeneExpressionSample", 
