@@ -64,6 +64,8 @@ cellLabels <- cdScFiltAnnot$cellType
 deng <- counts(cdScFiltAnnot)
 colnames(deng) <- cellLabels
 
+cds <- counts(cdScFiltAnnot)
+colnames(cds) <- cellLabels
 
 # Run PCA Use the runPCA function from the SingleCellExperiment package.
 cdScFiltAnnot <- runPCA(cdScFiltAnnot, ncomponents = 50)
@@ -4009,9 +4011,9 @@ server <- function(input, output, session) {
   output$trajectory_TSCAN_1 <- renderPlotly({
     
     
-    #procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
+  #  procdeng <- TSCAN::preprocess(counts(cdScFiltAnnot))
     
-   # colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
+    #colnames(procdeng) <- 1:ncol(cdScFiltAnnot)
     
     dengclust <- TSCAN::exprmclust(procdeng, clusternum = 14)
     
