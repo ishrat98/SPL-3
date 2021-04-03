@@ -360,27 +360,24 @@ ui <- dashboardPage(
       tabItem(tabName = 'HEG',
               fluidRow(
                 box(title='Highly expressed genes for samples', status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12,
+                    collapsible = TRUE, width = 4,
                     selectInput('hegChooseSample', 'Sample', 
                                 choices = levels(as.factor(cdScFiltAnnot$Sample)), 
                                 selected = '', multiple = FALSE,
-                                selectize = FALSE),
-                    DT::dataTableOutput("hegTableSample") %>% withSpinner(type = getOption("spinner.type", default = 8))%>% withSpinner(type = getOption("spinner.type", default = 8))
-                    
-                    #downloadButton("exportTsne", label = "Download t-SNE"),
-                    #downloadButton("exportUmap", label = "Download UMAP")
+                                selectize = FALSE)
                 ),
+              
                 
                 box(
-                  title = "Highly expressed genes for clusters", status = "primary", solidHeader = TRUE,
-                  collapsible = TRUE, width = 12,
-                  selectInput('hegChooseCluster', 'Cluster', 
-                              choices = levels(as.factor(my.clusters[order(my.clusters)])), 
-                              selected = '', multiple = FALSE,
-                              selectize = FALSE),
-                  DT::dataTableOutput("hegTableCluster") %>% withSpinner(type = getOption("spinner.type", default = 8))
-                )
+                  title = "Highly expressed genes", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 8,
+                  DT::dataTableOutput("hegTableSample") %>% withSpinner(type = getOption("spinner.type", default = 8))%>% withSpinner(type = getOption("spinner.type", default = 8))
+                  
+                  #downloadButton("exportTsne", label = "Download t-SNE"),
+                  #downloadButton("exportUmap", label = "Download UMAP")
+                ),
               )
+          
       ),
 
       tabItem(tabName = 'Gene_expression',
@@ -398,8 +395,8 @@ ui <- dashboardPage(
                                               selectize = FALSE),
                   sliderInput("geneExpressionplotOverviewDotSize", "Dot size:", 0, 10, 0.5, 0.5),
                   sliderInput("geneExpressionplotOverviewDotOpacity", "Dot opacity:", 0, 1, 1, 0.1),
-                  colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "#D66565"),
-                  colourpicker::colourInput("colmingeneExp", "Select colour for minimum", "#9C7272"),
+                  colourpicker::colourInput("colmaxgeneExp", "Select colour for maximum value", "#FF0F33"),
+                  colourpicker::colourInput("colmingeneExp", "Select colour for minimum", "#666060"),
                   
                   pickerInput(
                     inputId = "checkboxGeneExpressionSample", 
@@ -1578,12 +1575,6 @@ server <- function(input, output, session) {
     
   }
   
-  
-  
-  output$hegTableCluster = DT::renderDataTable(tableRenderinghegChooseSCluster (), server = FALSE, extensions = 'Buttons', 
-                                               options = list(dom = 'lBfrtip',
-                                                              buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), 
-                                                              pageLength = 5, autoWidth = TRUE))
   
   ####################################
   
