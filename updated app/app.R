@@ -209,7 +209,9 @@ ui <- dashboardPage(
                menuSubItem('Monocle3', tabName = 'trajectory_monocle3'),
                menuSubItem('DiffusionMap', tabName = 'trajectory_DiffusionMap')),
               # menuSubItem('Slicer', tabName = 'trajectory_slicer'),
-      menuItem("Marker genes", tabName = "Downstream_markerGenes", icon = icon("hornbill")),
+      menuItem("Progenitor marker genes", tabName = "Downstream_markerGenes", icon = icon("hornbill")),
+      menuItem("Differentiated cell type markers", tabName = "differentiatedCellTypeMarkers", icon = icon("hornbill")),
+      menuItem("Different expression patterns", tabName = "differentExpressionPatterns", icon = icon("hornbill")),
       menuItem("patternTest with diffEndTest", tabName = "combining_test", icon = icon("hubspot")),
       # menuItem('Downstream', tabName = 'Downstream', icon = icon('route'),
       #          menuSubItem('Fit negative binomial model', tabName = 'Downstream_model'),
@@ -299,7 +301,7 @@ ui <- dashboardPage(
                                               selectize = FALSE),
                   
                   selectInput("colorCellsBy", "Color cells by",
-                                                choices = c('Sample','Cluster','nUMI','nGene','percent_mt','CellType'),
+                                                choices = c('Sample','CellType'),
                                                 multiple = FALSE,
                                                 selectize = FALSE),
                   sliderInput("plotOverviewDotSize", "Dot size:", 0, 10, 3.5, 0.5),
@@ -740,12 +742,44 @@ ui <- dashboardPage(
                 plotlyOutput("markerGenes1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
-                title = "UMAP space with gene’s expression.", status = "primary", solidHeader = TRUE,
+                title = " Plot gene expression", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("markerGenes2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
             )
       ),
+      
+      tabItem(tabName = 'differentiatedCellTypeMarkers',
+              fluidRow(
+                box(
+                  title = "DE between final stages of ineages", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 12,
+                  plotlyOutput("diffEnd1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                ),
+                box(
+                  title = " Plot gene expression", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 12,
+                  plotlyOutput("diffEnd2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                )
+              )
+      ),
+      
+      
+      tabItem(tabName = 'differentExpressionPatterns',
+              fluidRow(
+                box(
+                  title = "Differential expression pattern between lineages", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 12,
+                  plotlyOutput("patternTest1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                ),
+                box(
+                  title = " Plot gene expression", status = "primary", solidHeader = TRUE,
+                  collapsible = TRUE, width = 12,
+                  plotlyOutput("patternTest2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+                )
+              )
+      ),
+     
       
       tabItem(tabName = 'combining_test',
               fluidRow(
@@ -755,7 +789,7 @@ ui <- dashboardPage(
                 plotlyOutput("combining_test1", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               ),
               box(
-                title = "UMAP space with gene’s expression.", status = "primary", solidHeader = TRUE,
+                title = " Plot gene expression", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
                 plotlyOutput("combining_test2", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
               )
@@ -3694,9 +3728,50 @@ server <- function(input, output, session) {
     
   })
   
+  #customRes <- startVsEndTest(sce, pseudotimeValues = c(0.1, 0.8))
+  endRes <- diffEndTest(sce)
+  o <- order(endRes$waldStat, decreasing = TRUE)
+  sigGene <- names(sce)[o[1]]
+  
+  output$diffEnd1 <- renderPlotly({
+    
+    
+
+    plotSmoothers(sce, counts, sigGene)
+    
+    
+  })
+  
+  output$diffEnd2 <- renderPlotly({
+    
+    
+    plotGeneCount(crv, counts, gene = sigGene)
+    
+    
+  })
   patternRes <- patternTest(sce)
   oPat <- order(patternRes$waldStat, decreasing = TRUE)
   head(rownames(patternRes)[oPat])
+  
+  output$patternTest1 <- renderPlotly({
+    
+    
+    plotSmoothers(sce, counts, gene = rownames(patternRes)[oPat][4])
+    
+    
+  })
+  
+  output$patternTest2 <- renderPlotly({
+    
+    
+    plotGeneCount(crv, counts, gene = rownames(patternRes)[oPat][4])
+    
+    
+  })
+  
+  # patternRes <- patternTest(sce)
+  # oPat <- order(patternRes$waldStat, decreasing = TRUE)
+  # head(rownames(patternRes)[oPat])
   
   endRes <- diffEndTest(sce)
   patternRes$Gene <- rownames(patternRes)
