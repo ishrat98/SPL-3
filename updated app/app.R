@@ -649,11 +649,11 @@ ui <- dashboardPage(
       
       tabItem(tabName = 'trajectory_monocle3',
               fluidRow(
-              box(
-                title = "Feature Selection", status = "primary", solidHeader = TRUE,
-                collapsible = TRUE, width = 12,
-                plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
-              ),
+              # box(
+              #   title = "Feature Selection", status = "primary", solidHeader = TRUE,
+              #   collapsible = TRUE, width = 12,
+              #   plotOutput("trajectory_monocle3OT", width = "100%")%>% withSpinner(type = getOption("spinner.type", default = 8))
+              # ),
               box(
                 title = "Monocle UMAP", status = "primary", solidHeader = TRUE,
                 collapsible = TRUE, width = 12,
